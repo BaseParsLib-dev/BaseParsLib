@@ -44,6 +44,10 @@ proxy_session = rotating_proxy_auth(
     Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
     Задержка между каждым запросом увеличивается
 
+        :param url: str
+            Ссылка на страницу для запроса
+        :param method: str = 'GET'
+            HTTP-метод
         :param iter_count: int = 10
             Количество попыток отправки запроса
         :param increase_by_seconds: int = 10
@@ -57,6 +61,10 @@ proxy_session = rotating_proxy_auth(
             Заголовки запроса
         :param cookies: dict = None
             Куки
+        :param data: dict = None
+            Передаваемые данные
+        :param json: dict = None
+            Передаваемые данные
 
         :return:
             На последней итерации возвращает response с
@@ -67,6 +75,8 @@ proxy_session = rotating_proxy_auth(
         
         :param url: str
             Ссылка на страницу для запроса
+        :param method: str = 'GET'
+            HTTP-метод
         :param verify: bool = True
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
@@ -75,6 +85,10 @@ proxy_session = rotating_proxy_auth(
             Заголовки запроса
         :param cookies: dict = None
             Куки
+        :param data: dict = None
+            Передаваемые данные
+        :param json: dict = None
+            Передаваемые данные
         
         :return:
             response
@@ -127,6 +141,7 @@ class MyParser(BaseParser):
     def _my_method_get_responses(self, urls: list | tuple) -> None:
         for url in urls:
             response = self._make_backoff_request(
+                method='GET',
                 url=url,
                 iter_count=10,
                 increase_by_seconds=10,

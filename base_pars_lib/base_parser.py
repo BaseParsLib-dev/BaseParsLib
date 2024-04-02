@@ -17,16 +17,21 @@ class BaseParser:
     def _make_request(
             self,
             url: str,
+            method: str = 'GET',
             verify: bool = True,
             with_random_useragent: bool = True,
             headers: dict = None,
-            cookies: dict = None
+            cookies: dict = None,
+            json: dict = None,
+            data: dict = None
     ):
         """
         Отправляет реквест через requests_session
 
         :param url: str
             Ссылка на страницу для запроса
+        :param method: str = 'GET'
+            HTTP-метод
         :param verify: bool = True
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
@@ -35,6 +40,10 @@ class BaseParser:
             Заголовки запроса
         :param cookies: dict = None
             Куки
+        :param data: dict = None
+            Передаваемые данные
+        :param json: dict = None
+            Передаваемые данные
 
         :return:
             response
@@ -45,24 +54,32 @@ class BaseParser:
 
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random
-        return self.requests_session.get(
-            url, headers=headers, cookies=cookies, verify=verify
+        return self.requests_session.request(
+            method=method.upper(), url=url, headers=headers,
+            cookies=cookies, verify=verify, json=json, data=data
         )
 
     def _make_backoff_request(
             self,
             url: str,
+            method: str = 'GET',
             iter_count: int = 10,
             increase_by_seconds: int = 10,
             verify: bool = True,
             with_random_useragent: bool = True,
             headers: dict = None,
-            cookies: dict = None
+            cookies: dict = None,
+            json: dict = None,
+            data: dict = None
     ):
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
         Задержка между каждым запросом увеличивается
 
+        :param url: str
+            Ссылка на страницу для запроса
+        :param method: str = 'GET'
+            HTTP-метод
         :param iter_count: int = 10
             Количество попыток отправки запроса
         :param increase_by_seconds: int = 10
@@ -76,6 +93,10 @@ class BaseParser:
             Заголовки запроса
         :param cookies: dict = None
             Куки
+        :param data: dict = None
+            Передаваемые данные
+        :param json: dict = None
+            Передаваемые данные
 
         :return:
             На последней итерации возвращает response с
@@ -85,7 +106,8 @@ class BaseParser:
         for i in range(1, iter_count + 1):
             try:
                 response = self._make_request(
-                    url, verify, with_random_useragent, headers, cookies
+                    url=url, verify=verify, with_random_useragent=with_random_useragent,
+                    headers=headers, cookies=cookies, data=data, json=json, method=method
                 )
             except (
                     requests.exceptions.ProxyError,
