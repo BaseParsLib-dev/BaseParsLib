@@ -18,7 +18,9 @@ class BaseParser:
             self,
             url: str,
             verify: bool = True,
-            with_random_useragent: bool = True
+            with_random_useragent: bool = True,
+            headers: dict = None,
+            cookies: dict = None
     ):
         """
         Отправляет реквест через requests_session
@@ -29,15 +31,23 @@ class BaseParser:
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
+        :param headers: dict = None
+            Заголовки запроса
+        :param cookies: dict = None
+            Куки
 
         :return:
             response
         """
 
-        headers = {}
+        headers = {} if headers is None else headers
+        cookies = {} if cookies is None else cookies
+
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random
-        return self.requests_session.get(url, headers=headers, verify=verify)
+        return self.requests_session.get(
+            url, headers=headers, cookies=cookies, verify=verify
+        )
 
     def _make_backoff_request(
             self,
@@ -45,7 +55,9 @@ class BaseParser:
             iter_count: int = 10,
             increase_by_seconds: int = 10,
             verify: bool = True,
-            with_random_useragent: bool = True
+            with_random_useragent: bool = True,
+            headers: dict = None,
+            cookies: dict = None
     ):
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
@@ -60,6 +72,10 @@ class BaseParser:
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
+        :param headers: dict = None
+            Заголовки запроса
+        :param cookies: dict = None
+            Куки
 
         :return:
             На последней итерации возвращает response с
@@ -68,7 +84,9 @@ class BaseParser:
 
         for i in range(1, iter_count + 1):
             try:
-                response = self._make_request(url, verify, with_random_useragent)
+                response = self._make_request(
+                    url, verify, with_random_useragent, headers, cookies
+                )
             except (
                     requests.exceptions.ProxyError,
                     _requests_digest_proxy.ProxyError,

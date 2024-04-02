@@ -53,6 +53,10 @@ proxy_session = rotating_proxy_auth(
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
+        :param headers: dict = None
+            Заголовки запроса
+        :param cookies: dict = None
+            Куки
 
         :return:
             На последней итерации возвращает response с
@@ -67,6 +71,10 @@ proxy_session = rotating_proxy_auth(
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
+        :param headers: dict = None
+            Заголовки запроса
+        :param cookies: dict = None
+            Куки
         
         :return:
             response
