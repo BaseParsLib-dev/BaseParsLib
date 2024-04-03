@@ -167,3 +167,22 @@ class MyParser(BaseParser):
             else:
                 self.my_responses.append(response)
 ```
+
+#### Передача proxy в запрос вручную
+```python
+from base_pars_lib import BaseParser
+
+
+class MyParser(BaseParser):
+    
+    proxies = {
+        'http': f'http://username:password@proxy_dns'
+    }
+    
+    def get_my_ip(self):
+        return self._make_backoff_request(
+            url='http://api.ipify.org/?format=json',
+            from_one_session=False,
+            proxies=self.proxies
+        )
+```
