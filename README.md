@@ -69,6 +69,13 @@ proxy_session = rotating_proxy_auth(
             Передаваемые данные
         :param json: dict = None
             Передаваемые данные
+        :param ignore_exceptions: tuple = 'default'
+            Возможность передать ошибки, которые будут обрабатываться в backoff.
+            Если ничего не передано, обрабатываются дефолтные:
+                requests.exceptions.ProxyError,
+                _requests_digest_proxy.ProxyError,
+                urllib3.exceptions.ProxyError,
+                requests.exceptions.ConnectionError
 
         :return:
             На последней итерации возвращает response с

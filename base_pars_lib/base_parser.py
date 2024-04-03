@@ -14,6 +14,13 @@ class BaseParser:
 
         self.user_agent = UserAgent()
 
+        self.ignore_exceptions = (
+            requests.exceptions.ProxyError,
+            _requests_digest_proxy.ProxyError,
+            urllib3.exceptions.ProxyError,
+            requests.exceptions.ConnectionError
+        )
+
     def _make_request(
             self,
             url: str,
@@ -78,7 +85,8 @@ class BaseParser:
             headers: dict = None,
             cookies: dict = None,
             json: dict = None,
-            data: dict = None
+            data: dict = None,
+            ignore_exceptions: tuple = 'default'
     ):
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
@@ -109,11 +117,21 @@ class BaseParser:
             Передаваемые данные
         :param json: dict = None
             Передаваемые данные
+        :param ignore_exceptions: tuple = 'default'
+            Возможность передать ошибки, которые будут обрабатываться в backoff.
+            Если ничего не передано, обрабатываются дефолтные:
+                requests.exceptions.ProxyError,
+                _requests_digest_proxy.ProxyError,
+                urllib3.exceptions.ProxyError,
+                requests.exceptions.ConnectionError
 
         :return:
             На последней итерации возвращает response с
             любым кодом ответа или, если произошла ошибка Proxy - возвращает None
         """
+
+        if ignore_exceptions == 'default':
+            ignore_exceptions = self.ignore_exceptions
 
         for i in range(1, iter_count + 1):
             try:
@@ -122,11 +140,7 @@ class BaseParser:
                     headers=headers, cookies=cookies, data=data, json=json, method=method,
                     from_one_session=from_one_session, proxies=proxies
                 )
-            except (
-                    requests.exceptions.ProxyError,
-                    _requests_digest_proxy.ProxyError,
-                    urllib3.exceptions.ProxyError
-            ):
+            except ignore_exceptions:
                 time.sleep(i * increase_by_seconds)
                 continue
             if response.status_code == 200 or i == iter_count:
