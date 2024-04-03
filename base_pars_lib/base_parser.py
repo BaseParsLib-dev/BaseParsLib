@@ -9,7 +9,7 @@ from base_pars_lib import _requests_digest_proxy
 
 
 class BaseParser:
-    def __init__(self, requests_session):
+    def __init__(self, requests_session=None):
         self.requests_session = requests_session
 
         self.user_agent = UserAgent()
@@ -20,6 +20,8 @@ class BaseParser:
             method: str = 'GET',
             verify: bool = True,
             with_random_useragent: bool = True,
+            from_one_session=True,
+            proxies: dict = None,
             headers: dict = None,
             cookies: dict = None,
             json: dict = None,
@@ -36,6 +38,10 @@ class BaseParser:
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
+        :param from_one_session: bool = True
+            Использование одной сессии
+        :param proxies: dict = None
+            Прокси
         :param headers: dict = None
             Заголовки запроса
         :param cookies: dict = None
@@ -49,15 +55,15 @@ class BaseParser:
             response
         """
 
-        headers = {} if headers is None else headers
-        cookies = {} if cookies is None else cookies
-
-        if with_random_useragent:
-            headers['User-Agent'] = self.user_agent.random
-        return self.requests_session.request(
-            method=method.upper(), url=url, headers=headers,
-            cookies=cookies, verify=verify, json=json, data=data
+        params = self._get_request_params(
+            url, headers, cookies, with_random_useragent,
+            method, verify, json, data, proxies
         )
+
+        if from_one_session:
+            return self.requests_session.request(**params)
+        else:
+            return requests.request(**params)
 
     def _make_backoff_request(
             self,
@@ -67,6 +73,8 @@ class BaseParser:
             increase_by_seconds: int = 10,
             verify: bool = True,
             with_random_useragent: bool = True,
+            from_one_session=True,
+            proxies: dict = None,
             headers: dict = None,
             cookies: dict = None,
             json: dict = None,
@@ -89,6 +97,10 @@ class BaseParser:
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
+        :param from_one_session: bool = True
+            Использование одной сессии
+        :param proxies: dict = None
+            Прокси
         :param headers: dict = None
             Заголовки запроса
         :param cookies: dict = None
@@ -107,7 +119,8 @@ class BaseParser:
             try:
                 response = self._make_request(
                     url=url, verify=verify, with_random_useragent=with_random_useragent,
-                    headers=headers, cookies=cookies, data=data, json=json, method=method
+                    headers=headers, cookies=cookies, data=data, json=json, method=method,
+                    from_one_session=from_one_session, proxies=proxies
                 )
             except (
                     requests.exceptions.ProxyError,
@@ -121,6 +134,63 @@ class BaseParser:
             time.sleep(i * increase_by_seconds)
 
         return None
+
+    def _get_request_params(
+            self,
+            url: str,
+            headers: dict = None,
+            cookies: dict = None,
+            with_random_useragent: bool = True,
+            method: str = 'GET',
+            verify: bool = True,
+            json: dict = None,
+            data: dict = None,
+            proxies: dict = None
+    ) -> dict:
+        """
+        Возвращает словарь параметров для запроса через requests
+
+        :param url: str
+            Ссылка на сайт
+        :param headers: dict = None
+            Заголовки
+        :param cookies: dict = None
+            Куки
+        :param with_random_useragent: bool = True
+            Использование рандомного юзерагента
+        :param method: str = 'GET'
+            requests-метод
+        :param verify: bool = True
+            Проверка безопасности сайта
+        :param json: dict = None
+            json-данные
+        :param data: dict = None
+            Данные запроса
+        :param proxies: dict = None
+            Прокси
+        :return:
+        """
+
+        headers = {} if headers is None else headers
+        cookies = {} if cookies is None else cookies
+
+        if with_random_useragent:
+            headers['User-Agent'] = self.user_agent.random
+
+        params: dict = {
+            'method': method.upper(),
+            'url': url,
+            'headers': headers,
+            'cookies': cookies,
+            'verify': verify,
+            'json': json,
+            'data': data
+        }
+
+        if proxies is not None:
+            params['proxies'] = proxies
+
+        return params
 
     @staticmethod
     def _threading_method(

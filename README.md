@@ -8,7 +8,7 @@
 # Установка и примеры использования
 
 ```shell
-pip install git+<ссылка на гитхаб-репозиторий>
+pip install git+https://github.com/BaseParsLib-dev/BaseParsLib.git
 ```
 
 ### Авторизация в ротационном прокси
@@ -57,6 +57,10 @@ proxy_session = rotating_proxy_auth(
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
+        :param from_one_session: bool = True
+            Использование одной сессии
+        :param proxies: dict = None
+            Прокси
         :param headers: dict = None
             Заголовки запроса
         :param cookies: dict = None
@@ -81,6 +85,10 @@ proxy_session = rotating_proxy_auth(
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
+        :param from_one_session: bool = True
+            Использование одной сессии
+        :param proxies: dict = None
+            Прокси
         :param headers: dict = None
             Заголовки запроса
         :param cookies: dict = None
