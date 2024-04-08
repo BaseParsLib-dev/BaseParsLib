@@ -70,7 +70,8 @@ class BaseParser:
         if from_one_session:
             return self.requests_session.request(**params)
         else:
-            return requests.request(**params)
+            with requests.request(**params) as response:
+                return response
 
     def _make_backoff_request(
             self,
