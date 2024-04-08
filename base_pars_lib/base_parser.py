@@ -5,7 +5,7 @@ import requests
 from fake_useragent import UserAgent
 import urllib3
 
-# from base_pars_lib import _requests_digest_proxy
+from base_pars_lib import _requests_digest_proxy
 
 
 class BaseParser:
@@ -16,7 +16,7 @@ class BaseParser:
 
         self.ignore_exceptions = (
             requests.exceptions.ProxyError,
-            # _requests_digest_proxy.ProxyError,
+            _requests_digest_proxy.ProxyError,
             urllib3.exceptions.ProxyError,
             requests.exceptions.ConnectionError
         )
@@ -70,8 +70,7 @@ class BaseParser:
         if from_one_session:
             return self.requests_session.request(**params)
         else:
-            with requests.request(**params) as response:
-                return response
+            return requests.request(**params)
 
     def _make_backoff_request(
             self,
