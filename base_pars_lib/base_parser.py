@@ -153,12 +153,12 @@ class BaseParser:
                 time.sleep(i * increase_by_seconds)
                 continue
             if response.status_code == 200 or i == iter_count:
-                if self.debug:
-                    print(
-                        f'[_make_backoff_request]: status_code: {response.status_code}, '
-                        f'{url}: iter: {i}'
-                    )
                 return response
+            if self.debug:
+                print(
+                    f'[_make_backoff_request]: status_code: {response.status_code}, '
+                    f'{url}: iter: {i}'
+                )
             time.sleep(i * increase_by_seconds)
 
         return None
