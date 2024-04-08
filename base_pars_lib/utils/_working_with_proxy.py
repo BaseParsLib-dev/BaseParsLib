@@ -1,7 +1,7 @@
 import requests
 from requests.auth import HTTPProxyAuth
 
-from base_pars_lib._requests_digest_proxy import HTTPProxyDigestAuth
+# from base_pars_lib._requests_digest_proxy import HTTPProxyDigestAuth
 
 
 def rotating_proxy_auth(
@@ -30,6 +30,6 @@ def rotating_proxy_auth(
         'http': http_url,
         'https': https_url
     }
-    session_proxy.auth = HTTPProxyDigestAuth(login, password)
+    # session_proxy.auth = HTTPProxyDigestAuth(login, password)
     session_proxy.auth = HTTPProxyAuth(login, password)
     return session_proxy
