@@ -10,7 +10,7 @@ from base_pars_lib import _requests_digest_proxy
 
 
 class BaseParser:
-    def __init__(self, requests_session=None):
+    def __init__(self, requests_session=None, debug: bool = False):
         self.requests_session = requests_session
 
         self.user_agent = UserAgent()
@@ -21,6 +21,8 @@ class BaseParser:
             urllib3.exceptions.ProxyError,
             requests.exceptions.ConnectionError
         )
+
+        self.debug = debug
 
     def _make_request(
             self,
@@ -145,10 +147,17 @@ class BaseParser:
                     headers=headers, cookies=cookies, data=data, json=json, method=method,
                     from_one_session=from_one_session, proxies=proxies
                 )
-            except ignore_exceptions:
+            except ignore_exceptions as Ex:
+                if self.debug:
+                    print(f'[_make_backoff_request]: error: {Ex}, {url}: iter: {i}')
                 time.sleep(i * increase_by_seconds)
                 continue
             if response.status_code == 200 or i == iter_count:
+                if self.debug:
+                    print(
+                        f'[_make_backoff_request]: status_code: {response.status_code}, '
+                        f'{url}: iter: {i}'
+                    )
                 return response
             time.sleep(i * increase_by_seconds)
 
@@ -198,8 +207,12 @@ class BaseParser:
         random_index = random.randint(0, min(len(cookies), len(headers)) - 1)
         if type(headers) == list:
             headers = headers[random_index]
+            if self.debug:
+                print(f'Headers index: {random_index}')
         if type(cookies) == list:
             cookies = cookies[random_index]
+            if self.debug:
+                print(f'Cookies index: {random_index}')
 
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random
