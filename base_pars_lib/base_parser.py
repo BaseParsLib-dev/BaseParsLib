@@ -1,5 +1,6 @@
 from threading import Thread
 import time
+import random
 
 import requests
 from fake_useragent import UserAgent
@@ -29,8 +30,8 @@ class BaseParser:
             with_random_useragent: bool = True,
             from_one_session=True,
             proxies: dict = None,
-            headers: dict = None,
-            cookies: dict = None,
+            headers: dict | list = None,
+            cookies: dict | list = None,
             json: dict = None,
             data: dict = None
     ):
@@ -49,10 +50,12 @@ class BaseParser:
             Использование одной сессии
         :param proxies: dict = None
             Прокси
-        :param headers: dict = None
-            Заголовки запроса
-        :param cookies: dict = None
-            Куки
+        :param headers: dict | list = None
+            Заголовки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
+        :param cookies: dict | list = None
+            Куки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
         :param data: dict = None
             Передаваемые данные
         :param json: dict = None
@@ -82,8 +85,8 @@ class BaseParser:
             with_random_useragent: bool = True,
             from_one_session=True,
             proxies: dict = None,
-            headers: dict = None,
-            cookies: dict = None,
+            headers: dict | list = None,
+            cookies: dict | list = None,
             json: dict = None,
             data: dict = None,
             ignore_exceptions: tuple = 'default'
@@ -109,10 +112,12 @@ class BaseParser:
             Использование одной сессии
         :param proxies: dict = None
             Прокси
-        :param headers: dict = None
-            Заголовки запроса
-        :param cookies: dict = None
-            Куки
+        :param headers: dict | list = None
+            Заголовки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
+        :param cookies: dict | list = None
+            Куки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
         :param data: dict = None
             Передаваемые данные
         :param json: dict = None
@@ -152,8 +157,8 @@ class BaseParser:
     def _get_request_params(
             self,
             url: str,
-            headers: dict = None,
-            cookies: dict = None,
+            headers: dict | list = None,
+            cookies: dict | list = None,
             with_random_useragent: bool = True,
             method: str = 'GET',
             verify: bool = True,
@@ -166,10 +171,12 @@ class BaseParser:
 
         :param url: str
             Ссылка на сайт
-        :param headers: dict = None
-            Заголовки
-        :param cookies: dict = None
-            Куки
+        :param headers: dict | list = None
+            Заголовки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
+        :param cookies: dict | list = None
+            Куки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
         :param with_random_useragent: bool = True
             Использование рандомного юзерагента
         :param method: str = 'GET'
@@ -187,6 +194,12 @@ class BaseParser:
 
         headers = {} if headers is None else headers
         cookies = {} if cookies is None else cookies
+
+        random_index = random.randint(0, min(len(cookies), len(headers)) - 1)
+        if type(headers) == list:
+            headers = headers[random_index]
+        if type(cookies) == list:
+            cookies = cookies[random_index]
 
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random

@@ -42,7 +42,7 @@ proxy_session = rotating_proxy_auth(
 
 #### Метод ```_make_backoff_request```
     Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
-    Задержка между каждым запросом увеличивается
+        Задержка между каждым запросом увеличивается
 
         :param url: str
             Ссылка на страницу для запроса
@@ -61,10 +61,12 @@ proxy_session = rotating_proxy_auth(
             Использование одной сессии
         :param proxies: dict = None
             Прокси
-        :param headers: dict = None
-            Заголовки запроса
-        :param cookies: dict = None
-            Куки
+        :param headers: dict | list = None
+            Заголовки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
+        :param cookies: dict | list = None
+            Куки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
         :param data: dict = None
             Передаваемые данные
         :param json: dict = None
@@ -83,7 +85,7 @@ proxy_session = rotating_proxy_auth(
 
 #### Метод ```_make_request```
     Отправляет реквест через requests_session
-        
+
         :param url: str
             Ссылка на страницу для запроса
         :param method: str = 'GET'
@@ -96,15 +98,17 @@ proxy_session = rotating_proxy_auth(
             Использование одной сессии
         :param proxies: dict = None
             Прокси
-        :param headers: dict = None
-            Заголовки запроса
-        :param cookies: dict = None
-            Куки
+        :param headers: dict | list = None
+            Заголовки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
+        :param cookies: dict | list = None
+            Куки запроса, возможно передать в виде списка,
+            тогда выбирутся рандомно
         :param data: dict = None
             Передаваемые данные
         :param json: dict = None
             Передаваемые данные
-        
+
         :return:
             response
 
