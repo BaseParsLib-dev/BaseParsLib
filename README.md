@@ -78,6 +78,12 @@ proxy_session = rotating_proxy_auth(
                 _requests_digest_proxy.ProxyError,
                 urllib3.exceptions.ProxyError,
                 requests.exceptions.ConnectionError
+        :param ignore_404: bool = False
+            Позволяет не применять backoff к респонзам со статус-кодом 404.
+            Если такой страницы нет, backoff может не понадобиться
+            Если значение = True и передан url на несуществующую страницу,
+            метод вернёт response после первой попытки
+
 
         :return:
             На последней итерации возвращает response с
