@@ -1,6 +1,8 @@
 from threading import Thread
 import time
 import random
+import logging
+from http import HTTPStatus
 
 import requests
 from fake_useragent import UserAgent
@@ -91,7 +93,9 @@ class BaseParser:
             cookies: dict | list = None,
             json: dict = None,
             data: dict = None,
-            ignore_exceptions: tuple = 'default'
+            ignore_exceptions: tuple = 'default',
+            ignore_404: bool = False,
+            long_wait_for_50x: bool = False
     ):
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
@@ -131,6 +135,12 @@ class BaseParser:
                 _requests_digest_proxy.ProxyError,
                 urllib3.exceptions.ProxyError,
                 requests.exceptions.ConnectionError
+        :param ignore_404: bool = False
+            Позволяет не применять backoff к респонзам со статус-кодом 404.
+            Если такой страницы нет, backoff может не понадобиться
+            Если значение = True и передан url на несуществующую страницу,
+            метод вернёт response после первой попытки
+
 
         :return:
             На последней итерации возвращает response с
@@ -149,16 +159,20 @@ class BaseParser:
                 )
             except ignore_exceptions as Ex:
                 if self.debug:
-                    print(f'[_make_backoff_request]: error: {Ex}, {url}: iter: {i}')
+                    logging.debug(f'{Ex}: iter {i}')
                 time.sleep(i * increase_by_seconds)
                 continue
-            if response.status_code == 200 or i == iter_count:
+            if response.status_code == HTTPStatus.OK or i == iter_count:
                 return response
+            elif response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
+                return response
+            elif 599 >= response.status_code >= 500 and long_wait_for_50x:
+                time.sleep(i * increase_by_seconds * 10)
+                if self.debug:
+                    logging.debug(f'{response.status_code}: iter {i}: url {url}')
+                continue
             if self.debug:
-                print(
-                    f'[_make_backoff_request]: status_code: {response.status_code}, '
-                    f'{url}: iter: {i}'
-                )
+                logging.debug(f'{response.status_code}: iter {i}: url {url}')
             time.sleep(i * increase_by_seconds)
 
         return None
@@ -208,11 +222,11 @@ class BaseParser:
         if type(headers) == list:
             headers = headers[random_index]
             if self.debug:
-                print(f'Headers index: {random_index}')
+                logging.debug(f'Headers index: {random_index}')
         if type(cookies) == list:
             cookies = cookies[random_index]
             if self.debug:
-                print(f'Cookies index: {random_index}')
+                logging.debug(f'Cookies index: {random_index}')
 
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random
