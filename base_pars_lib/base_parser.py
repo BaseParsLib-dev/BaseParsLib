@@ -218,7 +218,11 @@ class BaseParser:
         headers = {} if headers is None else headers
         cookies = {} if cookies is None else cookies
 
-        random_index = random.randint(0, min(len(cookies), len(headers)) - 1)
+        try:
+            random_index = random.randint(0, min(len(cookies), len(headers)) - 1)
+        except ValueError:
+            random_index = 0
+
         if type(headers) == list:
             headers = headers[random_index]
             if self.debug:
