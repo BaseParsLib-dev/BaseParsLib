@@ -84,7 +84,9 @@ class BaseParser:
             url: str,
             method: str = 'GET',
             iter_count: int = 10,
+            iter_count_for_50x_errors: int = 3,
             increase_by_seconds: int = 10,
+            increase_by_minutes_for_50x_errors: int = 20,
             verify: bool = True,
             with_random_useragent: bool = True,
             from_one_session=True,
@@ -107,7 +109,12 @@ class BaseParser:
             HTTP-метод
         :param iter_count: int = 10
             Количество попыток отправки запроса
+        :param iter_count_for_50x_errors: int = 3
+            Количество попыток отправки запроса для 500-х ошибок
         :param increase_by_seconds: int = 10
+            Значение, на которое увеличивается время ожидания
+            на каждой итерации
+        :param increase_by_minutes_for_50x_errors: int = 20
             Значение, на которое увеличивается время ожидания
             на каждой итерации
         :param verify: bool = True
@@ -150,6 +157,7 @@ class BaseParser:
         if ignore_exceptions == 'default':
             ignore_exceptions = self.ignore_exceptions
 
+        iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
                 response = self._make_request(
@@ -167,7 +175,10 @@ class BaseParser:
             elif response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
                 return response
             elif 599 >= response.status_code >= 500 and long_wait_for_50x:
-                time.sleep(i * increase_by_seconds * 10)
+                if iteration_for_50x > iter_count_for_50x_errors:
+                    return response
+                iteration_for_50x += 1
+                time.sleep(i * increase_by_minutes_for_50x_errors * 60)
                 if self.debug:
                     logging.debug(f'{response.status_code}: iter {i}: url {url}')
                 continue

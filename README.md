@@ -50,7 +50,12 @@ proxy_session = rotating_proxy_auth(
             HTTP-метод
         :param iter_count: int = 10
             Количество попыток отправки запроса
+        :param iter_count_for_50x_errors: int = 3
+            Количество попыток отправки запроса для 500-х ошибок
         :param increase_by_seconds: int = 10
+            Значение, на которое увеличивается время ожидания
+            на каждой итерации
+        :param increase_by_minutes_for_50x_errors: int = 20
             Значение, на которое увеличивается время ожидания
             на каждой итерации
         :param verify: bool = True
