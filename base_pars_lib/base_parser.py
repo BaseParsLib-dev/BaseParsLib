@@ -167,7 +167,7 @@ class BaseParser:
                 )
             except ignore_exceptions as Ex:
                 if self.debug:
-                    logging.debug(f'{Ex}: iter {i}')
+                    logging.info(f'{Ex}: iter {i}')
                 time.sleep(i * increase_by_seconds)
                 continue
             if response.status_code == HTTPStatus.OK or i == iter_count:
@@ -180,10 +180,10 @@ class BaseParser:
                 iteration_for_50x += 1
                 time.sleep(i * increase_by_minutes_for_50x_errors * 60)
                 if self.debug:
-                    logging.debug(f'{response.status_code}: iter {i}: url {url}')
+                    logging.info(f'{response.status_code}: iter {i}: url {url}')
                 continue
             if self.debug:
-                logging.debug(f'{response.status_code}: iter {i}: url {url}')
+                logging.info(f'{response.status_code}: iter {i}: url {url}')
             time.sleep(i * increase_by_seconds)
 
         return None
@@ -196,8 +196,8 @@ class BaseParser:
             with_random_useragent: bool = True,
             method: str = 'GET',
             verify: bool = True,
-            json: dict = None,
-            data: dict = None,
+            json: dict | str = None,
+            data: dict | str = None,
             proxies: dict = None
     ) -> dict:
         """
@@ -237,11 +237,11 @@ class BaseParser:
         if type(headers) == list:
             headers = headers[random_index]
             if self.debug:
-                logging.debug(f'Headers index: {random_index}')
+                logging.info(f'Headers index: {random_index}')
         if type(cookies) == list:
             cookies = cookies[random_index]
             if self.debug:
-                logging.debug(f'Cookies index: {random_index}')
+                logging.info(f'Cookies index: {random_index}')
 
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random
