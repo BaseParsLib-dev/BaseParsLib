@@ -229,6 +229,9 @@ class BaseParser:
         headers = {} if headers is None else headers
         cookies = {} if cookies is None else cookies
 
+        upper_index = min(len(cookies), len(headers))
+        if not upper_index:
+            upper_index = max(len(cookies), len(headers))
         try:
             random_index = random.randint(0, min(len(cookies), len(headers)) - 1)
         except ValueError:
