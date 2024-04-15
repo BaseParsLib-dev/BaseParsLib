@@ -233,7 +233,7 @@ class BaseParser:
         if not upper_index:
             upper_index = max(len(cookies), len(headers))
         try:
-            random_index = random.randint(0, min(len(cookies), len(headers)) - 1)
+            random_index = random.randint(0, upper_index - 1)
         except ValueError:
             random_index = 0
 
