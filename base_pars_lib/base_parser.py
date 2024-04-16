@@ -229,22 +229,11 @@ class BaseParser:
         headers = {} if headers is None else headers
         cookies = {} if cookies is None else cookies
 
-        upper_index = min(len(cookies), len(headers))
-        if not upper_index:
-            upper_index = max(len(cookies), len(headers))
-        try:
-            random_index = random.randint(0, upper_index - 1)
-        except ValueError:
-            random_index = 0
-
-        if type(headers) == list:
-            headers = headers[random_index]
-            if self.debug:
-                logging.info(f'Headers index: {random_index}')
-        if type(cookies) == list:
-            cookies = cookies[random_index]
-            if self.debug:
-                logging.info(f'Cookies index: {random_index}')
+        random_index = self._calculate_random_cookies_headers_index(
+            cookies=cookies, headers=headers
+        )
+        headers = self._get_by_random_index(headers, random_index, 'Headers')
+        cookies = self._get_by_random_index(cookies, random_index, 'Cookies')
 
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random
@@ -263,6 +252,18 @@ class BaseParser:
             params['proxies'] = proxies
 
         return params
+
+    def _get_by_random_index(
+            self,
+            item: list[dict] | dict,
+            random_index: int,
+            item_name: str
+    ) -> dict:
+        if type(item) == list:
+            item = item[random_index]
+            if self.debug:
+                logging.info(f'{item_name} index: {random_index}')
+        return item
 
     @staticmethod
     def _threading_method(
@@ -293,3 +294,16 @@ class BaseParser:
             threads.append(chunk_thread)
         for thread in threads:
             thread.join()
+
+    @staticmethod
+    def _calculate_random_cookies_headers_index(
+            cookies: list[dict] | dict,
+            headers: list[dict] | dict
+    ) -> int:
+        upper_index = min(len(cookies), len(headers))
+        if not upper_index:
+            upper_index = max(len(cookies), len(headers))
+        try:
+            return random.randint(0, upper_index - 1)
+        except ValueError:
+            return 0
