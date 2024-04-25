@@ -26,7 +26,7 @@ proxy_session = rotating_proxy_auth(
 Реализует правильную авторизацию в ротационном прокси в файле ```base_pars_lib._requests_digest_proxy```, который 
 переопределяет некоторые методы библиотеки requests
 
-### Методы BaseParser
+# BaseParser
 #### ```__init__```
     :param requests_session: = None
         объект requests.session()
@@ -106,31 +106,13 @@ proxy_session = rotating_proxy_auth(
 #### Метод ```_make_request```
     Отправляет реквест через requests_session
 
-        :param url: str
-            Ссылка на страницу для запроса
-        :param method: str = 'GET'
-            HTTP-метод
-        :param verify: bool = True
-            Проверка безопасности сайта
-        :param with_random_useragent: bool = True
-            Случайный юзер-агент
-        :param from_one_session: bool = True
-            Использование одной сессии
-        :param proxies: dict = None
-            Прокси
-        :param headers: dict | list = None
-            Заголовки запроса, возможно передать в виде списка,
-            тогда выбирутся рандомно
-        :param cookies: dict | list = None
-            Куки запроса, возможно передать в виде списка,
-            тогда выбирутся рандомно
-        :param data: dict = None
-            Передаваемые данные
-        :param json: dict = None
-            Передаваемые данные
+    :param params: dict
+        Параметры запроса, поступающие из _make_backoff_request
+    :param from_one_session: bool = True
+        Использование одной сессии
 
-        :return:
-            response
+    :return:
+        response
 
 ### Дополнительные методы библиотеки
 #### Метод ```split_on_chunks_by_chunk_len```
@@ -216,4 +198,102 @@ class MyParser(BaseParser):
             from_one_session=False,
             proxies=self.proxies
         )
+```
+
+# AsyncBaseParser
+#### ```__init__```
+    :param debug:
+        Дебаг - вывод в консоль параметров отправляемых запросов и ответов
+    :param print_logs:
+        Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
+        Если True - логи выводятся принтами
+
+#### ```_make_backoff_request```
+    Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
+    Задержка между каждым запросом увеличивается
+
+    :param urls: list
+        Список ссылок для запросов. Все ссылки обабатываются асинхронно одновременно
+    :param method: str = 'GET'
+        HTTP-метод
+    :param iter_count: int = 10
+        Количество попыток отправки запроса
+    :param iter_count_for_50x_errors: int = 3
+        Количество попыток отправки запроса для 500-х ошибок
+    :param increase_by_seconds: int = 10
+        Значение, на которое увеличивается время ожидания
+        на каждой итерации
+    :param increase_by_minutes_for_50x_errors: int = 20
+        Значение, на которое увеличивается время ожидания
+        на каждой итерации
+    :param verify: bool = True
+        Проверка безопасности сайта
+    :param with_random_useragent: bool = True
+        Случайный юзер-агент
+    :param proxies: str = None
+        Прокси
+    :param headers: dict | list = None
+        Заголовки запроса, возможно передать в виде списка,
+        тогда выбирутся рандомно
+    :param cookies: dict | list = None
+        Куки запроса, возможно передать в виде списка,
+        тогда выбирутся рандомно
+    :param data: dict = None
+        Передаваемые данные
+    :param ignore_exceptions: tuple = 'default'
+        Возможность передать ошибки, которые будут обрабатываться в backoff.
+        Если ничего не передано, обрабатываются дефолтные:
+            urllib3.exceptions.ProxyError
+    :param ignore_404: bool = False
+        Позволяет не применять backoff к респонзам со статус-кодом 404.
+        Если такой страницы нет, backoff может не понадобиться
+        Если значение = True и передан url на несуществующую страницу,
+        метод вернёт response после первой попытки
+    :param long_wait_for_50x: bool = False
+        Если True, применяет increase_by_minutes_for_50x_errors
+
+    :return:
+        Возвращает список ответов от сайта.
+        Какие-то из ответов могут быть None, если произошла ошибка из ignore_exceptions
+
+        Класс ответа обладает следующими атрибутами:
+            text: str
+            json: dict | None
+            url: str
+            status: int
+
+### Применение методов библиотеки
+```python
+import asyncio
+
+from base_pars_lib import AsyncBaseParser
+
+
+class MyParser(AsyncBaseParser):
+    async def make_requests(self, urls: list) -> list:
+        return await self._make_backoff_request(
+            urls=urls,
+            method='GET',
+            iter_count=10,
+            iter_count_for_50x_errors=3,
+            increase_by_seconds=10,
+            increase_by_minutes_for_50x_errors=20,
+            verify=False,
+            with_random_useragent=True,
+            proxies='http://username:password@proxy_dns',
+            headers={},
+            cookies={},
+            data={},
+            ignore_exceptions=(),
+            ignore_404=True,
+            long_wait_for_50x=True
+        )
+
+
+if __name__ == '__main__':
+    responses = asyncio.run(
+        MyParser().make_requests(urls=['http://api.ipify.org/?format=json'] * 100)
+    )
+    print(responses)
+
 ```

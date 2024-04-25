@@ -1,7 +1,7 @@
+from http import HTTPStatus
+import random
 from threading import Thread
 import time
-import random
-from http import HTTPStatus
 
 import requests
 from fake_useragent import UserAgent
@@ -37,53 +37,18 @@ class BaseParser:
         self.debug = debug
         self.print_logs = print_logs
 
-    def _make_request(
-            self,
-            url: str,
-            method: str = 'GET',
-            verify: bool = True,
-            with_random_useragent: bool = True,
-            from_one_session=True,
-            proxies: dict = None,
-            headers: dict | list = None,
-            cookies: dict | list = None,
-            json: dict = None,
-            data: dict = None
-    ):
+    def _make_request(self, params: dict, from_one_session=True):
         """
         Отправляет реквест через requests_session
 
-        :param url: str
-            Ссылка на страницу для запроса
-        :param method: str = 'GET'
-            HTTP-метод
-        :param verify: bool = True
-            Проверка безопасности сайта
-        :param with_random_useragent: bool = True
-            Случайный юзер-агент
+        :param params: dict
+            Параметры запроса, поступающие из _make_backoff_request
         :param from_one_session: bool = True
             Использование одной сессии
-        :param proxies: dict = None
-            Прокси
-        :param headers: dict | list = None
-            Заголовки запроса, возможно передать в виде списка,
-            тогда выбирутся рандомно
-        :param cookies: dict | list = None
-            Куки запроса, возможно передать в виде списка,
-            тогда выбирутся рандомно
-        :param data: dict = None
-            Передаваемые данные
-        :param json: dict = None
-            Передаваемые данные
 
         :return:
             response
         """
-
-        params = self._get_request_params(
-            url, headers, cookies, with_random_useragent,
-            method, verify, json, data, proxies
-        )
 
         if from_one_session:
             response = self.requests_session.request(**params)
@@ -161,7 +126,8 @@ class BaseParser:
             Если такой страницы нет, backoff может не понадобиться
             Если значение = True и передан url на несуществующую страницу,
             метод вернёт response после первой попытки
-
+        :param long_wait_for_50x: bool = False
+            Если True, применяет increase_by_minutes_for_50x_errors
 
         :return:
             На последней итерации возвращает response с
@@ -171,13 +137,16 @@ class BaseParser:
         if ignore_exceptions == 'default':
             ignore_exceptions = self.ignore_exceptions
 
+        params = self._get_request_params(
+            url, headers, cookies, with_random_useragent,
+            method, verify, json, data, proxies
+        )
+
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
                 response = self._make_request(
-                    url=url, verify=verify, with_random_useragent=with_random_useragent,
-                    headers=headers, cookies=cookies, data=data, json=json, method=method,
-                    from_one_session=from_one_session, proxies=proxies
+                    from_one_session=from_one_session, params=params
                 )
             except ignore_exceptions as Ex:
                 if self.debug:
@@ -193,9 +162,9 @@ class BaseParser:
                 if iteration_for_50x > iter_count_for_50x_errors:
                     return response
                 iteration_for_50x += 1
-                time.sleep(i * increase_by_minutes_for_50x_errors * 60)
                 if self.debug:
                     logger.backoff_status_code(response.status_code, i, url, self.print_logs)
+                time.sleep(i * increase_by_minutes_for_50x_errors * 60)
                 continue
 
             if self.debug:
