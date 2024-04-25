@@ -1,7 +1,6 @@
 from threading import Thread
 import time
 import random
-import logging
 from http import HTTPStatus
 
 import requests
@@ -9,10 +8,21 @@ from fake_useragent import UserAgent
 import urllib3
 
 from base_pars_lib import _requests_digest_proxy
+from base_pars_lib.config import logger
 
 
 class BaseParser:
-    def __init__(self, requests_session=None, debug: bool = False):
+    def __init__(self, requests_session=None, debug: bool = False, print_logs: bool = False):
+        """
+        :param requests_session: = None
+            объект requests.session()
+        :param debug:
+            Дебаг - вывод в консоль параметров отправляемых запросов и ответов
+        :param print_logs:
+            Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
+            Если True - логи выводятся принтами
+        """
+
         self.requests_session = requests_session
 
         self.user_agent = UserAgent()
@@ -25,6 +35,7 @@ class BaseParser:
         )
 
         self.debug = debug
+        self.print_logs = print_logs
 
     def _make_request(
             self,
@@ -75,9 +86,12 @@ class BaseParser:
         )
 
         if from_one_session:
-            return self.requests_session.request(**params)
+            response = self.requests_session.request(**params)
         else:
-            return requests.request(**params)
+            response = requests.request(**params)
+        if self.debug:
+            logger.info_log(f'_make_request status code: {response.status_code}', self.print_logs)
+        return response
 
     def _make_backoff_request(
             self,
@@ -167,9 +181,10 @@ class BaseParser:
                 )
             except ignore_exceptions as Ex:
                 if self.debug:
-                    logging.info(f'{Ex}: iter {i}')
+                    logger.backoff_exception(Ex, i, self.print_logs)
                 time.sleep(i * increase_by_seconds)
                 continue
+
             if response.status_code == HTTPStatus.OK or i == iter_count:
                 return response
             elif response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
@@ -180,10 +195,11 @@ class BaseParser:
                 iteration_for_50x += 1
                 time.sleep(i * increase_by_minutes_for_50x_errors * 60)
                 if self.debug:
-                    logging.info(f'{response.status_code}: iter {i}: url {url}')
+                    logger.backoff_status_code(response.status_code, i, url, self.print_logs)
                 continue
+
             if self.debug:
-                logging.info(f'{response.status_code}: iter {i}: url {url}')
+                logger.backoff_status_code(response.status_code, i, url, self.print_logs)
             time.sleep(i * increase_by_seconds)
 
         return None
@@ -262,7 +278,7 @@ class BaseParser:
         if type(item) == list:
             item = item[random_index]
             if self.debug:
-                logging.info(f'{item_name} index: {random_index}')
+                logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
         return item
 
     @staticmethod

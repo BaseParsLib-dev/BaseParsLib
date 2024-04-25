@@ -27,6 +27,15 @@ proxy_session = rotating_proxy_auth(
 переопределяет некоторые методы библиотеки requests
 
 ### Методы BaseParser
+#### ```__init__```
+    :param requests_session: = None
+        объект requests.session()
+    :param debug: 
+        Дебаг - вывод в консоль параметров отправляемых запросов и ответов
+    :param print_logs: 
+        Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
+        Если True - логи выводятся принтами
+
 #### Метод ```_threading_method```
     Создаёт столько потоков, сколько чанков передано в chunked_array, выполняет метод method 
     для каждого чанка в отдельном потоке
