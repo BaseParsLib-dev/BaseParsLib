@@ -291,7 +291,7 @@ class MyParser(AsyncBaseParser):
 
     async def run(self, urls: list) -> list:
         chunked_urls = split_on_chunks_by_count_chunks(urls, 10)
-        await self._coroutines_method(chunked_urls, self.make_requests)
+        await self._method_in_series(chunked_urls, self.make_requests)
 
         return self.responses
 

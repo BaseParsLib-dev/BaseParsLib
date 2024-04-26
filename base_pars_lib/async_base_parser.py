@@ -311,7 +311,7 @@ class AsyncBaseParser:
         return AiohttpResponse(text=text, json=json, url=response_url, status_code=status)
 
     @staticmethod
-    async def _coroutines_method(
+    async def _method_in_series(
             chunked_array: list | tuple,
             async_method
     ) -> None:
@@ -321,8 +321,10 @@ class AsyncBaseParser:
 
         :param chunked_array: list | tuple
             Массив из чанков с url-ами или другими данными для запроса
+            Чанки созданы для того, чтобы не отправлять слишком много запросов одновременно,
+            чанки обрабатываются последовательно, запросы по ссылкам внутри них - одновременно
         :param async_method:
-            Асинхронный етод, который работает с чанком из переданного массива
+            Асинхронный метод, который работает с чанком из переданного массива
             и сохраняет результаты во внешний массив
 
         :return:
