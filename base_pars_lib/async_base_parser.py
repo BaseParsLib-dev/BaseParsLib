@@ -15,7 +15,7 @@ class AiohttpResponse:
     text: str
     json: dict | None
     url: str
-    status: int
+    status_code: int
 
 
 class AsyncBaseParser:
@@ -96,21 +96,21 @@ class AsyncBaseParser:
                 async with session.request(url=url, **params) as response:
                     aiohttp_response = await self.__forming_aiohttp_response(response)
 
-                    if aiohttp_response.status == HTTPStatus.NOT_FOUND and ignore_404:
+                    if aiohttp_response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
                         return aiohttp_response
 
-                    if 599 >= aiohttp_response.status >= 500 and long_wait_for_50x:
+                    if 599 >= aiohttp_response.status_code >= 500 and long_wait_for_50x:
                         if iteration_for_50x > iter_count_for_50x_errors:
                             return response
                         iteration_for_50x += 1
                         if self.debug:
-                            logger.backoff_status_code(aiohttp_response.status, i, url, self.print_logs)
+                            logger.backoff_status_code(aiohttp_response.status_code, i, url, self.print_logs)
                         await asyncio.sleep(i * increase_by_minutes_for_50x_errors * 60)
                         continue
 
-                    if aiohttp_response.status != HTTPStatus.OK:
+                    if aiohttp_response.status_code != HTTPStatus.OK:
                         if self.debug:
-                            logger.backoff_status_code(aiohttp_response.status, i, url, self.print_logs)
+                            logger.backoff_status_code(aiohttp_response.status_code, i, url, self.print_logs)
                         await asyncio.sleep(i * increase_by_seconds)
 
                     return aiohttp_response
@@ -308,7 +308,7 @@ class AsyncBaseParser:
             json = None
         response_url = str(response.url)
         status = response.status
-        return AiohttpResponse(text=text, json=json, url=response_url, status=status)
+        return AiohttpResponse(text=text, json=json, url=response_url, status_code=status)
 
     @staticmethod
     async def _coroutines_method(
