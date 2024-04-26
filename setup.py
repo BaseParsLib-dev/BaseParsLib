@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name='BaseParsLib',
     version='0.1.0',
-    packages=['base_pars_lib', 'base_pars_lib.utils'],
+    packages=['base_pars_lib.parser', 'base_pars_lib.utils'],
     install_requires=[
         'fake-useragent==1.5.1',
         'requests==2.31.0',
