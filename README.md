@@ -264,37 +264,37 @@ class MyParser(BaseParser):
             status: int
 
 ### Применение методов библиотеки
+100 запросов отправляются асинхронно, но по чанкам по 10 штук (как указано в пользовательском методе run)
 ```python
 import asyncio
+import time
 
 from base_pars_lib import AsyncBaseParser
+from base_pars_lib.utils import split_on_chunks_by_count_chunks
 
 
 class MyParser(AsyncBaseParser):
-    async def make_requests(self, urls: list) -> list:
-        return await self._make_backoff_request(
-            urls=urls,
-            method='GET',
-            iter_count=10,
-            iter_count_for_50x_errors=3,
-            increase_by_seconds=10,
-            increase_by_minutes_for_50x_errors=20,
-            verify=False,
-            with_random_useragent=True,
-            proxies='http://username:password@proxy_dns',
-            headers={},
-            cookies={},
-            data={},
-            ignore_exceptions=(),
-            ignore_404=True,
-            long_wait_for_50x=True
+    responses = []
+
+    async def run(self, urls: list) -> list:
+        chunked_urls = split_on_chunks_by_count_chunks(urls, 10)
+        await self._coroutines_method(chunked_urls, self.make_requests)
+
+        return self.responses
+
+    async def make_requests(self, chunk):
+        print(chunk)
+        self.responses += await self._make_backoff_request(
+            urls=chunk,
+            proxies='http://login:password@proxy_dns'
         )
 
 
 if __name__ == '__main__':
+    start = time.time()
     responses = asyncio.run(
-        MyParser().make_requests(urls=['http://api.ipify.org/?format=json'] * 100)
+        MyParser().run(urls=['http://api.ipify.org/?format=json'] * 100)
     )
+    print(time.time() - start)
     print(responses)
-
 ```

@@ -309,3 +309,25 @@ class AsyncBaseParser:
         response_url = str(response.url)
         status = response.status
         return AiohttpResponse(text=text, json=json, url=response_url, status=status)
+
+    @staticmethod
+    async def _coroutines_method(
+            chunked_array: list | tuple,
+            async_method
+    ) -> None:
+        """
+        Создаёт столько корутин, сколько чанков передано в chunked_array,
+        выполняет метод method для каждого чанка в отдельной корутине
+
+        :param chunked_array: list | tuple
+            Массив из чанков с url-ами или другими данными для запроса
+        :param async_method:
+            Асинхронный етод, который работает с чанком из переданного массива
+            и сохраняет результаты во внешний массив
+
+        :return:
+            None
+        """
+
+        for chunk in chunked_array:
+            await async_method(chunk)
