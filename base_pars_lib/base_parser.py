@@ -166,7 +166,7 @@ class BaseParser:
                     self._delete_from_bad_urls(url)
                 return response
 
-            if save_bad_urls:
+            if save_bad_urls and response.status_code != HTTPStatus.NOT_FOUND:
                 self._append_to_bad_urls(url)
 
             elif response.status_code == HTTPStatus.NOT_FOUND and ignore_404:

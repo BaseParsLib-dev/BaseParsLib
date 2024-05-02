@@ -105,7 +105,7 @@ class AsyncBaseParser:
                         if save_bad_urls and aiohttp_response.status_code == HTTPStatus.OK:
                             await self._delete_from_bad_urls(url)
                         return aiohttp_response
-                    if save_bad_urls:
+                    if save_bad_urls and aiohttp_response.status_code != HTTPStatus.NOT_FOUND:
                         await self._append_to_bad_urls(url)
                     if aiohttp_response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
                         return aiohttp_response
