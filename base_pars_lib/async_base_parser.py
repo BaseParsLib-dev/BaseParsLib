@@ -103,10 +103,10 @@ class AsyncBaseParser:
 
                     if aiohttp_response.status_code == HTTPStatus.OK or i == iter_count - 1:
                         if save_bad_urls and aiohttp_response.status_code == HTTPStatus.OK:
-                            await self.__delete_from_bad_urls(url)
+                            await self._delete_from_bad_urls(url)
                         return aiohttp_response
                     if save_bad_urls:
-                        await self.__append_to_bad_urls(url)
+                        await self._append_to_bad_urls(url)
                     if aiohttp_response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
                         return aiohttp_response
 
@@ -127,7 +127,7 @@ class AsyncBaseParser:
                 if self.debug:
                     logger.backoff_exception(Ex, i, self.print_logs)
                 if save_bad_urls:
-                    await self.__append_to_bad_urls(url)
+                    await self._append_to_bad_urls(url)
                 await asyncio.sleep(i * increase_by_seconds)
                 continue
 
@@ -301,11 +301,11 @@ class AsyncBaseParser:
                 logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
         return item
 
-    async def __append_to_bad_urls(self, url) -> None:
+    async def _append_to_bad_urls(self, url) -> None:
         if url not in self.bad_urls:
             self.bad_urls.append(url)
 
-    async def __delete_from_bad_urls(self, url) -> None:
+    async def _delete_from_bad_urls(self, url) -> None:
         if url in self.bad_urls:
             self.bad_urls.remove(url)
 
