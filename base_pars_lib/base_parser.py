@@ -37,6 +37,8 @@ class BaseParser:
         self.debug = debug
         self.print_logs = print_logs
 
+        self.bad_urls = []
+
     def _make_request(self, params: dict, from_one_session=True):
         """
         Отправляет реквест через requests_session
@@ -76,7 +78,8 @@ class BaseParser:
             data: dict = None,
             ignore_exceptions: tuple = 'default',
             ignore_404: bool = False,
-            long_wait_for_50x: bool = False
+            long_wait_for_50x: bool = False,
+            save_bad_urls: bool = False
     ):
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
@@ -128,6 +131,8 @@ class BaseParser:
             метод вернёт response после первой попытки
         :param long_wait_for_50x: bool = False
             Если True, применяет increase_by_minutes_for_50x_errors
+        :param save_bad_urls: bool = False
+            Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
 
         :return:
             На последней итерации возвращает response с
@@ -167,6 +172,8 @@ class BaseParser:
                 time.sleep(i * increase_by_minutes_for_50x_errors * 60)
                 continue
 
+            if save_bad_urls:
+                self._append_to_bad_urls(url)
             if self.debug:
                 logger.backoff_status_code(response.status_code, i, url, self.print_logs)
             time.sleep(i * increase_by_seconds)
@@ -249,6 +256,10 @@ class BaseParser:
             if self.debug:
                 logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
         return item
+
+    def _append_to_bad_urls(self, url) -> None:
+        if url not in self.bad_urls:
+            self.bad_urls.append(url)
 
     @staticmethod
     def _threading_method(

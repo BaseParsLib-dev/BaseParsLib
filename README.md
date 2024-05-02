@@ -98,6 +98,8 @@ proxy_session = rotating_proxy_auth(
             Если такой страницы нет, backoff может не понадобиться
             Если значение = True и передан url на несуществующую страницу,
             метод вернёт response после первой попытки
+        :param save_bad_urls: bool = False
+            Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
 
 
         :return:

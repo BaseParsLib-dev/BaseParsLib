@@ -37,6 +37,8 @@ class AsyncBaseParser:
         self.debug = debug
         self.print_logs = print_logs
 
+        self.bad_urls = []
+
     async def __fetch(
             self,
             url: str,
@@ -48,8 +50,9 @@ class AsyncBaseParser:
             increase_by_seconds: int = 10,
             increase_by_minutes_for_50x_errors: int = 20,
             ignore_404: bool = False,
-            long_wait_for_50x: bool = False
-    ):
+            long_wait_for_50x: bool = False,
+            save_bad_urls: bool = False
+    ) -> AiohttpResponse | None:
         """
         Отправляет запрос с настройками из _make_backoff_request
 
@@ -78,6 +81,8 @@ class AsyncBaseParser:
             метод вернёт response после первой попытки
         :param long_wait_for_50x:
             Если True, применяет increase_by_minutes_for_50x_errors
+        :param save_bad_urls: bool = False
+            Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
 
         :return:
             Ответ от сайта. Если на протяжении всех попыток запросов сайт не отдавал код 200,
@@ -96,12 +101,16 @@ class AsyncBaseParser:
                 async with session.request(url=url, **params) as response:
                     aiohttp_response = await self.__forming_aiohttp_response(response)
 
+                    if aiohttp_response.status_code == HTTPStatus.OK or i == iter_count - 1:
+                        return aiohttp_response
+                    if save_bad_urls:
+                        await self.__append_to_bad_urls(url)
                     if aiohttp_response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
                         return aiohttp_response
 
                     if 599 >= aiohttp_response.status_code >= 500 and long_wait_for_50x:
                         if iteration_for_50x > iter_count_for_50x_errors:
-                            return response
+                            return aiohttp_response
                         iteration_for_50x += 1
                         if self.debug:
                             logger.backoff_status_code(aiohttp_response.status_code, i, url, self.print_logs)
@@ -112,8 +121,6 @@ class AsyncBaseParser:
                         if self.debug:
                             logger.backoff_status_code(aiohttp_response.status_code, i, url, self.print_logs)
                         await asyncio.sleep(i * increase_by_seconds)
-
-                    return aiohttp_response
             except ignore_exceptions as Ex:
                 if self.debug:
                     logger.backoff_exception(Ex, i, self.print_logs)
@@ -136,7 +143,8 @@ class AsyncBaseParser:
             data: dict = None,
             ignore_exceptions: tuple = 'default',
             ignore_404: bool = False,
-            long_wait_for_50x: bool = False
+            long_wait_for_50x: bool = False,
+            save_bad_urls: bool = False
     ):
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -181,6 +189,8 @@ class AsyncBaseParser:
             метод вернёт response после первой попытки
         :param long_wait_for_50x: bool = False
             Если True, применяет increase_by_minutes_for_50x_errors
+        :param save_bad_urls: bool = False
+            Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
 
         :return:
             Возвращает список ответов от сайта.
@@ -212,7 +222,8 @@ class AsyncBaseParser:
                     increase_by_seconds=increase_by_seconds,
                     increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
                     ignore_404=ignore_404,
-                    long_wait_for_50x=long_wait_for_50x
+                    long_wait_for_50x=long_wait_for_50x,
+                    save_bad_urls=save_bad_urls
                 ) for url in urls
             ]
             return await asyncio.gather(*tasks)
@@ -286,6 +297,10 @@ class AsyncBaseParser:
                 logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
         return item
 
+    async def __append_to_bad_urls(self, url) -> None:
+        if url not in self.bad_urls:
+            self.bad_urls.append(url)
+
     @staticmethod
     async def __calculate_random_cookies_headers_index(
             cookies: list[dict] | dict,
@@ -299,16 +314,19 @@ class AsyncBaseParser:
         except ValueError:
             return 0
 
-    @staticmethod
-    async def __forming_aiohttp_response(response) -> AiohttpResponse:
-        text = await response.text()
+    async def __forming_aiohttp_response(self, response) -> AiohttpResponse | None:
         try:
-            json = await response.json()
-        except aiohttp.client_exceptions.ContentTypeError:
-            json = None
-        response_url = str(response.url)
-        status = response.status
-        return AiohttpResponse(text=text, json=json, url=response_url, status_code=status)
+            text = await response.text()
+            try:
+                json = await response.json()
+            except aiohttp.client_exceptions.ContentTypeError:
+                json = None
+            response_url = str(response.url)
+            status = response.status
+            return AiohttpResponse(text=text, json=json, url=response_url, status_code=status)
+        except Exception as Ex:
+            logger.info_log(f'forming AiohttpResponse error {Ex}', self.print_logs)
+            return None
 
     @staticmethod
     async def _method_in_series(
