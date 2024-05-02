@@ -156,11 +156,19 @@ class BaseParser:
             except ignore_exceptions as Ex:
                 if self.debug:
                     logger.backoff_exception(Ex, i, self.print_logs)
+                if save_bad_urls:
+                    self._append_to_bad_urls(url)
                 time.sleep(i * increase_by_seconds)
                 continue
 
             if response.status_code == HTTPStatus.OK or i == iter_count:
+                if save_bad_urls and response.status_code == HTTPStatus.OK:
+                    self._delete_from_bad_urls(url)
                 return response
+
+            if save_bad_urls:
+                self._append_to_bad_urls(url)
+
             elif response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
                 return response
             elif 599 >= response.status_code >= 500 and long_wait_for_50x:
@@ -172,8 +180,6 @@ class BaseParser:
                 time.sleep(i * increase_by_minutes_for_50x_errors * 60)
                 continue
 
-            if save_bad_urls:
-                self._append_to_bad_urls(url)
             if self.debug:
                 logger.backoff_status_code(response.status_code, i, url, self.print_logs)
             time.sleep(i * increase_by_seconds)
@@ -260,6 +266,10 @@ class BaseParser:
     def _append_to_bad_urls(self, url) -> None:
         if url not in self.bad_urls:
             self.bad_urls.append(url)
+
+    def _delete_from_bad_urls(self, url) -> None:
+        if url in self.bad_urls:
+            self.bad_urls.remove(url)
 
     @staticmethod
     def _threading_method(

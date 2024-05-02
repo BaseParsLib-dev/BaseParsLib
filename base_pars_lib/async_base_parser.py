@@ -102,6 +102,8 @@ class AsyncBaseParser:
                     aiohttp_response = await self.__forming_aiohttp_response(response)
 
                     if aiohttp_response.status_code == HTTPStatus.OK or i == iter_count - 1:
+                        if save_bad_urls and aiohttp_response.status_code == HTTPStatus.OK:
+                            await self.__delete_from_bad_urls(url)
                         return aiohttp_response
                     if save_bad_urls:
                         await self.__append_to_bad_urls(url)
@@ -124,6 +126,8 @@ class AsyncBaseParser:
             except ignore_exceptions as Ex:
                 if self.debug:
                     logger.backoff_exception(Ex, i, self.print_logs)
+                if save_bad_urls:
+                    await self.__append_to_bad_urls(url)
                 await asyncio.sleep(i * increase_by_seconds)
                 continue
 
@@ -300,6 +304,10 @@ class AsyncBaseParser:
     async def __append_to_bad_urls(self, url) -> None:
         if url not in self.bad_urls:
             self.bad_urls.append(url)
+
+    async def __delete_from_bad_urls(self, url) -> None:
+        if url in self.bad_urls:
+            self.bad_urls.remove(url)
 
     @staticmethod
     async def __calculate_random_cookies_headers_index(
