@@ -276,7 +276,7 @@ class MyParser(BaseParser):
             url: str
             status: int
 
-#### ```_coroutines_method```
+#### ```_method_in_series```
     Создаёт столько корутин, сколько чанков передано в chunked_array,
     выполняет метод method для каждого чанка в отдельной корутине
 
