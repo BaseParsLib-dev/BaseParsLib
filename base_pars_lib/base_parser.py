@@ -79,7 +79,8 @@ class BaseParser:
             ignore_exceptions: tuple = 'default',
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
-            save_bad_urls: bool = False
+            save_bad_urls: bool = False,
+            compare_headers_and_cookies_indexes: bool = True
     ):
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
@@ -133,6 +134,14 @@ class BaseParser:
             Если True, применяет increase_by_minutes_for_50x_errors
         :param save_bad_urls: bool = False
             Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
+        param compare_headers_and_cookies_indexes: bool = True
+            Если True, индекс для списков хедеров и куков будет одинаков:
+                (если требуется, чтобы пары были обязательно вместе)
+                Например:
+                headers = [header1, header2, header3]
+                cookies = [cookie1, cookie2, cookie3, cookie4]
+                Случайно может выбраться 3 варианта - 1 и 1, 2 и 2, 3 и 3 (cookie4 выбран не будет)
+            Если False, индексы будут случайны для каждого списка
 
         :return:
             На последней итерации возвращает response с
@@ -143,7 +152,8 @@ class BaseParser:
             ignore_exceptions = self.ignore_exceptions
 
         params = self._get_request_params(
-            url, headers, cookies, with_random_useragent,
+            url, compare_headers_and_cookies_indexes,
+            headers, cookies, with_random_useragent,
             method, verify, json, data, proxies
         )
 
@@ -189,6 +199,7 @@ class BaseParser:
     def _get_request_params(
             self,
             url: str,
+            compare_headers_and_cookies_indexes: bool,
             headers: dict | list = None,
             cookies: dict | list = None,
             with_random_useragent: bool = True,
@@ -221,15 +232,28 @@ class BaseParser:
             Данные запроса
         :param proxies: dict = None
             Прокси
-        :return:
+        :param compare_headers_and_cookies_indexes: bool
+            Если True, индекс для списков хедеров и куков будет одинаков:
+                (если требуется, чтобы пары были обязательно вместе)
+                Например:
+                headers = [header1, header2, header3]
+                cookies = [cookie1, cookie2, cookie3, cookie4]
+                Случайно может выбраться 3 варианта - 1 и 1, 2 и 2, 3 и 3 (cookie4 выбран не будет)
+            Если False, индексы будут случайны для каждого списка
+
+        :return: dict
+            Параметры запроса
         """
 
         headers = {} if headers is None else headers
         cookies = {} if cookies is None else cookies
 
-        random_index = self._calculate_random_cookies_headers_index(
-            cookies=cookies, headers=headers
-        )
+        if compare_headers_and_cookies_indexes:
+            random_index = self._calculate_random_cookies_headers_index(
+                cookies=cookies, headers=headers
+            )
+        else:
+            random_index = None
         headers = self._get_by_random_index(headers, random_index, 'Headers')
         cookies = self._get_by_random_index(cookies, random_index, 'Cookies')
 
@@ -254,10 +278,12 @@ class BaseParser:
     def _get_by_random_index(
             self,
             item: list[dict] | dict,
-            random_index: int,
+            random_index: int | None,
             item_name: str
     ) -> dict:
         if type(item) == list:
+            if random_index is None:
+                random_index = random.randint(0, len(item) - 1)
             item = item[random_index]
             if self.debug:
                 logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
