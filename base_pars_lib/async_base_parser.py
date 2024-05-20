@@ -31,7 +31,8 @@ class AsyncBaseParser:
         self.user_agent = UserAgent()
 
         self.ignore_exceptions = (
-            urllib3.exceptions.ProxyError
+            urllib3.exceptions.ProxyError,
+            aiohttp.client_exceptions.ClientConnectorError
         )
 
         self.debug = debug
