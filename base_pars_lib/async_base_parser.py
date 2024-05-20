@@ -33,7 +33,8 @@ class AsyncBaseParser:
         self.ignore_exceptions = (
             urllib3.exceptions.ProxyError,
             aiohttp.client_exceptions.ClientConnectorError,
-            aiohttp.client_exceptions.ServerDisconnectedError
+            aiohttp.client_exceptions.ServerDisconnectedError,
+            aiohttp.client_exceptions.ClientOSError
         )
 
         self.debug = debug
