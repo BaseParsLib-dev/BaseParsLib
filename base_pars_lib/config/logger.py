@@ -7,11 +7,11 @@ logging.basicConfig(
 )
 
 
-def backoff_exception(ex: Exception, iteration: int, print_logs: bool) -> None:
+def backoff_exception(ex: Exception, iteration: int, print_logs: bool, url: str) -> None:
     if print_logs:
-        print(f'{datetime.now()} - info - backoff_exception - {ex}: iter {iteration}')
+        print(f'{datetime.now()} - info - backoff_exception - {ex}: iter {iteration}: url {url}')
     else:
-        logging.info(f'{ex}: iter {iteration}')
+        logging.info(f'{ex}: iter {iteration}: url {url}')
 
 
 def backoff_status_code(status_code: int, iteration: int, url: str, print_logs: bool) -> None:

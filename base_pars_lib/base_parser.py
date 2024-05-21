@@ -165,7 +165,7 @@ class BaseParser:
                 )
             except ignore_exceptions as Ex:
                 if self.debug:
-                    logger.backoff_exception(Ex, i, self.print_logs)
+                    logger.backoff_exception(Ex, i, self.print_logs, url)
                 if save_bad_urls:
                     self._append_to_bad_urls(url)
                 time.sleep(i * increase_by_seconds)

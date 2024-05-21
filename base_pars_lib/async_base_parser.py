@@ -128,7 +128,7 @@ class AsyncBaseParser:
                         await asyncio.sleep(i * increase_by_seconds)
             except ignore_exceptions as Ex:
                 if self.debug:
-                    logger.backoff_exception(Ex, i, self.print_logs)
+                    logger.backoff_exception(Ex, i, self.print_logs, url)
                 if save_bad_urls:
                     await self._append_to_bad_urls(url)
                 await asyncio.sleep(i * increase_by_seconds)
