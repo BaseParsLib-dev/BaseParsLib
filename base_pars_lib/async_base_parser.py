@@ -99,12 +99,12 @@ class AsyncBaseParser:
                 status: int
         """
         iteration_for_50x = 1
-        for i in range(iter_count):
+        for i in range(1, iter_count + 1):
             try:
                 async with session.request(url=url, **params) as response:
                     aiohttp_response = await self.__forming_aiohttp_response(response)
 
-                    if aiohttp_response.status_code == HTTPStatus.OK or i == iter_count - 1:
+                    if aiohttp_response.status_code == HTTPStatus.OK or i == iter_count:
                         if save_bad_urls and aiohttp_response.status_code == HTTPStatus.OK:
                             await self._delete_from_bad_urls(url)
                         return aiohttp_response
@@ -151,7 +151,8 @@ class AsyncBaseParser:
             ignore_exceptions: tuple = 'default',
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
-            save_bad_urls: bool = False
+            save_bad_urls: bool = False,
+            timeout: int = 30
     ):
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -198,6 +199,8 @@ class AsyncBaseParser:
             Если True, применяет increase_by_minutes_for_50x_errors
         :param save_bad_urls: bool = False
             Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
+        :param timeout : int = 30
+            Время максимального ожидания ответа
 
         :return:
             Возвращает список ответов от сайта.
@@ -217,7 +220,7 @@ class AsyncBaseParser:
             method, verify, with_random_useragent, proxies, headers, cookies, data
         )
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
             tasks = [
                 self.__fetch(
                     session=session,
