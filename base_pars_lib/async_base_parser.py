@@ -54,7 +54,8 @@ class AsyncBaseParser:
             increase_by_minutes_for_50x_errors: int = 20,
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
-            save_bad_urls: bool = False
+            save_bad_urls: bool = False,
+            random_sleep_time_every_request: list = False
     ) -> AiohttpResponse | None:
         """
         Отправляет запрос с настройками из _make_backoff_request
@@ -86,6 +87,8 @@ class AsyncBaseParser:
             Если True, применяет increase_by_minutes_for_50x_errors
         :param save_bad_urls: bool = False
             Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
+        :param random_sleep_time_every_request: list = False
+            Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
 
         :return:
             Ответ от сайта. Если на протяжении всех попыток запросов сайт не отдавал код 200,
@@ -98,6 +101,12 @@ class AsyncBaseParser:
                 url: str
                 status: int
         """
+
+        if random_sleep_time_every_request:
+            await asyncio.sleep(
+                random.uniform(random_sleep_time_every_request[0], random_sleep_time_every_request[1])
+            )
+
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
@@ -152,7 +161,8 @@ class AsyncBaseParser:
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
             save_bad_urls: bool = False,
-            timeout: int = 30
+            timeout: int = 30,
+            random_sleep_time_every_request: list = False
     ):
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -201,6 +211,8 @@ class AsyncBaseParser:
             Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
         :param timeout : int = 30
             Время максимального ожидания ответа
+        :param random_sleep_time_every_request: list = False
+            Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
 
         :return:
             Возвращает список ответов от сайта.
@@ -233,7 +245,8 @@ class AsyncBaseParser:
                     increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
                     ignore_404=ignore_404,
                     long_wait_for_50x=long_wait_for_50x,
-                    save_bad_urls=save_bad_urls
+                    save_bad_urls=save_bad_urls,
+                    random_sleep_time_every_request=random_sleep_time_every_request
                 ) for url in urls
             ]
             return await asyncio.gather(*tasks)
@@ -345,7 +358,8 @@ class AsyncBaseParser:
     @staticmethod
     async def _method_in_series(
             chunked_array: list | tuple,
-            async_method
+            async_method,
+            sleep_time: int = 0
     ) -> None:
         """
         Создаёт столько корутин, сколько чанков передано в chunked_array,
@@ -358,6 +372,8 @@ class AsyncBaseParser:
         :param async_method:
             Асинхронный метод, который работает с чанком из переданного массива
             и сохраняет результаты во внешний массив
+        :param sleep_time: int = 0
+            Задержка между чанками запросов
 
         :return:
             None
@@ -365,3 +381,4 @@ class AsyncBaseParser:
 
         for chunk in chunked_array:
             await async_method(chunk)
+            await asyncio.sleep(sleep_time)
