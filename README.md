@@ -101,7 +101,7 @@ proxy_session = rotating_proxy_auth(
         :param save_bad_urls: bool = False
             Собирает ссылки, по которым ошибка или код не 200 и не 404 в список self.bad_urls.
             Если по ссылке код 200, удаляет её из списка (это позволяет использовать этот список повторно несколько раз)
-        param compare_headers_and_cookies_indexes: bool = True
+        :param compare_headers_and_cookies_indexes: bool = True
             Если True, индекс для списков хедеров и куков будет одинаков:
                 (если требуется, чтобы пары были обязательно вместе)
                 Например:
@@ -109,6 +109,8 @@ proxy_session = rotating_proxy_auth(
                 cookies = [cookie1, cookie2, cookie3, cookie4]
                 Случайно может выбраться 3 варианта - 1 и 1, 2 и 2, 3 и 3 (cookie4 выбран не будет)
             Если False, индексы будут случайны для каждого списка
+        :param params: dict = False
+            Словарь параметров запроса
 
         :return:
             На последней итерации возвращает response с
@@ -269,6 +271,8 @@ class MyParser(BaseParser):
             Время максимального ожидания ответа
     :param random_sleep_time_every_request: list = False
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
+    :param params: dict = False
+            Словарь параметров запроса
 
     :return:
         Возвращает список ответов от сайта.

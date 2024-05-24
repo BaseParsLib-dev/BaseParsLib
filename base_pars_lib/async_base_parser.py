@@ -162,7 +162,8 @@ class AsyncBaseParser:
             long_wait_for_50x: bool = False,
             save_bad_urls: bool = False,
             timeout: int = 30,
-            random_sleep_time_every_request: list = False
+            random_sleep_time_every_request: list = False,
+            params: dict = False
     ):
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -213,6 +214,8 @@ class AsyncBaseParser:
             Время максимального ожидания ответа
         :param random_sleep_time_every_request: list = False
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
+        :param params: dict = False
+            Словарь параметров запроса
 
         :return:
             Возвращает список ответов от сайта.
@@ -228,8 +231,9 @@ class AsyncBaseParser:
         if ignore_exceptions == 'default':
             ignore_exceptions = self.ignore_exceptions
 
-        params = await self.__get_request_params(
-            method, verify, with_random_useragent, proxies, headers, cookies, data
+        request_params = await self.__get_request_params(
+            method, verify, with_random_useragent, proxies, headers, cookies, data,
+            params
         )
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
@@ -237,7 +241,7 @@ class AsyncBaseParser:
                 self.__fetch(
                     session=session,
                     url=url,
-                    params=params,
+                    params=request_params,
                     ignore_exceptions=ignore_exceptions,
                     iter_count=iter_count,
                     iter_count_for_50x_errors=iter_count_for_50x_errors,
@@ -259,7 +263,8 @@ class AsyncBaseParser:
             proxies: str | None,
             headers: dict | list | None,
             cookies: dict | list | None,
-            data: dict | None
+            data: dict | None,
+            params: dict = False
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -280,6 +285,8 @@ class AsyncBaseParser:
             тогда выбирутся рандомно
         :param data: dict = None
             Данные запроса
+        :param params: dict = False
+            Словарь параметров запроса
         :return:
         """
 
@@ -295,7 +302,7 @@ class AsyncBaseParser:
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random
 
-        params: dict = {
+        request_params: dict = {
             'method': method.upper(),
             'headers': headers,
             'cookies': cookies,
@@ -304,9 +311,11 @@ class AsyncBaseParser:
         }
 
         if proxies is not None:
-            params['proxy'] = proxies
+            request_params['proxy'] = proxies
+        if params:
+            request_params['params'] = params
 
-        return params
+        return request_params
 
     async def __get_by_random_index(
             self,

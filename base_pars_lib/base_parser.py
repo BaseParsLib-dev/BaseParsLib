@@ -80,7 +80,8 @@ class BaseParser:
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
             save_bad_urls: bool = False,
-            compare_headers_and_cookies_indexes: bool = True
+            compare_headers_and_cookies_indexes: bool = True,
+            params: dict = False
     ):
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
@@ -142,6 +143,8 @@ class BaseParser:
                 cookies = [cookie1, cookie2, cookie3, cookie4]
                 Случайно может выбраться 3 варианта - 1 и 1, 2 и 2, 3 и 3 (cookie4 выбран не будет)
             Если False, индексы будут случайны для каждого списка
+        :param params: dict = False
+            Словарь параметров запроса
 
         :return:
             На последней итерации возвращает response с
@@ -151,17 +154,17 @@ class BaseParser:
         if ignore_exceptions == 'default':
             ignore_exceptions = self.ignore_exceptions
 
-        params = self._get_request_params(
+        request_params = self._get_request_params(
             url, compare_headers_and_cookies_indexes,
             headers, cookies, with_random_useragent,
-            method, verify, json, data, proxies
+            method, verify, json, data, proxies, params
         )
 
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
                 response = self._make_request(
-                    from_one_session=from_one_session, params=params
+                    from_one_session=from_one_session, params=request_params
                 )
             except ignore_exceptions as Ex:
                 if self.debug:
@@ -207,7 +210,8 @@ class BaseParser:
             verify: bool = True,
             json: dict | str = None,
             data: dict | str = None,
-            proxies: dict = None
+            proxies: dict = None,
+            params: dict = False
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -240,6 +244,8 @@ class BaseParser:
                 cookies = [cookie1, cookie2, cookie3, cookie4]
                 Случайно может выбраться 3 варианта - 1 и 1, 2 и 2, 3 и 3 (cookie4 выбран не будет)
             Если False, индексы будут случайны для каждого списка
+        :param params: dict = False
+            Словарь параметров запроса
 
         :return: dict
             Параметры запроса
@@ -260,7 +266,7 @@ class BaseParser:
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random
 
-        params: dict = {
+        request_params: dict = {
             'method': method.upper(),
             'url': url,
             'headers': headers,
@@ -271,9 +277,11 @@ class BaseParser:
         }
 
         if proxies is not None:
-            params['proxies'] = proxies
+            request_params['proxies'] = proxies
+        if params:
+            request_params['params']: params
 
-        return params
+        return request_params
 
     def _get_by_random_index(
             self,
