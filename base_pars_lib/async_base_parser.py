@@ -164,7 +164,7 @@ class AsyncBaseParser:
             timeout: int = 30,
             random_sleep_time_every_request: list = False,
             params: dict = False
-    ):
+    ) -> list:
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
         Задержка между каждым запросом увеличивается
