@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='BaseParsLib',
-    version='0.1.33',
+    version='0.1.4',
     packages=[
         'base_pars_lib',
         'base_pars_lib.utils',
@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'fake-useragent==1.5.1',
         'requests==2.31.0',
-        'aiohttp==3.9.5'
+        'aiohttp==3.9.5',
+        'pytest-playwright==0.5.0'
     ]
 )
