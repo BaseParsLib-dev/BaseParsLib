@@ -157,6 +157,7 @@ class AsyncBaseParser:
             headers: dict | list = None,
             cookies: dict | list = None,
             data: dict = None,
+            json: dict = None,
             ignore_exceptions: tuple = 'default',
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
@@ -197,6 +198,8 @@ class AsyncBaseParser:
             тогда выбирутся рандомно
         :param data: dict = None
             Передаваемые данные
+        :param json: dict = None
+            Передаваемые данные
         :param ignore_exceptions: tuple = 'default'
             Возможность передать ошибки, которые будут обрабатываться в backoff.
             Если ничего не передано, обрабатываются дефолтные:
@@ -233,7 +236,7 @@ class AsyncBaseParser:
 
         request_params = await self.__get_request_params(
             method, verify, with_random_useragent, proxies, headers, cookies, data,
-            params
+            params, json
         )
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
@@ -264,6 +267,7 @@ class AsyncBaseParser:
             headers: dict | list | None,
             cookies: dict | list | None,
             data: dict | None,
+            json: dict | None,
             params: dict = False
     ) -> dict:
         """
@@ -284,6 +288,8 @@ class AsyncBaseParser:
             Куки запроса, возможно передать в виде списка,
             тогда выбирутся рандомно
         :param data: dict = None
+            Данные запроса
+        :param json: dict = None
             Данные запроса
         :param params: dict = False
             Словарь параметров запроса
@@ -307,7 +313,8 @@ class AsyncBaseParser:
             'headers': headers,
             'cookies': cookies,
             'ssl': verify,
-            'data': data
+            'data': data,
+            'json': json
         }
 
         if proxies is not None:

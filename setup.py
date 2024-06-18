@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='BaseParsLib',
-    version='0.1.4',
+    version='0.1.41',
     packages=[
         'base_pars_lib',
         'base_pars_lib.utils',
