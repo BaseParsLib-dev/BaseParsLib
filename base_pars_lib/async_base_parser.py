@@ -235,8 +235,8 @@ class AsyncBaseParser:
             ignore_exceptions = self.ignore_exceptions
 
         request_params = await self.__get_request_params(
-            method, verify, with_random_useragent, proxies, headers, cookies, data,
-            params, json
+            method, verify, with_random_useragent, proxies, headers, cookies, data, json,
+            params
         )
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
@@ -268,7 +268,7 @@ class AsyncBaseParser:
             cookies: dict | list | None,
             data: dict | None,
             json: dict | None,
-            params: dict = False
+            params: dict = None
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -287,9 +287,9 @@ class AsyncBaseParser:
         :param cookies: dict | list = None
             Куки запроса, возможно передать в виде списка,
             тогда выбирутся рандомно
-        :param data: dict = None
+        :param data: dict | None
             Данные запроса
-        :param json: dict = None
+        :param json: dict | None
             Данные запроса
         :param params: dict = False
             Словарь параметров запроса
