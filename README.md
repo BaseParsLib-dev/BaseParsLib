@@ -14,6 +14,7 @@ pip install git+https://github.com/BaseParsLib-dev/BaseParsLib.git
 ```
 
 ### Авторизация в ротационном прокси
+Ротация для прокси от webshare, может не работать с другими
 
 ```python
 from base_pars_lib.utils import rotating_proxy_auth
