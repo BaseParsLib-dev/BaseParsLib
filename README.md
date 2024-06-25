@@ -33,11 +33,14 @@ proxy_session = rotating_proxy_auth(
 #### ```__init__```
     :param requests_session: = None
         объект requests.session()
-    :param debug: 
+    :param debug:
         Дебаг - вывод в консоль параметров отправляемых запросов и ответов
-    :param print_logs: 
+    :param print_logs:
         Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
         Если True - логи выводятся принтами
+    :param check_exceptions: bool = False
+        Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
+        кроме тех, на которых завязана логика (например _calculate_random_cookies_headers_index)
 
 #### Метод ```_threading_method```
     Создаёт столько потоков, сколько чанков передано в chunked_array, выполняет метод method 
@@ -217,11 +220,14 @@ class MyParser(BaseParser):
 
 # AsyncBaseParser
 #### ```__init__```
-    :param debug:
+    :param debug: bool = False
         Дебаг - вывод в консоль параметров отправляемых запросов и ответов
-    :param print_logs:
+    :param print_logs: bool = False
         Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
         Если True - логи выводятся принтами
+    :param check_exceptions: bool = False
+        Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
+        кроме тех, на которых завязана логика (например __calculate_random_cookies_headers_index)
 
 #### ```_make_backoff_request```
     Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно

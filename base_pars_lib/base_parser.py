@@ -12,7 +12,13 @@ from base_pars_lib.config import logger
 
 
 class BaseParser:
-    def __init__(self, requests_session=None, debug: bool = False, print_logs: bool = False):
+    def __init__(
+        self,
+        requests_session=None,
+        debug: bool = False,
+        print_logs: bool = False,
+        check_exceptions: bool = False
+    ) -> None:
         """
         :param requests_session: = None
             объект requests.session()
@@ -21,6 +27,9 @@ class BaseParser:
         :param print_logs:
             Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
             Если True - логи выводятся принтами
+        :param check_exceptions: bool = False
+            Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
+            кроме тех, на которых завязана логика (например _calculate_random_cookies_headers_index)
         """
 
         self.requests_session = requests_session
@@ -33,6 +42,8 @@ class BaseParser:
             urllib3.exceptions.ProxyError,
             requests.exceptions.ConnectionError
         )
+
+        self.check_exceptions = check_exceptions
 
         self.debug = debug
         self.print_logs = print_logs
@@ -166,7 +177,7 @@ class BaseParser:
                 response = self._make_request(
                     from_one_session=from_one_session, params=request_params
                 )
-            except ignore_exceptions as Ex:
+            except ignore_exceptions if not self.check_exceptions else () as Ex:
                 if self.debug:
                     logger.backoff_exception(Ex, i, self.print_logs, url)
                 if save_bad_urls:

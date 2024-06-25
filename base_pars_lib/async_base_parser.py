@@ -19,13 +19,21 @@ class AiohttpResponse:
 
 
 class AsyncBaseParser:
-    def __init__(self, debug: bool = False, print_logs: bool = False):
+    def __init__(
+        self,
+        debug: bool = False,
+        print_logs: bool = False,
+        check_exceptions: bool = False
+    ) -> None:
         """
-        :param debug:
+        :param debug: bool = False
             Дебаг - вывод в консоль параметров отправляемых запросов и ответов
-        :param print_logs:
+        :param print_logs: bool = False
             Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
             Если True - логи выводятся принтами
+        :param check_exceptions: bool = False
+            Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
+            кроме тех, на которых завязана логика (например __calculate_random_cookies_headers_index)
         """
 
         self.user_agent = UserAgent()
@@ -36,6 +44,8 @@ class AsyncBaseParser:
             aiohttp.client_exceptions.ServerDisconnectedError,
             aiohttp.client_exceptions.ClientOSError
         )
+
+        self.check_exceptions = check_exceptions
 
         self.debug = debug
         self.print_logs = print_logs
@@ -135,7 +145,7 @@ class AsyncBaseParser:
                         if self.debug:
                             logger.backoff_status_code(aiohttp_response.status_code, i, url, self.print_logs)
                         await asyncio.sleep(i * increase_by_seconds)
-            except ignore_exceptions as Ex:
+            except ignore_exceptions if not self.check_exceptions else () as Ex:
                 if self.debug:
                     logger.backoff_exception(Ex, i, self.print_logs, url)
                 if save_bad_urls:
@@ -367,7 +377,7 @@ class AsyncBaseParser:
             response_url = str(response.url)
             status = response.status
             return AiohttpResponse(text=text, json=json, url=response_url, status_code=status)
-        except Exception as Ex:
+        except Exception if not self.check_exceptions else () as Ex:
             logger.info_log(f'forming AiohttpResponse error {Ex}', self.print_logs)
             return None
 
