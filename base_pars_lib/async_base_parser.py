@@ -42,7 +42,8 @@ class AsyncBaseParser:
             urllib3.exceptions.ProxyError,
             aiohttp.client_exceptions.ClientConnectorError,
             aiohttp.client_exceptions.ServerDisconnectedError,
-            aiohttp.client_exceptions.ClientOSError
+            aiohttp.client_exceptions.ClientOSError,
+            aiohttp.client_exceptions.ClientHttpProxyError
         )
 
         self.check_exceptions = check_exceptions
