@@ -124,6 +124,12 @@ class AsyncBaseParser:
                 async with session.request(url=url, **params) as response:
                     aiohttp_response = await self.__forming_aiohttp_response(response)
 
+                    if aiohttp_response is None:
+                        if self.debug:
+                            logger.info_log(f'response is None, iter: {i}, {url}', self.print_logs)
+                        await asyncio.sleep(i * increase_by_seconds)
+                        continue
+
                     if aiohttp_response.status_code == HTTPStatus.OK or i == iter_count:
                         if save_bad_urls and aiohttp_response.status_code == HTTPStatus.OK:
                             await self._delete_from_bad_urls(url)
