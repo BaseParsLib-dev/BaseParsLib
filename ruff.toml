@@ -1,0 +1,38 @@
+line-length = 100
+indent-width = 4
+
+exclude = [
+    ".env",
+    ".git",
+    "__pycache__",
+    ".venv/",
+    "env/",
+    "venv/",
+    "**/_requests_digest_proxy.py"
+]
+
+[lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "N",  # pep8-naming
+    "UP",  # pyupgrade
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "BLE",  # flake8-blind-except
+    "A",  # flake8-builtins
+    "T20",  # flake8-print
+]
+ignore = [
+    "B008",  # do not perform function calls in argument default
+    "T201",  # `print` found
+    "BLE001",  # Do not catch blind exception: `Exception`
+    "B030"  # except-with-non-exception-classes
+]
+
+[lint.isort]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+known-local-folder = ["src", "tests"]
+split-on-trailing-comma = false
