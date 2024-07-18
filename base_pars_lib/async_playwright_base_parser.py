@@ -1,10 +1,11 @@
 import asyncio
+from typing import Any, Callable
 
 
 class AsyncPlaywrightBaseParser:
 
     @staticmethod
-    async def _async_pages(pages_urls: list[str], page_method):
+    async def _async_pages(pages_urls: list | tuple, page_method: Callable) -> tuple[Any]:
         """
         :param pages_urls:
             Страницы, которые будут обрабатываться асинхронно
@@ -16,12 +17,12 @@ class AsyncPlaywrightBaseParser:
         """
 
         tasks = [page_method(url) for url in pages_urls]
-        return await asyncio.gather(*tasks)
+        return await asyncio.gather(*tasks)  # type: ignore[return-value]
 
     @staticmethod
     async def _method_in_series(
             chunked_array: list | tuple,
-            async_method,
+            async_method: Callable,
             sleep_time: int = 0
     ) -> None:
         """

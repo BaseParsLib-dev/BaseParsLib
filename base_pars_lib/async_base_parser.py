@@ -1,11 +1,12 @@
-import aiohttp
 import asyncio
+import random
 from dataclasses import dataclass
 from http import HTTPStatus
-import random
+from typing import Any, Callable
 
-from fake_useragent import UserAgent
+import aiohttp
 import urllib3
+from fake_useragent import UserAgent
 
 from base_pars_lib.config import logger
 
@@ -33,7 +34,8 @@ class AsyncBaseParser:
             Если True - логи выводятся принтами
         :param check_exceptions: bool = False
             Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
-            кроме тех, на которых завязана логика (например __calculate_random_cookies_headers_index)
+            кроме тех, на которых завязана логика
+            (например __calculate_random_cookies_headers_index)
         """
 
         self.user_agent = UserAgent()
@@ -51,14 +53,14 @@ class AsyncBaseParser:
         self.debug = debug
         self.print_logs = print_logs
 
-        self.bad_urls = []
+        self.bad_urls: list = []
 
-    async def __fetch(
+    async def __fetch(  # type: ignore[return]
             self,
             url: str,
             session: aiohttp.ClientSession,
             params: dict,
-            ignore_exceptions: tuple = 'default',
+            ignore_exceptions: tuple | str = 'default',
             iter_count: int = 10,
             iter_count_for_50x_errors: int = 3,
             increase_by_seconds: int = 10,
@@ -66,7 +68,7 @@ class AsyncBaseParser:
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
             save_bad_urls: bool = False,
-            random_sleep_time_every_request: list = False
+            random_sleep_time_every_request: list[float | int] | bool = False
     ) -> AiohttpResponse | None:
         """
         Отправляет запрос с настройками из _make_backoff_request
@@ -115,7 +117,10 @@ class AsyncBaseParser:
 
         if random_sleep_time_every_request:
             await asyncio.sleep(
-                random.uniform(random_sleep_time_every_request[0], random_sleep_time_every_request[1])
+                random.uniform(
+                    random_sleep_time_every_request[0],  # type: ignore[index]
+                    random_sleep_time_every_request[1]  # type: ignore[index]
+                )
             )
 
         iteration_for_50x = 1
@@ -144,13 +149,17 @@ class AsyncBaseParser:
                             return aiohttp_response
                         iteration_for_50x += 1
                         if self.debug:
-                            logger.backoff_status_code(aiohttp_response.status_code, i, url, self.print_logs)
+                            logger.backoff_status_code(
+                                aiohttp_response.status_code, i, url, self.print_logs
+                            )
                         await asyncio.sleep(i * increase_by_minutes_for_50x_errors * 60)
                         continue
 
                     if aiohttp_response.status_code != HTTPStatus.OK:
                         if self.debug:
-                            logger.backoff_status_code(aiohttp_response.status_code, i, url, self.print_logs)
+                            logger.backoff_status_code(
+                                aiohttp_response.status_code, i, url, self.print_logs
+                            )
                         await asyncio.sleep(i * increase_by_seconds)
             except ignore_exceptions if not self.check_exceptions else () as Ex:
                 if self.debug:
@@ -170,19 +179,19 @@ class AsyncBaseParser:
             increase_by_minutes_for_50x_errors: int = 20,
             verify: bool = True,
             with_random_useragent: bool = True,
-            proxies: str = None,
-            headers: dict | list = None,
-            cookies: dict | list = None,
-            data: dict = None,
-            json: dict = None,
-            ignore_exceptions: tuple = 'default',
+            proxies: str | None = None,
+            headers: dict | list | None = None,
+            cookies: dict | list | None = None,
+            data: dict | None = None,
+            json: dict | None = None,
+            ignore_exceptions: tuple | str = 'default',
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
             save_bad_urls: bool = False,
             timeout: int = 30,
-            random_sleep_time_every_request: list = False,
-            params: dict = False
-    ) -> list:
+            random_sleep_time_every_request: list | bool = False,
+            params: dict | bool = False
+    ) -> tuple[AiohttpResponse | None]:
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
         Задержка между каждым запросом увеличивается
@@ -273,7 +282,7 @@ class AsyncBaseParser:
                     random_sleep_time_every_request=random_sleep_time_every_request
                 ) for url in urls
             ]
-            return await asyncio.gather(*tasks)
+            return await asyncio.gather(*tasks)  # type: ignore[return-value]
 
     async def __get_request_params(
             self,
@@ -285,7 +294,7 @@ class AsyncBaseParser:
             cookies: dict | list | None,
             data: dict | None,
             json: dict | None,
-            params: dict = None
+            params: dict | bool | None = None
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -347,17 +356,17 @@ class AsyncBaseParser:
             random_index: int,
             item_name: str
     ) -> dict:
-        if type(item) == list:
+        if type(item) is list:
             item = item[random_index]
             if self.debug:
                 logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
-        return item
+        return item  # type: ignore[return-value]
 
-    async def _append_to_bad_urls(self, url) -> None:
+    async def _append_to_bad_urls(self, url: Any) -> None:
         if url not in self.bad_urls:
             self.bad_urls.append(url)
 
-    async def _delete_from_bad_urls(self, url) -> None:
+    async def _delete_from_bad_urls(self, url: Any) -> None:
         if url in self.bad_urls:
             self.bad_urls.remove(url)
 
@@ -374,7 +383,7 @@ class AsyncBaseParser:
         except ValueError:
             return 0
 
-    async def __forming_aiohttp_response(self, response) -> AiohttpResponse | None:
+    async def __forming_aiohttp_response(self, response: Any) -> AiohttpResponse | None:
         try:
             text = await response.text()
             try:
@@ -391,7 +400,7 @@ class AsyncBaseParser:
     @staticmethod
     async def _method_in_series(
             chunked_array: list | tuple,
-            async_method,
+            async_method: Callable,
             sleep_time: int = 0
     ) -> None:
         """

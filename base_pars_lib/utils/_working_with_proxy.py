@@ -9,7 +9,7 @@ def rotating_proxy_auth(
         https_url: str,
         login: str,
         password: str
-):
+) -> requests.Session:
     """
     Правильная авторизация в ротационном прокси
 

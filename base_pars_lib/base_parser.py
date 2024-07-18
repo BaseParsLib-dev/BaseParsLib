@@ -1,11 +1,12 @@
-from http import HTTPStatus
 import random
-from threading import Thread
 import time
+from http import HTTPStatus
+from threading import Thread
+from typing import Any, Callable
 
 import requests
-from fake_useragent import UserAgent
 import urllib3
+from fake_useragent import UserAgent
 
 from base_pars_lib import _requests_digest_proxy
 from base_pars_lib.config import logger
@@ -14,7 +15,7 @@ from base_pars_lib.config import logger
 class BaseParser:
     def __init__(
         self,
-        requests_session=None,
+        requests_session: requests.Session = None,
         debug: bool = False,
         print_logs: bool = False,
         check_exceptions: bool = False
@@ -48,9 +49,9 @@ class BaseParser:
         self.debug = debug
         self.print_logs = print_logs
 
-        self.bad_urls = []
+        self.bad_urls: list = []
 
-    def _make_request(self, params: dict, from_one_session=True):
+    def _make_request(self, params: dict, from_one_session: bool = True) -> Any:
         """
         Отправляет реквест через requests_session
 
@@ -81,19 +82,19 @@ class BaseParser:
             increase_by_minutes_for_50x_errors: int = 20,
             verify: bool = True,
             with_random_useragent: bool = True,
-            from_one_session=True,
-            proxies: dict = None,
-            headers: dict | list = None,
-            cookies: dict | list = None,
-            json: dict = None,
-            data: dict = None,
-            ignore_exceptions: tuple = 'default',
+            from_one_session: bool = True,
+            proxies: dict | None = None,
+            headers: dict | list | None = None,
+            cookies: dict | list | None = None,
+            json: dict | None = None,
+            data: dict | None = None,
+            ignore_exceptions: tuple | str = 'default',
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
             save_bad_urls: bool = False,
             compare_headers_and_cookies_indexes: bool = True,
-            params: dict = False
-    ):
+            params: dict | bool = False
+    ) -> Any:
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
         Задержка между каждым запросом увеличивается
@@ -214,15 +215,15 @@ class BaseParser:
             self,
             url: str,
             compare_headers_and_cookies_indexes: bool,
-            headers: dict | list = None,
-            cookies: dict | list = None,
+            headers: dict | list | None = None,
+            cookies: dict | list | None = None,
             with_random_useragent: bool = True,
             method: str = 'GET',
             verify: bool = True,
-            json: dict | str = None,
-            data: dict | str = None,
-            proxies: dict = None,
-            params: dict = False
+            json: dict | str | None = None,
+            data: dict | str | None = None,
+            proxies: dict | None = None,
+            params: dict | bool = False
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -290,7 +291,7 @@ class BaseParser:
         if proxies is not None:
             request_params['proxies'] = proxies
         if params:
-            request_params['params']: params
+            request_params['params'] = params
 
         return request_params
 
@@ -300,26 +301,26 @@ class BaseParser:
             random_index: int | None,
             item_name: str
     ) -> dict:
-        if type(item) == list:
+        if type(item) is list:
             if random_index is None:
                 random_index = random.randint(0, len(item) - 1)
             item = item[random_index]
             if self.debug:
                 logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
-        return item
+        return item  # type: ignore[return-value]
 
-    def _append_to_bad_urls(self, url) -> None:
+    def _append_to_bad_urls(self, url: Any) -> None:
         if url not in self.bad_urls:
             self.bad_urls.append(url)
 
-    def _delete_from_bad_urls(self, url) -> None:
+    def _delete_from_bad_urls(self, url: Any) -> None:
         if url in self.bad_urls:
             self.bad_urls.remove(url)
 
     @staticmethod
     def _threading_method(
             chunked_array: list | tuple,
-            method
+            method: Callable
     ) -> None:
         """
         Создаёт столько потоков, сколько чанков передано в chunked_array,

@@ -1,4 +1,10 @@
-def split_on_chunks_by_chunk_len(array: list | tuple, chunk_len: int):
+from typing import Iterator
+
+
+def split_on_chunks_by_chunk_len(
+    array: list | tuple,
+    chunk_len: int
+) -> Iterator:
     """
     Делит массив на чанки в зависимости от переданой длины чанка
 
@@ -12,7 +18,10 @@ def split_on_chunks_by_chunk_len(array: list | tuple, chunk_len: int):
         yield array[i: i + chunk_len]
 
 
-def split_on_chunks_by_count_chunks(array: list | tuple, count_chunks: int):
+def split_on_chunks_by_count_chunks(
+    array: list | tuple,
+    count_chunks: int
+) -> Iterator:
     """
     Делит массив на чанки в зависимости от переданого количества чанков
 
