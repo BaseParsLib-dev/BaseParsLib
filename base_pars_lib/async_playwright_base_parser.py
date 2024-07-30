@@ -1,8 +1,122 @@
 import asyncio
 from typing import Any, Callable
 
+from fake_useragent import UserAgent
+from playwright.async_api import Browser, BrowserContext, Page, Playwright
+
+from base_pars_lib.config import logger
+
 
 class AsyncPlaywrightBaseParser:
+
+    def __init__(
+        self,
+        debug: bool = False,
+        print_logs: bool = False
+    ) -> None:
+
+        self.debug = debug
+        self.print_logs = print_logs
+
+        self.user_agent = UserAgent()
+
+        self.context: BrowserContext | None = None
+        self.browser: Browser | None = None
+        self.playwright: Playwright | None = None
+
+    async def _backoff_open_new_page_on_context(
+        self,
+        url: str,
+        check_page: Callable = None,  # type: ignore[assignment]
+        check_page_args: dict | None = None,
+        load_timeout: int = 30,
+        increase_by_seconds: int = 10,
+        iter_count: int = 10,
+        with_new_context: bool = False,
+        load_img_mp4_mp3: bool = False,
+        headless_browser: bool = False
+    ) -> Page | None:
+        """
+        Открывает страницу по переданному url,
+        в случае ошибки открывает повторно через время
+
+        !!! Для работы требуются созданный объект self.playwright: Playwright
+        Также, если объекты self.browser: Browser и self.context: BrowserContext
+        не созданы, автоматически примется with_new_context, и они создадутся
+
+        :param url: str
+            Ссылка на страницу
+        :param check_page: Callable = None
+            Можно передать асинхронную функцию, в которой будут дополнительные проверки страницы
+            (например на то, страница с капчей ли это)
+            Функция обязательно должна принимать объект страницы плейрайт (Page) и возвращать
+            True или False, где True - вернуть страницу, False - попытаться открыть заново
+        :param check_page_args: dict = None
+            Дополнительные параметры для check_page
+        :param load_timeout: int = 30
+            Таймаут для загрузки страницы
+        :param increase_by_seconds: int = 10
+            Кол-во секунд, на которое увеличивается задержка между попытками
+        :param iter_count: int = 10
+            Кол-во попыток
+        :param with_new_context: bool = False
+            Создать новый контекст для открытия страницы
+            (новый браузер с новым плейрайт-контекстом)
+        :param load_img_mp4_mp3: bool = False
+            Загружать картинки, видео, аудио
+        :param headless_browser: bool = False
+            Режим отображения браузера
+
+        :return:
+            Объект страницы или None в случае, если за все попытки не удалось открыть
+        """
+
+        if with_new_context or self.context is None:
+            await self.__generate_new_context(headless_browser)
+
+        for i in range(1, iter_count + 1):
+            page = None
+            try:
+                page = await self.context.new_page()  # type: ignore[union-attr]
+                if not load_img_mp4_mp3:
+                    await page.route(
+                        '**/*.{png,jpg,jpeg,mp4,mp3}',
+                        lambda route: route.abort()
+                    )
+                await page.goto(url, timeout=load_timeout * 1000)
+                await page.wait_for_load_state("networkidle", timeout=load_timeout * 1000)
+                if check_page is not None and check_page_args is not None:
+                    if await check_page(page, **check_page_args):
+                        return page
+                else:
+                    return page
+            except Exception as Ex:
+                if page:
+                    await page.close()
+                if self.debug:
+                    logger.backoff_exception(
+                        Ex, print_logs=self.print_logs, iteration=i, url=url
+                    )
+            await asyncio.sleep(i * increase_by_seconds)
+
+        return None
+
+    async def __generate_new_context(self, headless_browser: bool) -> None:
+        user_agent = await self.__get_pc_user_agent()
+        if self.debug:
+            logger.info_log(user_agent, print_logs=self.print_logs)
+        self.browser = await self.playwright.chromium.launch(  # type: ignore[union-attr]
+            proxy=self.proxy,  # type: ignore[arg-type]
+            headless=headless_browser
+        )
+        self.context = await self.browser.new_context(user_agent=user_agent)
+        await self.context.new_page()
+
+    async def __get_pc_user_agent(self) -> str:
+        while True:
+            user_agent = self.user_agent.random
+            if 'Android' not in user_agent and 'iPhone' not in user_agent:
+                return user_agent
 
     @staticmethod
     async def _async_pages(pages_urls: list | tuple, page_method: Callable) -> tuple[Any]:
