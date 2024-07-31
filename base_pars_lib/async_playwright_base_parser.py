@@ -72,7 +72,7 @@ class AsyncPlaywrightBaseParser:
         """
 
         if with_new_context or self.context is None:
-            await self.__generate_new_context(headless_browser)
+            await self._generate_new_context(headless_browser)
 
         for i in range(1, iter_count + 1):
             page = None
@@ -101,7 +101,7 @@ class AsyncPlaywrightBaseParser:
 
         return None
 
-    async def __generate_new_context(self, headless_browser: bool) -> None:
+    async def _generate_new_context(self, headless_browser: bool) -> None:
         user_agent = await self.__get_pc_user_agent()
         if self.debug:
             logger.info_log(user_agent, print_logs=self.print_logs)
