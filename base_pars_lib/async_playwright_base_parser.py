@@ -35,7 +35,8 @@ class AsyncPlaywrightBaseParser:
         with_new_context: bool = False,
         load_img_mp4_mp3: bool = False,
         headless_browser: bool = False,
-        load_for_state: str = "networkidle"
+        load_for_state: str | None = "networkidle",
+        load_by_time: int | None = 0
     ) -> Page | None:
         """
         Открывает страницу по переданному url,
@@ -72,6 +73,9 @@ class AsyncPlaywrightBaseParser:
             networkidle - прекращения сетевой активности
             load - полной загрузки страницы
             domcontentloaded - загрузки dom
+            None - сразу отдаёт страницу
+        :param load_by_time: int = 0
+            Количество секунд, сколько нужно ждать при переходе по ссылке
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
@@ -90,7 +94,11 @@ class AsyncPlaywrightBaseParser:
                         lambda route: route.abort()
                     )
                 await page.goto(url, timeout=load_timeout * 1000)
-                await page.wait_for_load_state(load_for_state, timeout=load_timeout * 1000)
+
+                if load_for_state is not None:
+                    await page.wait_for_load_state(load_for_state, timeout=load_timeout * 1000)
+                await asyncio.sleep(load_by_time)
+
                 if check_page is not None and check_page_args is not None:
                     if await check_page(page, **check_page_args):
                         return page
