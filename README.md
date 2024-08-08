@@ -397,6 +397,11 @@ if __name__ == '__main__':
             Загружать картинки, видео, аудио
         :param headless_browser: bool = False
             Режим отображения браузера
+        :param load_for_state: str = "networkidle"
+            Загружать страницу до:
+            networkidle - прекращения сетевой активности
+            load - полной загрузки страницы
+            domcontentloaded - загрузки dom
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
