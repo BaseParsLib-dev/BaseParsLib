@@ -36,7 +36,7 @@ class AsyncPlaywrightBaseParser:
         load_img_mp4_mp3: bool = False,
         headless_browser: bool = False,
         load_for_state: str | None = "networkidle",
-        load_by_time: int | None = 0
+        load_by_time: float = 0
     ) -> Page | None:
         """
         Открывает страницу по переданному url,
@@ -96,7 +96,10 @@ class AsyncPlaywrightBaseParser:
                 await page.goto(url, timeout=load_timeout * 1000)
 
                 if load_for_state is not None:
-                    await page.wait_for_load_state(load_for_state, timeout=load_timeout * 1000)
+                    await page.wait_for_load_state(
+                        load_for_state,  # type: ignore[arg-type]
+                        timeout=load_timeout * 1000
+                    )
                 await asyncio.sleep(load_by_time)
 
                 if check_page is not None and check_page_args is not None:
