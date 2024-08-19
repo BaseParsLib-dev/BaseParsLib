@@ -45,7 +45,8 @@ class AsyncBaseParser:
             aiohttp.client_exceptions.ClientConnectorError,
             aiohttp.client_exceptions.ServerDisconnectedError,
             aiohttp.client_exceptions.ClientOSError,
-            aiohttp.client_exceptions.ClientHttpProxyError
+            aiohttp.client_exceptions.ClientHttpProxyError,
+            asyncio.TimeoutError
         )
 
         self.check_exceptions = check_exceptions
