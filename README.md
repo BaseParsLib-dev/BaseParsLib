@@ -116,6 +116,8 @@ proxy_session = rotating_proxy_auth(
             Если False, индексы будут случайны для каждого списка
         :param params: dict = False
             Словарь параметров запроса
+        :param timeout: int | None = None
+            Ограничение запроса по времени
 
         :return:
             На последней итерации возвращает response с

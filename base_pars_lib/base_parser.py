@@ -93,7 +93,8 @@ class BaseParser:
             long_wait_for_50x: bool = False,
             save_bad_urls: bool = False,
             compare_headers_and_cookies_indexes: bool = True,
-            params: dict | bool = False
+            params: dict | bool = False,
+            timeout: int | None = None
     ) -> Any:
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
@@ -147,7 +148,7 @@ class BaseParser:
             Если True, применяет increase_by_minutes_for_50x_errors
         :param save_bad_urls: bool = False
             Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
-        param compare_headers_and_cookies_indexes: bool = True
+        :param compare_headers_and_cookies_indexes: bool = True
             Если True, индекс для списков хедеров и куков будет одинаков:
                 (если требуется, чтобы пары были обязательно вместе)
                 Например:
@@ -157,6 +158,8 @@ class BaseParser:
             Если False, индексы будут случайны для каждого списка
         :param params: dict = False
             Словарь параметров запроса
+        :param timeout: int | None = None
+            Ограничение запроса по времени
 
         :return:
             На последней итерации возвращает response с
@@ -167,9 +170,10 @@ class BaseParser:
             ignore_exceptions = self.ignore_exceptions
 
         request_params = self._get_request_params(
-            url, compare_headers_and_cookies_indexes,
-            headers, cookies, with_random_useragent,
-            method, verify, json, data, proxies, params
+            url=url, compare_headers_and_cookies_indexes=compare_headers_and_cookies_indexes,
+            headers=headers, cookies=cookies, with_random_useragent=with_random_useragent,
+            method=method, verify=verify, json=json, data=data, proxies=proxies, params=params,
+            timeout=timeout
         )
 
         iteration_for_50x = 1
@@ -223,7 +227,8 @@ class BaseParser:
             json: dict | str | None = None,
             data: dict | str | None = None,
             proxies: dict | None = None,
-            params: dict | bool = False
+            params: dict | bool = False,
+            timeout: int | None = None
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -258,6 +263,8 @@ class BaseParser:
             Если False, индексы будут случайны для каждого списка
         :param params: dict = False
             Словарь параметров запроса
+        :param timeout: int | None = None
+            Ограничение запроса по времени
 
         :return: dict
             Параметры запроса
@@ -285,7 +292,8 @@ class BaseParser:
             'cookies': cookies,
             'verify': verify,
             'json': json,
-            'data': data
+            'data': data,
+            'timeout': timeout
         }
 
         if proxies is not None:
