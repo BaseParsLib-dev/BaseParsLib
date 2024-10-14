@@ -98,7 +98,7 @@ class AsyncPlaywrightBaseParser:
                 if viewport_size:
                     await page.set_viewport_size(viewport_size)
 
-                if catch_requests_handler is None:
+                if catch_requests_handler:
                     page.on('request', catch_requests_handler)
                 if not load_img_mp4_mp3:
                     await page.route(
