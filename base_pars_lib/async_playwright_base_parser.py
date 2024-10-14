@@ -133,7 +133,8 @@ class AsyncPlaywrightBaseParser:
             headless=headless_browser
         )
         self.context = await self.browser.new_context(user_agent=user_agent)
-        await self.context.new_page()
+        page = await self.context.new_page()
+        await page.goto('https://www.google.com')
 
     async def _get_pc_user_agent(self) -> str:
         while True:
