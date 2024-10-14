@@ -410,6 +410,8 @@ if __name__ == '__main__':
         :param catch_requests_handler: Callable = None
             Если передать метод, он будет срабатывать при каждом запросе от страницы.
             В качестве аргумента принимает request
+        :param viewport_size: dict | None = None
+            Размер окна в формате {"width": 1920, "height": 1080}
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть

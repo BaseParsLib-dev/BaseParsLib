@@ -38,6 +38,7 @@ class AsyncPlaywrightBaseParser:
         load_for_state: str | None = "networkidle",
         load_by_time: float = 0,
         catch_requests_handler: Callable = None,  # type: ignore[assignment]
+        viewport_size: dict | None = None,
     ) -> Page | None:
         """
         Открывает страницу по переданному url,
@@ -80,6 +81,8 @@ class AsyncPlaywrightBaseParser:
         :param catch_requests_handler: Callable = None
             Если передать метод, он будет срабатывать при каждом запросе от страницы.
             В качестве аргумента принимает request
+        :param viewport_size: dict | None = None
+            Размер окна в формате {"width": 1920, "height": 1080}
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
@@ -92,6 +95,9 @@ class AsyncPlaywrightBaseParser:
             page = None
             try:
                 page = await self.context.new_page()  # type: ignore[union-attr]
+                if viewport_size:
+                    await page.set_viewport_size(viewport_size)
+
                 if catch_requests_handler is None:
                     page.on('request', catch_requests_handler)
                 if not load_img_mp4_mp3:
