@@ -125,7 +125,7 @@ class AsyncPlaywrightBaseParser:
         return None
 
     async def _generate_new_context(self, headless_browser: bool) -> None:
-        user_agent = await self.__get_pc_user_agent()
+        user_agent = await self._get_pc_user_agent()
         if self.debug:
             logger.info_log(user_agent, print_logs=self.print_logs)
         self.browser = await self.playwright.chromium.launch(  # type: ignore[union-attr]
@@ -135,7 +135,7 @@ class AsyncPlaywrightBaseParser:
         self.context = await self.browser.new_context(user_agent=user_agent)
         await self.context.new_page()
 
-    async def __get_pc_user_agent(self) -> str:
+    async def _get_pc_user_agent(self) -> str:
         while True:
             user_agent = self.user_agent.random
             if 'Android' not in user_agent and 'iPhone' not in user_agent:
