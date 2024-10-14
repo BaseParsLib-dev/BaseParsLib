@@ -91,14 +91,17 @@ class AsyncPlaywrightBaseParser:
         if with_new_context or self.context is None:
             await self._generate_new_context(headless_browser)
 
+        old_page: Page | None = None
         for i in range(1, iter_count + 1):
-            page = None
+            page: Page | None = None
             try:
                 page = await self.context.new_page()  # type: ignore[union-attr]
+                if old_page:
+                    await old_page.close()
                 if viewport_size:
-                    await page.set_viewport_size(viewport_size)
+                    await page.set_viewport_size(viewport_size)  # type: ignore[arg-type]
 
-                if catch_requests_handler:
+                if catch_requests_handler is not None:
                     page.on('request', catch_requests_handler)
                 if not load_img_mp4_mp3:
                     await page.route(
@@ -117,6 +120,8 @@ class AsyncPlaywrightBaseParser:
                 if check_page is not None and check_page_args is not None:
                     if await check_page(page, **check_page_args):
                         return page
+                    else:
+                        old_page = page
                 else:
                     return page
             except Exception as Ex:
