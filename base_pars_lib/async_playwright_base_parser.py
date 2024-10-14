@@ -36,7 +36,8 @@ class AsyncPlaywrightBaseParser:
         load_img_mp4_mp3: bool = False,
         headless_browser: bool = False,
         load_for_state: str | None = "networkidle",
-        load_by_time: float = 0
+        load_by_time: float = 0,
+        catch_requests_handler: Callable = None,  # type: ignore[assignment]
     ) -> Page | None:
         """
         Открывает страницу по переданному url,
@@ -76,6 +77,9 @@ class AsyncPlaywrightBaseParser:
             None - сразу отдаёт страницу
         :param load_by_time: int = 0
             Количество секунд, сколько нужно ждать при переходе по ссылке
+        :param catch_requests_handler: Callable = None
+            Если передать метод, он будет срабатывать при каждом запросе от страницы.
+            В качестве аргумента принимает request
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
@@ -88,6 +92,8 @@ class AsyncPlaywrightBaseParser:
             page = None
             try:
                 page = await self.context.new_page()  # type: ignore[union-attr]
+                if catch_requests_handler is None:
+                    page.on('request', catch_requests_handler)
                 if not load_img_mp4_mp3:
                     await page.route(
                         '**/*.{png,jpg,jpeg,mp4,mp3}',
