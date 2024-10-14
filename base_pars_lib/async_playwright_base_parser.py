@@ -145,7 +145,11 @@ class AsyncPlaywrightBaseParser:
     async def _get_pc_user_agent(self) -> str:
         while True:
             user_agent = self.user_agent.random
-            if 'Android' not in user_agent and 'iPhone' not in user_agent:
+            if (
+                'Android' not in user_agent and
+                'iPhone' not in user_agent and
+                'iPad' not in user_agent
+            ):
                 return user_agent
 
     @staticmethod
