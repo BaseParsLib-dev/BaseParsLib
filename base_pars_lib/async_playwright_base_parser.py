@@ -198,3 +198,28 @@ class AsyncPlaywrightBaseParser:
         for chunk in chunked_array:
             await async_method(chunk)
             await asyncio.sleep(sleep_time)
+
+    @staticmethod
+    async def _scroll_down(
+        page: Page,
+        pixels: int | None = None,
+        full_page: bool = False
+    ) -> None:
+        """
+        Прокручивает страницу вниз на указанное количество пикселов или полностью
+
+        :param page: Page
+            Объект страницы
+        :param pixels: int | None = None
+            Количество пикселов для прокрутки
+        :param full_page: bool = False
+            Если True, страница прокрутится до конца
+        :return:
+            None
+        """
+
+        if full_page:
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            return None
+        await page.evaluate(f"window.scrollTo(0, {pixels})")
+        return None

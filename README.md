@@ -57,71 +57,71 @@ proxy_session = rotating_proxy_auth(
 
 #### Метод ```_make_backoff_request```
     Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
-        Задержка между каждым запросом увеличивается
+    Задержка между каждым запросом увеличивается
 
-        :param url: str
-            Ссылка на страницу для запроса
-        :param method: str = 'GET'
-            HTTP-метод
-        :param iter_count: int = 10
-            Количество попыток отправки запроса
-        :param iter_count_for_50x_errors: int = 3
-            Количество попыток отправки запроса для 500-х ошибок
-        :param increase_by_seconds: int = 10
-            Значение, на которое увеличивается время ожидания
-            на каждой итерации
-        :param increase_by_minutes_for_50x_errors: int = 20
-            Значение, на которое увеличивается время ожидания
-            на каждой итерации
-        :param verify: bool = True
-            Проверка безопасности сайта
-        :param with_random_useragent: bool = True
-            Случайный юзер-агент
-        :param from_one_session: bool = True
-            Использование одной сессии
-        :param proxies: dict = None
-            Прокси
-        :param headers: dict | list = None
-            Заголовки запроса, возможно передать в виде списка,
-            тогда выбирутся рандомно
-        :param cookies: dict | list = None
-            Куки запроса, возможно передать в виде списка,
-            тогда выбирутся рандомно
-        :param data: dict = None
-            Передаваемые данные
-        :param json: dict = None
-            Передаваемые данные
-        :param ignore_exceptions: tuple = 'default'
-            Возможность передать ошибки, которые будут обрабатываться в backoff.
-            Если ничего не передано, обрабатываются дефолтные:
-                requests.exceptions.ProxyError,
-                _requests_digest_proxy.ProxyError,
-                urllib3.exceptions.ProxyError,
-                requests.exceptions.ConnectionError
-        :param ignore_404: bool = False
-            Позволяет не применять backoff к респонзам со статус-кодом 404.
-            Если такой страницы нет, backoff может не понадобиться
-            Если значение = True и передан url на несуществующую страницу,
-            метод вернёт response после первой попытки
-        :param save_bad_urls: bool = False
-            Собирает ссылки, по которым ошибка или код не 200 и не 404 в список self.bad_urls.
-            Если по ссылке код 200, удаляет её из списка (это позволяет использовать этот список повторно несколько раз)
-        :param compare_headers_and_cookies_indexes: bool = True
-            Если True, индекс для списков хедеров и куков будет одинаков:
-                (если требуется, чтобы пары были обязательно вместе)
-                Например:
-                headers = [header1, header2, header3]
-                cookies = [cookie1, cookie2, cookie3, cookie4]
-                Случайно может выбраться 3 варианта - 1 и 1, 2 и 2, 3 и 3 (cookie4 выбран не будет)
-            Если False, индексы будут случайны для каждого списка
-        :param params: dict = False
-            Словарь параметров запроса
-        :param timeout: int | None = None
-            Ограничение запроса по времени
+    :param url: str
+        Ссылка на страницу для запроса
+    :param method: str = 'GET'
+        HTTP-метод
+    :param iter_count: int = 10
+        Количество попыток отправки запроса
+    :param iter_count_for_50x_errors: int = 3
+        Количество попыток отправки запроса для 500-х ошибок
+    :param increase_by_seconds: int = 10
+        Значение, на которое увеличивается время ожидания
+        на каждой итерации
+    :param increase_by_minutes_for_50x_errors: int = 20
+        Значение, на которое увеличивается время ожидания
+        на каждой итерации
+    :param verify: bool = True
+        Проверка безопасности сайта
+    :param with_random_useragent: bool = True
+        Случайный юзер-агент
+    :param from_one_session: bool = True
+        Использование одной сессии
+    :param proxies: dict = None
+        Прокси
+    :param headers: dict | list = None
+        Заголовки запроса, возможно передать в виде списка,
+        тогда выбирутся рандомно
+    :param cookies: dict | list = None
+        Куки запроса, возможно передать в виде списка,
+        тогда выбирутся рандомно
+    :param data: dict = None
+        Передаваемые данные
+    :param json: dict = None
+        Передаваемые данные
+    :param ignore_exceptions: tuple = 'default'
+        Возможность передать ошибки, которые будут обрабатываться в backoff.
+        Если ничего не передано, обрабатываются дефолтные:
+            requests.exceptions.ProxyError,
+            _requests_digest_proxy.ProxyError,
+            urllib3.exceptions.ProxyError,
+            requests.exceptions.ConnectionError
+    :param ignore_404: bool = False
+        Позволяет не применять backoff к респонзам со статус-кодом 404.
+        Если такой страницы нет, backoff может не понадобиться
+        Если значение = True и передан url на несуществующую страницу,
+        метод вернёт response после первой попытки
+    :param save_bad_urls: bool = False
+        Собирает ссылки, по которым ошибка или код не 200 и не 404 в список self.bad_urls.
+        Если по ссылке код 200, удаляет её из списка (это позволяет использовать этот список повторно несколько раз)
+    :param compare_headers_and_cookies_indexes: bool = True
+        Если True, индекс для списков хедеров и куков будет одинаков:
+            (если требуется, чтобы пары были обязательно вместе)
+            Например:
+            headers = [header1, header2, header3]
+            cookies = [cookie1, cookie2, cookie3, cookie4]
+            Случайно может выбраться 3 варианта - 1 и 1, 2 и 2, 3 и 3 (cookie4 выбран не будет)
+        Если False, индексы будут случайны для каждого списка
+    :param params: dict = False
+        Словарь параметров запроса
+    :param timeout: int | None = None
+        Ограничение запроса по времени
 
-        :return:
-            На последней итерации возвращает response с
-            любым кодом ответа или, если произошла ошибка Proxy - возвращает None
+    :return:
+        На последней итерации возвращает response с
+        любым кодом ответа или, если произошла ошибка Proxy - возвращает None
 
 #### Метод ```_make_request```
     Отправляет реквест через requests_session
@@ -371,47 +371,59 @@ if __name__ == '__main__':
 
 #### ```_backoff_open_new_page_on_context```
     Открывает страницу по переданному url,
-        в случае ошибки открывает повторно через время
+    в случае ошибки открывает повторно через время
 
-        !!! Для работы требуются созданный объект self.playwright: Playwright
-        Также, если объекты self.browser: Browser и self.context: BrowserContext
-        не созданы, автоматически примется with_new_context, и они создадутся
+    !!! Для работы требуются созданный объект self.playwright: Playwright
+    Также, если объекты self.browser: Browser и self.context: BrowserContext
+    не созданы, автоматически примется with_new_context, и они создадутся
 
-        :param url: str
-            Ссылка на страницу
-        :param check_page: Callable = None
-            Можно передать асинхронную функцию, в которой будут дополнительные проверки страницы
-            (например на то, страница с капчей ли это)
-            Функция обязательно должна принимать объект страницы плейрайт (Page) и возвращать
-            True или False, где True - вернуть страницу, False - попытаться открыть заново
-        :param check_page_args: dict = None
-            Дополнительные параметры для check_page
-        :param load_timeout: int = 30
-            Таймаут для загрузки страницы
-        :param increase_by_seconds: int = 10
-            Кол-во секунд, на которое увеличивается задержка между попытками
-        :param iter_count: int = 10
-            Кол-во попыток
-        :param with_new_context: bool = False
-            Создать новый контекст для открытия страницы
-            (новый браузер с новым плейрайт-контекстом)
-        :param load_img_mp4_mp3: bool = False
-            Загружать картинки, видео, аудио
-        :param headless_browser: bool = False
-            Режим отображения браузера
-        :param load_for_state: str = "networkidle"
-            Загружать страницу до:
-            networkidle - прекращения сетевой активности
-            load - полной загрузки страницы
-            domcontentloaded - загрузки dom
-            None - сразу отдаёт страницу
-        :param load_by_time: int = 0
-            Количество секунд, сколько нужно ждать при переходе по ссылке
-        :param catch_requests_handler: Callable = None
-            Если передать метод, он будет срабатывать при каждом запросе от страницы.
-            В качестве аргумента принимает request
-        :param viewport_size: dict | None = None
-            Размер окна в формате {"width": 1920, "height": 1080}
+    :param url: str
+        Ссылка на страницу
+    :param check_page: Callable = None
+        Можно передать асинхронную функцию, в которой будут дополнительные проверки страницы
+        (например на то, страница с капчей ли это)
+        Функция обязательно должна принимать объект страницы плейрайт (Page) и возвращать
+        True или False, где True - вернуть страницу, False - попытаться открыть заново
+    :param check_page_args: dict = None
+        Дополнительные параметры для check_page
+    :param load_timeout: int = 30
+        Таймаут для загрузки страницы
+    :param increase_by_seconds: int = 10
+        Кол-во секунд, на которое увеличивается задержка между попытками
+    :param iter_count: int = 10
+        Кол-во попыток
+    :param with_new_context: bool = False
+        Создать новый контекст для открытия страницы
+        (новый браузер с новым плейрайт-контекстом)
+    :param load_img_mp4_mp3: bool = False
+        Загружать картинки, видео, аудио
+    :param headless_browser: bool = False
+        Режим отображения браузера
+    :param load_for_state: str = "networkidle"
+        Загружать страницу до:
+        networkidle - прекращения сетевой активности
+        load - полной загрузки страницы
+        domcontentloaded - загрузки dom
+        None - сразу отдаёт страницу
+    :param load_by_time: int = 0
+        Количество секунд, сколько нужно ждать при переходе по ссылке
+    :param catch_requests_handler: Callable = None
+        Если передать метод, он будет срабатывать при каждом запросе от страницы.
+        В качестве аргумента принимает request
+    :param viewport_size: dict | None = None
+        Размер окна в формате {"width": 1920, "height": 1080}
 
-        :return:
-            Объект страницы или None в случае, если за все попытки не удалось открыть
+    :return:
+        Объект страницы или None в случае, если за все попытки не удалось открыть
+
+#### ```_scroll_down```
+    Прокручивает страницу вниз на указанное количество пикселов или полностью
+        
+    :param page: Page
+        Объект страницы
+    :param pixels: int | None = None
+        Количество пикселов для прокрутки
+    :param full_page: bool = False
+        Если True, страница прокрутится до конца
+    :return: 
+        None
