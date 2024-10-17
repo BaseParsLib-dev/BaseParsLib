@@ -204,7 +204,8 @@ class AsyncPlaywrightBaseParser:
         page: Page,
         from_: int = 0,
         to: int | None = None,
-        full_page: bool = False
+        full_page: bool = False,
+        custom_js_code: str | None = None,
     ) -> None:
         """
         Прокручивает страницу вниз на указанное количество пикселов или полностью
@@ -217,9 +218,15 @@ class AsyncPlaywrightBaseParser:
             Количество пикселей, на которые скроллим
         :param full_page: bool = False
             Если True, страница прокрутится до конца
+        :custom_js_code: str | None = None
+            Есть возможность написать собственную логику скроллинка
         :return:
             None
         """
+
+        if custom_js_code:
+            await page.evaluate(custom_js_code)
+            return None
 
         smooth = "{behavior: 'smooth'}"
         if full_page:
