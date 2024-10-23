@@ -135,8 +135,26 @@ class AsyncPlaywrightBaseParser:
 
         return None
 
-    async def _generate_new_context(self, headless_browser: bool) -> None:
-        user_agent = await self._get_pc_user_agent()
+    async def _generate_new_context(
+        self,
+        headless_browser: bool,
+        user_agent: str | None = None
+    ) -> None:
+        """
+        Создаёт playwright-контекст - открывает браузер с начальной страницей поиска гугл
+        (может быть полезно для некоторых сайтов, которые смотрят,
+        откуда пользователь перешёл на их сайт)
+        :param headless_browser: bool
+            Булево значение, в скрытом ли режиме работает браузер
+        :param user_agent:
+            Можно передать собственный юзер-агент, в противном случае выберится случайный
+            юзер-агент для пользователя на ПК
+        :return:
+            None
+        """
+
+        if not user_agent:
+            user_agent = await self._get_pc_user_agent()
         if self.debug:
             logger.info_log(user_agent, print_logs=self.print_logs)
         self.browser = await self.playwright.chromium.launch(  # type: ignore[union-attr]
