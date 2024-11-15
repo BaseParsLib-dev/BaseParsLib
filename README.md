@@ -151,6 +151,21 @@ proxy_session = rotating_proxy_auth(
     :param count_chunks: int
         Количество чанков    
 
+#### Метод ```get_data_from_text```
+    Функция вырезает нужную подстроку из строки
+    
+    :param text: str
+        Основной текст
+    :param start_row: str
+        Левая граница, по которой вырезать
+    :param end_row: str
+        Правая граница, по которой вырезать
+    :param cut_start_row: bool = True
+        Обрезать левую границу
+    :param cut_end_row: bool = True
+        Обрезать правую границу
+    :return: str
+
 ### Применение методов библиотеки
 
 ```python
