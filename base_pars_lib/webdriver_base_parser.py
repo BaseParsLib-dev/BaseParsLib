@@ -1,5 +1,3 @@
-from typing import Any
-
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.expected_conditions import WebDriver, WebElement
