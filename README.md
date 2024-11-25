@@ -462,7 +462,7 @@ if __name__ == '__main__':
 
 # WebDriverBaseParser
 #### ```__init__```
-    param driver: Any
+    param driver: WebDriver
         Драйвер селениума или аппиума
     :param timeout: 
         Таймаут, который можно использовать в коде, 

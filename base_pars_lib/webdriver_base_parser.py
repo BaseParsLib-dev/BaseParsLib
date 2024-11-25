@@ -6,9 +6,9 @@ from selenium.webdriver.support.expected_conditions import WebDriver, WebElement
 
 
 class WebDriverBaseParser:
-    def __init__(self, driver: Any, timeout: int = 30) -> None:
+    def __init__(self, driver: WebDriver, timeout: int = 30) -> None:
         """
-        :param driver: Any
+        :param driver: WebDriver
             Драйвер селениума или аппиума
         :param timeout:
             Таймаут, который можно использовать в коде,
