@@ -467,3 +467,12 @@ if __name__ == '__main__':
     :param timeout: 
         Таймаут, который можно использовать в коде, 
         чтобы дожидаться появления каких-то объектов
+#### ```_get_element_with_wait```
+    Получает элемент по какому-либо селениум-тегу (ID, название и т.д.)
+    :param by: 
+        Селениум-тег. Можно передать, например AppiumBy.ID из
+        from appium.webdriver.common.appiumby import AppiumBy
+    :param element: 
+        Сам тег
+    :return: 
+        WebElement
