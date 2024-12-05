@@ -1,6 +1,6 @@
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.expected_conditions import WebDriver, WebElement
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class WebDriverBaseParser:
