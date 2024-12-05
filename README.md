@@ -301,6 +301,8 @@ class MyParser(BaseParser):
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
     :param params: dict = False
             Словарь параметров запроса
+    :param get_raw_aiohttp_response_content: bool = False
+            При True возвращает не модель AiohttpResponse, а просто контент из response.read()
 
     :return:
         Возвращает список ответов от сайта.

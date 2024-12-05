@@ -69,8 +69,9 @@ class AsyncBaseParser:
             ignore_404: bool = False,
             long_wait_for_50x: bool = False,
             save_bad_urls: bool = False,
-            random_sleep_time_every_request: list[float | int] | bool = False
-    ) -> AiohttpResponse | None:
+            random_sleep_time_every_request: list[float | int] | bool = False,
+            get_raw_aiohttp_response_content: bool = False,
+    ) -> AiohttpResponse | bytes | None:
         """
         Отправляет запрос с настройками из _make_backoff_request
 
@@ -103,6 +104,8 @@ class AsyncBaseParser:
             Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
         :param random_sleep_time_every_request: list = False
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
+        :param get_raw_aiohttp_response_content: bool = False
+            При True возвращает не модель AiohttpResponse, а просто контент из response.read()
 
         :return:
             Ответ от сайта. Если на протяжении всех попыток запросов сайт не отдавал код 200,
@@ -128,6 +131,8 @@ class AsyncBaseParser:
         for i in range(1, iter_count + 1):
             try:
                 async with session.request(url=url, **params) as response:
+                    if get_raw_aiohttp_response_content:
+                        return await response.read()
                     aiohttp_response = await self.__forming_aiohttp_response(response)
 
                     if aiohttp_response is None:
@@ -191,7 +196,8 @@ class AsyncBaseParser:
             save_bad_urls: bool = False,
             timeout: int = 30,
             random_sleep_time_every_request: list | bool = False,
-            params: dict | bool = False
+            params: dict | bool = False,
+            get_raw_aiohttp_response_content: bool = False
     ) -> tuple[AiohttpResponse | None]:
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -246,6 +252,8 @@ class AsyncBaseParser:
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
         :param params: dict = False
             Словарь параметров запроса
+        :param get_raw_aiohttp_response_content: bool = False
+            При True возвращает не модель AiohttpResponse, а просто контент из response.read()
 
         :return:
             Возвращает список ответов от сайта.
@@ -280,7 +288,8 @@ class AsyncBaseParser:
                     ignore_404=ignore_404,
                     long_wait_for_50x=long_wait_for_50x,
                     save_bad_urls=save_bad_urls,
-                    random_sleep_time_every_request=random_sleep_time_every_request
+                    random_sleep_time_every_request=random_sleep_time_every_request,
+                    get_raw_aiohttp_response_content=get_raw_aiohttp_response_content
                 ) for url in urls
             ]
             return await asyncio.gather(*tasks)  # type: ignore[return-value]
