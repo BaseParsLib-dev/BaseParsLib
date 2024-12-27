@@ -18,7 +18,7 @@ class AsyncNodriverBaseParser:
 
         self.debug: bool | None = None
 
-    async def backoff_open_new_page(
+    async def _backoff_open_new_page(
             self,
             url: str,
             check_page: Callable = None,  # type: ignore[assignment]
