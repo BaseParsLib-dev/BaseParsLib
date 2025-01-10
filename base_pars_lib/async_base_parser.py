@@ -395,7 +395,10 @@ class AsyncBaseParser:
 
     async def __forming_aiohttp_response(self, response: Any) -> AiohttpResponse | None:
         try:
-            text = await response.text()
+            try:
+                text = await response.text()
+            except UnicodeDecodeError as Ex:
+                text = f'Encoding error: {Ex}'
             try:
                 json = await response.json()
             except aiohttp.client_exceptions.ContentTypeError:
