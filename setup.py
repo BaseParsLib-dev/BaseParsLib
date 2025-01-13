@@ -15,5 +15,6 @@ setup(
         'pytest-playwright==0.5.0',
         'nodriver==0.38.post1',
         'selenium==4.26.1',
+        'curl-cffi==0.7.4'
     ]
 )
