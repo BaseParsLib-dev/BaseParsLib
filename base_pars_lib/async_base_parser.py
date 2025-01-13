@@ -123,27 +123,24 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         for i in range(1, iter_count + 1):
             try:
                 async with session.request(url=url, **params) as response:
-                    try:
-                        if get_raw_aiohttp_response_content:
-                            return await response.read()
-                        aiohttp_response = await self.__forming_aiohttp_response(response)
-                        is_cycle_end, response_ = await self._check_response(
-                            response=aiohttp_response,
-                            iteration=i,
-                            url=url,
-                            increase_by_seconds=i,
-                            iter_count=iter_count,
-                            save_bad_urls=save_bad_urls,
-                            ignore_404=ignore_404,
-                            long_wait_for_50x=long_wait_for_50x,
-                            iteration_for_50x=iteration_for_50x,
-                            iter_count_for_50x_errors=iter_count_for_50x_errors,
-                            increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors
-                        )
-                        if is_cycle_end:
-                            return response_  # type: ignore[return-value]
-                    finally:
-                        await session.close()
+                    if get_raw_aiohttp_response_content:
+                        return await response.read()
+                    aiohttp_response = await self.__forming_aiohttp_response(response)
+                    is_cycle_end, response_ = await self._check_response(
+                        response=aiohttp_response,
+                        iteration=i,
+                        url=url,
+                        increase_by_seconds=i,
+                        iter_count=iter_count,
+                        save_bad_urls=save_bad_urls,
+                        ignore_404=ignore_404,
+                        long_wait_for_50x=long_wait_for_50x,
+                        iteration_for_50x=iteration_for_50x,
+                        iter_count_for_50x_errors=iter_count_for_50x_errors,
+                        increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors
+                    )
+                    if is_cycle_end:
+                        return response_  # type: ignore[return-value]
             except ignore_exceptions if not self.check_exceptions else () as Ex:
                 if self.debug:
                     logger.backoff_exception(Ex, i, self.print_logs, url)
