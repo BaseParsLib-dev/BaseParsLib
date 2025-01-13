@@ -2,11 +2,12 @@ from setuptools import setup
 
 setup(
     name='BaseParsLib',
-    version='0.2.011',
+    version='0.2.012',
     packages=[
         'base_pars_lib',
         'base_pars_lib.utils',
-        'base_pars_lib.config'
+        'base_pars_lib.config',
+        'base_pars_lib.core',
     ],
     install_requires=[
         'fake-useragent==1.5.1',
