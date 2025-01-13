@@ -1,25 +1,16 @@
 import asyncio
 import random
-from dataclasses import dataclass
-from http import HTTPStatus
-from typing import Any, Callable
+from typing import Any
 
 import aiohttp
 import urllib3
 from fake_useragent import UserAgent
 
 from base_pars_lib.config import logger
+from base_pars_lib.core.async_requests_parser_base import AiohttpResponse, AsyncRequestsParserBase
 
 
-@dataclass
-class AiohttpResponse:
-    text: str
-    json: dict | None
-    url: str
-    status_code: int
-
-
-class AsyncBaseParser:
+class AsyncBaseParser(AsyncRequestsParserBase):
     def __init__(
         self,
         debug: bool = False,
@@ -35,8 +26,10 @@ class AsyncBaseParser:
         :param check_exceptions: bool = False
             Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
             кроме тех, на которых завязана логика
-            (например __calculate_random_cookies_headers_index)
+            (например _calculate_random_cookies_headers_index)
         """
+
+        super().__init__()
 
         self.user_agent = UserAgent()
 
@@ -83,8 +76,7 @@ class AsyncBaseParser:
             Параметры запроса из _make_backoff_request
         :param ignore_exceptions:
             Возможность передать ошибки, которые будут обрабатываться в backoff.
-            Если ничего не передано, обрабатываются дефолтные:
-                urllib3.exceptions.ProxyError
+            Если ничего не передано, обрабатываются дефолтные
         :param iter_count:
             Количество попыток для запроса
         :param iter_count_for_50x_errors:
@@ -131,42 +123,27 @@ class AsyncBaseParser:
         for i in range(1, iter_count + 1):
             try:
                 async with session.request(url=url, **params) as response:
-                    if get_raw_aiohttp_response_content:
-                        return await response.read()
-                    aiohttp_response = await self.__forming_aiohttp_response(response)
-
-                    if aiohttp_response is None:
-                        if self.debug:
-                            logger.info_log(f'response is None, iter: {i}, {url}', self.print_logs)
-                        await asyncio.sleep(i * increase_by_seconds)
-                        continue
-
-                    if aiohttp_response.status_code == HTTPStatus.OK or i == iter_count:
-                        if save_bad_urls and aiohttp_response.status_code == HTTPStatus.OK:
-                            await self._delete_from_bad_urls(url)
-                        return aiohttp_response
-                    if save_bad_urls and aiohttp_response.status_code != HTTPStatus.NOT_FOUND:
-                        await self._append_to_bad_urls(url)
-                    if aiohttp_response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
-                        return aiohttp_response
-
-                    if 599 >= aiohttp_response.status_code >= 500 and long_wait_for_50x:
-                        if iteration_for_50x > iter_count_for_50x_errors:
-                            return aiohttp_response
-                        iteration_for_50x += 1
-                        if self.debug:
-                            logger.backoff_status_code(
-                                aiohttp_response.status_code, i, url, self.print_logs
-                            )
-                        await asyncio.sleep(i * increase_by_minutes_for_50x_errors * 60)
-                        continue
-
-                    if aiohttp_response.status_code != HTTPStatus.OK:
-                        if self.debug:
-                            logger.backoff_status_code(
-                                aiohttp_response.status_code, i, url, self.print_logs
-                            )
-                        await asyncio.sleep(i * increase_by_seconds)
+                    try:
+                        if get_raw_aiohttp_response_content:
+                            return await response.read()
+                        aiohttp_response = await self.__forming_aiohttp_response(response)
+                        is_cycle_end, response_ = await self._check_response(
+                            response=aiohttp_response,
+                            iteration=i,
+                            url=url,
+                            increase_by_seconds=i,
+                            iter_count=iter_count,
+                            save_bad_urls=save_bad_urls,
+                            ignore_404=ignore_404,
+                            long_wait_for_50x=long_wait_for_50x,
+                            iteration_for_50x=iteration_for_50x,
+                            iter_count_for_50x_errors=iter_count_for_50x_errors,
+                            increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors
+                        )
+                        if is_cycle_end:
+                            return response_  # type: ignore[return-value]
+                    finally:
+                        await session.close()
             except ignore_exceptions if not self.check_exceptions else () as Ex:
                 if self.debug:
                     logger.backoff_exception(Ex, i, self.print_logs, url)
@@ -174,6 +151,8 @@ class AsyncBaseParser:
                     await self._append_to_bad_urls(url)
                 await asyncio.sleep(i * increase_by_seconds)
                 continue
+
+        return None
 
     async def _make_backoff_request(
             self,
@@ -235,8 +214,7 @@ class AsyncBaseParser:
             Передаваемые данные
         :param ignore_exceptions: tuple = 'default'
             Возможность передать ошибки, которые будут обрабатываться в backoff.
-            Если ничего не передано, обрабатываются дефолтные:
-                urllib3.exceptions.ProxyError
+            Если ничего не передано, обрабатываются дефолтные
         :param ignore_404: bool = False
             Позволяет не применять backoff к респонзам со статус-кодом 404.
             Если такой страницы нет, backoff может не понадобиться
@@ -335,11 +313,11 @@ class AsyncBaseParser:
         headers = {} if headers is None else headers
         cookies = {} if cookies is None else cookies
 
-        random_index = await self.__calculate_random_cookies_headers_index(
+        random_index = await self._calculate_random_cookies_headers_index(
             cookies=cookies, headers=headers
         )
-        headers = await self.__get_by_random_index(headers, random_index, 'Headers')
-        cookies = await self.__get_by_random_index(cookies, random_index, 'Cookies')
+        headers = await self._get_by_random_index(headers, random_index, 'Headers')
+        cookies = await self._get_by_random_index(cookies, random_index, 'Cookies')
 
         if with_random_useragent:
             headers['User-Agent'] = self.user_agent.random
@@ -360,39 +338,6 @@ class AsyncBaseParser:
 
         return request_params
 
-    async def __get_by_random_index(
-            self,
-            item: list[dict] | dict,
-            random_index: int,
-            item_name: str
-    ) -> dict:
-        if type(item) is list:
-            item = item[random_index]
-            if self.debug:
-                logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
-        return item  # type: ignore[return-value]
-
-    async def _append_to_bad_urls(self, url: Any) -> None:
-        if url not in self.bad_urls:
-            self.bad_urls.append(url)
-
-    async def _delete_from_bad_urls(self, url: Any) -> None:
-        if url in self.bad_urls:
-            self.bad_urls.remove(url)
-
-    @staticmethod
-    async def __calculate_random_cookies_headers_index(
-            cookies: list[dict] | dict,
-            headers: list[dict] | dict
-    ) -> int:
-        upper_index = min(len(cookies), len(headers))
-        if not upper_index:
-            upper_index = max(len(cookies), len(headers))
-        try:
-            return random.randint(0, upper_index - 1)
-        except ValueError:
-            return 0
-
     async def __forming_aiohttp_response(self, response: Any) -> AiohttpResponse | None:
         try:
             try:
@@ -409,30 +354,3 @@ class AsyncBaseParser:
         except Exception if not self.check_exceptions else () as Ex:
             logger.info_log(f'forming AiohttpResponse error {Ex}', self.print_logs)
             return None
-
-    @staticmethod
-    async def _method_in_series(
-            chunked_array: list | tuple,
-            async_method: Callable,
-            sleep_time: int = 0
-    ) -> None:
-        """
-        Выполняет метод method для каждого чанка последовательно
-
-        :param chunked_array: list | tuple
-            Массив из чанков с url-ами или другими данными для запроса
-            Чанки созданы для того, чтобы не отправлять слишком много запросов одновременно,
-            чанки обрабатываются последовательно, запросы по ссылкам внутри них - одновременно
-        :param async_method:
-            Асинхронный метод, который работает с чанком из переданного массива
-            и сохраняет результаты во внешний массив
-        :param sleep_time: int = 0
-            Задержка между чанками запросов
-
-        :return:
-            None
-        """
-
-        for chunk in chunked_array:
-            await async_method(chunk)
-            await asyncio.sleep(sleep_time)

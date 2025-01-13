@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='BaseParsLib',
-    version='0.1.94',
+    version='0.2.01',
     packages=[
         'base_pars_lib',
         'base_pars_lib.utils',
