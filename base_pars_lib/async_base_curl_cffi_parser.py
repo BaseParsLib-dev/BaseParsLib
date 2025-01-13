@@ -26,7 +26,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         :param check_exceptions: bool = False
             Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
             кроме тех, на которых завязана логика
-            (например __calculate_random_cookies_headers_index)
+            (например _calculate_random_cookies_headers_index)
         """
 
         super().__init__()

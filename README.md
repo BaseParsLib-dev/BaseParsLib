@@ -508,3 +508,83 @@ if __name__ == '__main__':
 
     :return:
         Объект страницы или None в случае, если за все попытки не удалось открыть
+
+# AsyncBaseCurlCffiParser
+#### ```__init__```
+    :param debug: bool = False
+        Дебаг - вывод в консоль параметров отправляемых запросов и ответов
+    :param print_logs: bool = False
+        Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
+        Если True - логи выводятся принтами
+    :param check_exceptions: bool = False
+        Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
+        кроме тех, на которых завязана логика
+        (например _calculate_random_cookies_headers_index)
+#### ```_make_backoff_request```
+    Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
+    Задержка между каждым запросом увеличивается
+
+    :param urls: list
+        Список ссылок для запросов. Все ссылки обабатываются асинхронно одновременно
+    :param method: str = 'GET'
+        HTTP-метод
+    :param iter_count: int = 10
+        Количество попыток отправки запроса
+    :param iter_count_for_50x_errors: int = 3
+        Количество попыток отправки запроса для 500-х ошибок
+    :param increase_by_seconds: int = 10
+        Значение, на которое увеличивается время ожидания
+        на каждой итерации
+    :param increase_by_minutes_for_50x_errors: int = 20
+        Значение, на которое увеличивается время ожидания
+        на каждой итерации
+    :param verify: bool = True
+        Проверка безопасности сайта
+    :param with_random_useragent: bool = True
+        Случайный юзер-агент
+    :param proxies: dict | None = None
+        Прокси
+    :param headers: dict | list = None
+        Заголовки запроса, возможно передать в виде списка,
+        тогда выбирутся рандомно
+    :param cookies: dict | list = None
+        Куки запроса, возможно передать в виде списка,
+        тогда выбирутся рандомно
+    :param data: dict = None
+        Передаваемые данные
+    :param json: dict = None
+        Передаваемые данные
+    :param ignore_exceptions: tuple = 'default'
+        Возможность передать ошибки, которые будут обрабатываться в backoff.
+        Если ничего не передано, обрабатываются дефолтные
+    :param ignore_404: bool = False
+        Позволяет не применять backoff к респонзам со статус-кодом 404.
+        Если такой страницы нет, backoff может не понадобиться
+        Если значение = True и передан url на несуществующую страницу,
+        метод вернёт response после первой попытки
+    :param long_wait_for_50x: bool = False
+        Если True, применяет increase_by_minutes_for_50x_errors
+    :param save_bad_urls: bool = False
+        Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
+    :param timeout : int = 30
+        Время максимального ожидания ответа
+    :param random_sleep_time_every_request: list = False
+        Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
+    :param params: dict = False
+        Словарь параметров запроса
+    :param impersonate: str | None = None
+        Имитируемый браузер, если None, выбирается рандомно для каждого запроса из:
+            "chrome",
+            "edge",
+            "safari",
+            "safari_ios",
+            "chrome_android"
+        Можно передать свой. Можно так же передать название с версией - "chrome107",
+        но не рекоммендуется. Если не использовать версию, ставится автоматически последняя
+    :param debug_curl_cffi: bool = False
+        Дебаг от curl-cffi, выводит подробную информацию о каждом запросе.
+        Не зависит от debug, передаваемый при инициализации класса
+
+    :return:
+        Возвращает список ответов от сайта.
+        Какие-то из ответов могут быть None, если произошла ошибка из ignore_exceptions
