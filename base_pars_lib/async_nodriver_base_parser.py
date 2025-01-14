@@ -1,7 +1,6 @@
 import asyncio
-from typing import Callable
+from typing import Any, Callable
 
-import nodriver as uc
 from nodriver.core.browser import Browser
 from nodriver.core.tab import Tab, cdp
 
@@ -20,6 +19,8 @@ class AsyncNodriverBaseParser:
         self.debug: bool = False
 
         self.print_logs: bool = False
+
+        self.cdp_network_handler: Any = cdp.network.RequestWillBeSent
 
     async def _backoff_open_new_page(
             self,
@@ -59,7 +60,9 @@ class AsyncNodriverBaseParser:
             В качестве первого параметра функция обязательно должна принимать объект страницы: Tab
         :param catch_requests_handler: Callable = None
             Если передать метод, он будет срабатывать при каждом запросе от страницы.
-            В качестве аргумента принимает request
+            В качестве аргумента принимает request.
+            По дефолту запросы перехватывает cdp.network.RequestWillBeSent, но можно
+            поменять на другой через параметр self.cdp_network_handler
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
@@ -74,7 +77,7 @@ class AsyncNodriverBaseParser:
                 await self.browser.get('https://www.google.com')
                 page = await self.browser.get(url, new_tab=True)
                 if catch_requests_handler is not None:
-                    page.add_handler(cdp.network.RequestWillBeSent, catch_requests_handler)
+                    page.add_handler(self.cdp_network_handler, catch_requests_handler)
 
                 for _ in range(load_timeout):
                     if await is_page_loaded_check(page):

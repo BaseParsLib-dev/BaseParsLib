@@ -237,7 +237,7 @@ class AsyncPlaywrightBaseParser:
         :param full_page: bool = False
             Если True, страница прокрутится до конца
         :custom_js_code: str | None = None
-            Есть возможность написать собственную логику скроллинка
+            Есть возможность написать собственную логику скроллинга
         :return:
             None
         """
