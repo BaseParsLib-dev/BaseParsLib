@@ -21,7 +21,6 @@ class AsyncPlaywrightBaseParser:
         self.user_agent = UserAgent()
 
         self.context: BrowserContext | None = None
-        self.browser: Browser | None = None
         self.playwright: Playwright | None = None
 
     async def _backoff_open_new_page_on_context(
@@ -157,7 +156,7 @@ class AsyncPlaywrightBaseParser:
             user_agent = await self._get_pc_user_agent()
         if self.debug:
             logger.info_log(user_agent, print_logs=self.print_logs)
-        self.browser = await self.playwright.chromium.launch_persistent_context(  # type: ignore[union-attr]
+        self.context = await self.playwright.chromium.launch_persistent_context(  # type: ignore[union-attr]
             proxy=self.proxy,  # type: ignore[arg-type]
             headless=headless_browser,
             user_agent=user_agent,
