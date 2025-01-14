@@ -1,6 +1,7 @@
 # ruff: noqa: F401
 
 from base_pars_lib import utils
+from base_pars_lib.async_base_curl_cffi_parser import AsyncBaseCurlCffiParser
 from base_pars_lib.async_base_parser import AiohttpResponse, AsyncBaseParser
 from base_pars_lib.async_nodriver_base_parser import AsyncNodriverBaseParser
 from base_pars_lib.async_playwright_base_parser import AsyncPlaywrightBaseParser
