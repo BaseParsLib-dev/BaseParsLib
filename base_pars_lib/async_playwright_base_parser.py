@@ -157,13 +157,13 @@ class AsyncPlaywrightBaseParser:
             user_agent = await self._get_pc_user_agent()
         if self.debug:
             logger.info_log(user_agent, print_logs=self.print_logs)
-        self.browser = await self.playwright.chromium.launch(  # type: ignore[union-attr]
+        self.browser = await self.playwright.chromium.launch_persistent_context(  # type: ignore[union-attr]
             proxy=self.proxy,  # type: ignore[arg-type]
-            headless=headless_browser
+            headless=headless_browser,
+            user_agent=user_agent,
+            base_url='https://www.google.com',
+            user_data_dir=''
         )
-        self.context = await self.browser.new_context(user_agent=user_agent)
-        page = await self.context.new_page()
-        await page.goto('https://www.google.com')
 
     async def _get_pc_user_agent(self) -> str:
         while True:
