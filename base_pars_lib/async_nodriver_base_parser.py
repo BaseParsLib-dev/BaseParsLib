@@ -1,8 +1,9 @@
 import asyncio
 from typing import Callable
 
+import nodriver as uc
 from nodriver.core.browser import Browser
-from nodriver.core.tab import Tab
+from nodriver.core.tab import Tab, cdp
 
 from base_pars_lib.config import logger
 
@@ -16,17 +17,20 @@ class AsyncNodriverBaseParser:
     def __init__(self) -> None:
         self.browser: Browser | None = None
 
-        self.debug: bool | None = None
+        self.debug: bool = False
+
+        self.print_logs: bool = False
 
     async def _backoff_open_new_page(
             self,
             url: str,
+            is_page_loaded_check: Callable,
             check_page: Callable = None,  # type: ignore[assignment]
             check_page_args: dict | None = None,
-            is_page_loaded_check: Callable = None,  # type: ignore[assignment]
             load_timeout: int = 30,
             increase_by_seconds: int = 10,
             iter_count: int = 10,
+            catch_requests_handler: Callable = None
     ) -> Tab | None:
         """
         Открывает страницу по переданному url,
@@ -53,6 +57,9 @@ class AsyncNodriverBaseParser:
         :param is_page_loaded_check: Callable = None
             Можно передать функцию проверки того, что страница загружена.
             В качестве первого параметра функция обязательно должна принимать объект страницы: Tab
+        :param catch_requests_handler: Callable = None
+            Если передать метод, он будет срабатывать при каждом запросе от страницы.
+            В качестве аргумента принимает request
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
@@ -66,6 +73,8 @@ class AsyncNodriverBaseParser:
             try:
                 await self.browser.get('https://www.google.com')
                 page = await self.browser.get(url, new_tab=True)
+                if catch_requests_handler is not None:
+                    page.add_handler(cdp.network.RequestWillBeSent, catch_requests_handler)
 
                 for _ in range(load_timeout):
                     if await is_page_loaded_check(page):
@@ -85,7 +94,7 @@ class AsyncNodriverBaseParser:
                 if page:
                     await page.close()
                 if self.debug:
-                    logger.backoff_exception(ex=Ex, iteration=i, print_logs=True, url=url)
+                    logger.backoff_exception(ex=Ex, iteration=i, print_logs=self.print_logs, url=url)
             await asyncio.sleep(i * increase_by_seconds)
 
         return None
