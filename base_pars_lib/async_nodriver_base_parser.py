@@ -1,4 +1,5 @@
 import asyncio
+import os
 from typing import Any, Callable
 
 from nodriver.core.browser import Browser
@@ -31,7 +32,7 @@ class AsyncNodriverBaseParser:
             load_timeout: int = 30,
             increase_by_seconds: int = 10,
             iter_count: int = 10,
-            catch_requests_handler: Callable = None
+            catch_requests_handler: Callable = None  # type: ignore[assignment]
     ) -> Tab | None:
         """
         Открывает страницу по переданному url,
@@ -97,7 +98,65 @@ class AsyncNodriverBaseParser:
                 if page:
                     await page.close()
                 if self.debug:
-                    logger.backoff_exception(ex=Ex, iteration=i, print_logs=self.print_logs, url=url)
+                    logger.backoff_exception(
+                        ex=Ex,
+                        iteration=i,
+                        print_logs=self.print_logs,
+                        url=url
+                    )
             await asyncio.sleep(i * increase_by_seconds)
 
         return None
+
+    @staticmethod
+    async def _make_proxy_extension(host: str, port: int, login: str, password: str) -> str:
+        """
+        Создаёт расширение с прокси для Nodriver
+
+        :param host: str
+            IP-адрес прокси
+        :param port: int
+            Порт прокси
+        :param login: str
+            Логин прокси
+        :param password: str
+            Пароль прокси
+        :return:
+            возвращает путь к папке с расширением, который
+            после нужно зарегистрировать при старте браузера:
+            browser_args=['--load-extension=<<PATH>>']
+        """
+
+        background_js = """
+        var config = {
+             mode: "fixed_servers",
+             rules: {
+             singleProxy: {
+                 scheme: "http",
+                 host: "%s",
+                 port: parseInt(%s)
+             },
+            bypassList: ["localhost"]
+             }
+         };
+        chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
+        function callbackFn(details) {
+         return {
+             authCredentials: {
+                 username: "%s",
+                 password: "%s"
+             }
+         };
+        }
+        chrome.webRequest.onAuthRequired.addListener(
+                 callbackFn,
+                 {urls: ["<all_urls>"]},
+                 ['blocking']
+        );
+        """ % (host, port, login, password)  # noqa: UP031
+
+        current_directory = os.path.dirname(os.path.abspath(__file__))
+        with open(f'{current_directory}/nodriver_proxy_extension/background.js', 'w') as f:
+            f.write(background_js)
+
+        return f'{current_directory}/nodriver_proxy_extension'

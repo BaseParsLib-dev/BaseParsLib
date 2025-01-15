@@ -514,6 +514,24 @@ if __name__ == '__main__':
     :return:
         Объект страницы или None в случае, если за все попытки не удалось открыть
 
+####
+```_make_proxy_extension```
+
+    Создаёт расширение с прокси для Nodriver
+
+    :param host: str
+        IP-адрес прокси
+    :param port: int
+        Порт прокси
+    :param login: str
+        Логин прокси
+    :param password: str
+        Пароль прокси
+    :return:
+        возвращает путь к папке с расширением, который
+        после нужно зарегистрировать при старте браузера:
+        browser_args=['--load-extension=<<PATH>>']
+
 # AsyncBaseCurlCffiParser
 #### ```__init__```
     :param debug: bool = False
