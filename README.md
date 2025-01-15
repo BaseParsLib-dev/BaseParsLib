@@ -545,6 +545,11 @@ if __name__ == '__main__':
     :return:
         Текст с запрашиваемой страницы
 
+#### ```_close_browser```
+    Закрывает браузер
+    :return: 
+        None
+
 # AsyncBaseCurlCffiParser
 #### ```__init__```
     :param debug: bool = False
