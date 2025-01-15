@@ -75,7 +75,6 @@ class AsyncNodriverBaseParser:
         for i in range(1, iter_count + 1):
             page = None
             try:
-                await self.browser.get('https://www.google.com')
                 page = await self.browser.get(url, new_tab=True)
                 if catch_requests_handler is not None:
                     page.add_handler(self.cdp_network_handler, catch_requests_handler)
