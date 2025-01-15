@@ -514,7 +514,7 @@ if __name__ == '__main__':
     :return:
         Объект страницы или None в случае, если за все попытки не удалось открыть
 
-#### ```_make_proxy_extension```
+#### ```__make_chrome_proxy_extension```
 
     Создаёт расширение с прокси для Nodriver
 

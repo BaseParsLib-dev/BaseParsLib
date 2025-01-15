@@ -150,7 +150,7 @@ class AsyncNodriverBaseParser:
         return await page.evaluate(script, await_promise=True)
 
     @staticmethod
-    async def _make_proxy_extension(host: str, port: int, login: str, password: str) -> str:
+    async def _make_chrome_proxy_extension(host: str, port: int, login: str, password: str) -> str:
         """
         Создаёт расширение с прокси для Nodriver
 
@@ -196,8 +196,32 @@ class AsyncNodriverBaseParser:
         );
         """ % (host, port, login, password)  # noqa: UP031
 
+        manifest_json = """
+        {
+          "version": "1.0.0",
+          "manifest_version": 3,
+          "name": "Chrome Proxy",
+          "permissions": [
+            "proxy",
+            "tabs",
+            "storage",
+            "webRequest",
+            "webRequestAuthProvider"
+          ],
+          "host_permissions": [
+            "<all_urls>"
+          ],
+          "background": {
+            "service_worker": "background.js"
+          },
+          "minimum_chrome_version": "22.0.0"
+        }
+        """
+
         current_directory = os.path.dirname(os.path.abspath(__file__))
         with open(f'{current_directory}/nodriver_proxy_extension/background.js', 'w') as f:
             f.write(background_js)
+        with open(f'{current_directory}/nodriver_proxy_extension/manifest.json', 'w') as f:
+            f.write(manifest_json)
 
         return f'{current_directory}/nodriver_proxy_extension'
