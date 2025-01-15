@@ -514,8 +514,7 @@ if __name__ == '__main__':
     :return:
         Объект страницы или None в случае, если за все попытки не удалось открыть
 
-####
-```_make_proxy_extension```
+#### ```_make_proxy_extension```
 
     Создаёт расширение с прокси для Nodriver
 
@@ -531,6 +530,20 @@ if __name__ == '__main__':
         возвращает путь к папке с расширением, который
         после нужно зарегистрировать при старте браузера:
         browser_args=['--load-extension=<<PATH>>']
+
+#### ```_make_request_from_page```
+    Выполняет запрос через JS со страницы
+
+    :param page: Tab
+        Объект страницы
+    :param url: str
+        Ссылка
+    :param method: str
+        HTTP-метод
+    :param request_body: str | dict | None = None
+        Тело запроса
+    :return:
+        Текст с запрашиваемой страницы
 
 # AsyncBaseCurlCffiParser
 #### ```__init__```

@@ -109,6 +109,47 @@ class AsyncNodriverBaseParser:
         return None
 
     @staticmethod
+    async def _make_request_from_page(
+            page: Tab,
+            url: str,
+            method: str,
+            request_body: str | dict | None = None
+    ) -> str:
+        """
+        Выполняет запрос через JS со страницы
+
+        :param page: Tab
+            Объект страницы
+        :param url: str
+            Ссылка
+        :param method: str
+            HTTP-метод
+        :param request_body: str | dict | None = None
+            Тело запроса
+        :return:
+            Текст с запрашиваемой страницы
+        """
+
+        script = """
+            fetch("%s", {
+                method: "%s",
+                REQUEST_BODY,
+                headers: {
+                    "Content-Type": "application/json;charset=UTF-8"
+                }
+            })
+            .then(response => response.text());
+        """ % (url, method)
+        if request_body is not None:
+            script = script.replace(
+                'REQUEST_BODY',
+                f'body: JSON.stringify({request_body})'
+            )
+        else:
+            script = script.replace('REQUEST_BODY,', '')
+        return await page.evaluate(script, await_promise=True)
+
+    @staticmethod
     async def _make_proxy_extension(host: str, port: int, login: str, password: str) -> str:
         """
         Создаёт расширение с прокси для Nodriver
