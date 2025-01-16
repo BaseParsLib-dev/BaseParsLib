@@ -6,6 +6,7 @@ from nodriver.core.browser import Browser
 from nodriver.core.tab import Tab, cdp
 
 from base_pars_lib.config import logger
+from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase
 
 
 class BrowserIsNotInitError(Exception):
@@ -13,8 +14,10 @@ class BrowserIsNotInitError(Exception):
         self.message = 'BrowserIsNotInitError'
 
 
-class AsyncNodriverBaseParser:
+class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
     def __init__(self) -> None:
+        super().__init__()
+
         self.browser: Browser | None = None
 
         self.debug: bool = False
@@ -138,7 +141,7 @@ class AsyncNodriverBaseParser:
                 }
             })
             .then(response => response.text());
-        """ % (url, method)
+        """ % (url, method)  # noqa: UP031
         if request_body is not None:
             script = script.replace(
                 'REQUEST_BODY',
