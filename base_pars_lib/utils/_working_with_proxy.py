@@ -1,7 +1,7 @@
 import requests
 from requests.auth import HTTPProxyAuth
 
-from base_pars_lib._requests_digest_proxy import HTTPProxyDigestAuth
+from base_pars_lib.core._requests_digest_proxy import HTTPProxyDigestAuth
 
 
 def rotating_proxy_auth(

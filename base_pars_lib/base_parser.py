@@ -8,8 +8,8 @@ import requests
 import urllib3
 from fake_useragent import UserAgent
 
-from base_pars_lib import _requests_digest_proxy
 from base_pars_lib.config import logger
+from base_pars_lib.core import _requests_digest_proxy
 
 
 class BaseParser:
