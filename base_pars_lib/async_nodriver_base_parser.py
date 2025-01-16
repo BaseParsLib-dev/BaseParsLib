@@ -107,18 +107,6 @@ class AsyncNodriverBaseParser:
 
         return None
 
-    async def _close_browser(self) -> None:
-        """
-        Закрывает браузер
-        :return:
-            None
-        """
-        if self.browser:
-            pages = self.browser.tabs
-            for page in pages:
-                await page.close()
-        return None
-
     @staticmethod
     async def _make_request_from_page(
             page: Tab,
