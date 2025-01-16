@@ -1,6 +1,7 @@
 import asyncio
 import random
 
+import curl_cffi
 import urllib3
 from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.models import Response
@@ -34,7 +35,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
 
         self.ignore_exceptions = (
             urllib3.exceptions.ProxyError,
-            asyncio.TimeoutError
+            asyncio.TimeoutError,
+            curl_cffi.requests.exceptions.ConnectionError
         )
 
         self.check_exceptions = check_exceptions
