@@ -107,8 +107,8 @@ class AsyncNodriverBaseParser:
 
         return None
 
-    @staticmethod
     async def _make_request_from_page(
+            self,
             page: Tab,
             url: str,
             method: str,
@@ -146,6 +146,10 @@ class AsyncNodriverBaseParser:
             )
         else:
             script = script.replace('REQUEST_BODY,', '')
+
+        if self.debug:
+            logger.info_log(f'JS request\n\n{script}', print_logs=self.print_logs)
+
         return await page.evaluate(script, await_promise=True)
 
     @staticmethod
