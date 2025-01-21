@@ -116,9 +116,11 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             )
         if impersonate is None:
             impersonate = await self.__get_random_impersonate()
-
-        if self.debug:
-            logger.info_log(f'impersonate: {impersonate}', print_logs=self.print_logs)
+            if self.debug:
+                logger.info_log(
+                    f'impersonate: {impersonate}',
+                    print_logs=self.print_logs
+                )
 
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
