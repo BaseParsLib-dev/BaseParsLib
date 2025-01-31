@@ -31,7 +31,14 @@ def split_on_chunks_by_count_chunks(
         Количество чанков
     """
 
-    chunk_len = -(-len(array) // count_chunks)
+    array_length = len(array)
+    chunk_size = array_length // count_chunks
+    remainder = array_length % count_chunks
 
-    for i in range(0, len(array), chunk_len):
-        yield array[i: i + chunk_len]
+    start = 0
+    for i in range(count_chunks):
+        end = start + chunk_size
+        if i < remainder:
+            end += 1
+        yield array[start:end]
+        start = end
