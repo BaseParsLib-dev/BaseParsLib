@@ -167,6 +167,18 @@ proxy_session = rotating_proxy_auth(
         Обрезать правую границу
     :return: str
 
+#### Метод ```collect_proxies_for_countries```
+    Получение списка прокси с webshare.io для выбранных стран
+    
+    :param token: токен авторизации на webshare.io
+    :param countries_list: список стран формата ['AE', 'EG']
+    :param max_retries: максимальное число попыток отправки запроса
+    :param list_of_dict: возвращать прокси в виде списка словарей
+                        [{'https': 'http://username:password@proxy_address:port'}, ]
+                        вместо списка строк
+                        ['http://username:password@proxy_address:port', ]
+    :return: список прокси
+
 ### Применение методов библиотеки
 
 ```python
