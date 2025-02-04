@@ -116,7 +116,7 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             url: str | list[str],
             method: str,
             request_body: str | dict | None = None
-    ) -> str | list[str]:
+    ) -> str | list[str] | None:
         """
         Выполняет запрос через JS со страницы
 
@@ -143,7 +143,7 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             tasks.append(page.evaluate(script, await_promise=True))
 
         responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
-        if len(responses) == 1:
+        if responses or len(responses) == 1:
             return responses[0]
         return responses
 
