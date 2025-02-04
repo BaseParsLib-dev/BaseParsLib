@@ -35,7 +35,9 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             load_timeout: int = 30,
             increase_by_seconds: int = 10,
             iter_count: int = 10,
-            catch_requests_handler: Callable = None  # type: ignore[assignment]
+            catch_requests_handler: Callable = None,  # type: ignore[assignment]
+            new_tab: bool = True,
+            new_window: bool = False
     ) -> Tab | None:
         """
         Открывает страницу по переданному url,
@@ -67,6 +69,10 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             В качестве аргумента принимает request.
             По дефолту запросы перехватывает cdp.network.RequestWillBeSent, но можно
             поменять на другой через параметр self.cdp_network_handler
+        :param new_tab: bool = True
+            Открыть в новой вкладке
+        :param new_window: bool = False
+            Открыть в новом окне браузера
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
@@ -78,7 +84,7 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         for i in range(1, iter_count + 1):
             page = None
             try:
-                page = await self.browser.get(url, new_tab=True)
+                page = await self.browser.get(url, new_tab=new_tab, new_window=new_window)
                 if catch_requests_handler is not None:
                     page.add_handler(self.cdp_network_handler, catch_requests_handler)
 

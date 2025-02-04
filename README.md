@@ -510,6 +510,10 @@ if __name__ == '__main__':
         В качестве аргумента принимает request.
         По дефолту запросы перехватывает cdp.network.RequestWillBeSent, но можно
         поменять на другой через параметр self.cdp_network_handler
+    :param new_tab: bool = True
+        Открыть в новой вкладке
+    :param new_window: bool = False
+        Открыть в новом окне браузера
 
     :return:
         Объект страницы или None в случае, если за все попытки не удалось открыть
