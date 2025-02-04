@@ -113,7 +113,7 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
     async def _make_request_from_page(
             self,
             page: Tab,
-            url: str,
+            url: str | list[str],
             method: str,
             request_body: str | dict | None = None
     ) -> str:
@@ -122,8 +122,9 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
 
         :param page: Tab
             Объект страницы
-        :param url: str
+        :param url: str | list[str]
             Ссылка
+            Если передан список ссылок, запросы отправятся асинхронно
         :param method: str
             HTTP-метод
         :param request_body: str | dict | None = None
@@ -132,16 +133,33 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             Текст с запрашиваемой страницы
         """
 
+        tasks: list = []
+        if isinstance(url, list):
+            for one_url in url:
+                script = await self.__make_js_script(one_url, method, request_body)
+                tasks.append(page.evaluate(script, await_promise=True))
+        else:
+            script = await self.__make_js_script(url, method, request_body)
+            tasks.append(page.evaluate(script, await_promise=True))
+
+        return await asyncio.gather(*tasks)  # type: ignore[return-value]
+
+    async def __make_js_script(
+            self,
+            url: str | list[str],
+            method: str,
+            request_body: str | dict | None = None
+    ) -> str:
         script = """
-            fetch("%s", {
-                method: "%s",
-                REQUEST_BODY,
-                headers: {
-                    "Content-Type": "application/json;charset=UTF-8"
-                }
-            })
-            .then(response => response.text());
-        """ % (url, method)  # noqa: UP031
+                    fetch("%s", {
+                        method: "%s",
+                        REQUEST_BODY,
+                        headers: {
+                            "Content-Type": "application/json;charset=UTF-8"
+                        }
+                    })
+                    .then(response => response.text());
+                """ % (url, method)  # noqa: UP031
         if request_body is not None:
             script = script.replace(
                 'REQUEST_BODY',
@@ -153,7 +171,7 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         if self.debug:
             logger.info_log(f'JS request\n\n{script}', print_logs=self.print_logs)
 
-        return await page.evaluate(script, await_promise=True)
+        return script
 
     @staticmethod
     async def _make_chrome_proxy_extension(host: str, port: int, login: str, password: str) -> str:

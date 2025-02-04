@@ -536,8 +536,9 @@ if __name__ == '__main__':
 
     :param page: Tab
         Объект страницы
-    :param url: str
+    :param url: str | list[str]
         Ссылка
+        Если передан список ссылок, запросы отправятся асинхронно
     :param method: str
         HTTP-метод
     :param request_body: str | dict | None = None
