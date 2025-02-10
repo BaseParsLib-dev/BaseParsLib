@@ -2,8 +2,8 @@ import asyncio
 import os
 from typing import Any, Callable
 
-from nodriver.core.browser import Browser
-from nodriver.core.tab import Tab, cdp
+from zendriver.core.browser import Browser
+from zendriver.core.tab import Tab, cdp
 
 from base_pars_lib.config import logger
 from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase

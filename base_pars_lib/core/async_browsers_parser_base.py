@@ -2,8 +2,8 @@ import asyncio
 from typing import Any, Callable
 
 from fake_useragent import UserAgent
-from nodriver.core.tab import Tab
 from playwright.async_api import Page
+from zendriver.core.tab import Tab
 
 
 class AsyncBrowsersParserBase:

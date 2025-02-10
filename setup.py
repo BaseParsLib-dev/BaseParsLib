@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='BaseParsLib',
-    version='0.2.610',
+    version='0.2.611',
     packages=[
         'base_pars_lib',
         'base_pars_lib.utils',
@@ -15,7 +15,7 @@ setup(
         'requests==2.31.0',
         'aiohttp==3.9.5',
         'pytest-playwright==0.5.0',
-        'nodriver==0.38.post1',
+        'zendriver==0.4.1',
         'selenium==4.26.1',
         'curl-cffi==0.7.4'
     ]
