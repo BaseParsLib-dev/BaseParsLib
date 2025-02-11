@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable
 
 from zendriver.core.browser import Browser
 from zendriver.core.tab import Tab, cdp
@@ -174,8 +174,10 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             for one_url in url:
                 script = await self.__make_js_script(one_url, method, request_body)
                 tasks.append(
-                    self.__fetch_task(
-                        task=page.evaluate(script, await_promise=True),
+                    self.__fetch(
+                        page=page,
+                        script=script,
+                        await_promise=True,
                         timeout=timeout,
                         iter_count=iter_count,
                         increase_by_seconds=increase_by_seconds,
@@ -186,8 +188,10 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         else:
             script = await self.__make_js_script(url, method, request_body)
             tasks.append(
-                self.__fetch_task(
-                    task=page.evaluate(script, await_promise=True),
+                self.__fetch(
+                    page=page,
+                    script=script,
+                    await_promise=True,
                     timeout=timeout,
                     iter_count=iter_count,
                     increase_by_seconds=increase_by_seconds,
@@ -224,9 +228,11 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
 
         return script
 
-    async def __fetch_task(
+    async def __fetch(
         self,
-        task: Coroutine[Any, Any, Any],
+        page: Tab,
+        script: str,
+        await_promise: bool,
         timeout: int,
         iter_count: int,
         increase_by_seconds: int,
@@ -235,7 +241,9 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
     ) -> str | None:
         for i in range(1, iter_count + 1):
             try:
-                return await asyncio.wait_for(task, timeout)
+                return await asyncio.wait_for(
+                    page.evaluate(script, await_promise=await_promise), timeout
+                )
             except ignore_exceptions if not self.check_exceptions else () as Ex:
                 if self.debug:
                     logger.backoff_exception(Ex, i, self.print_logs, url_for_logs)
