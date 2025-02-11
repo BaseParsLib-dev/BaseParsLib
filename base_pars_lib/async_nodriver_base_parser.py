@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import Any, Callable
+from typing import Any, Callable, Coroutine
 
 from zendriver.core.browser import Browser
 from zendriver.core.tab import Tab, cdp
@@ -11,11 +11,24 @@ from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBas
 
 class BrowserIsNotInitError(Exception):
     def __init__(self) -> None:
-        self.message = 'BrowserIsNotInitError'
+        self.message = "BrowserIsNotInitError"
 
 
 class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
-    def __init__(self) -> None:
+    def __init__(
+        self, debug: bool = False, print_logs: bool = False, check_exceptions: bool = False
+    ) -> None:
+        """
+        :param debug: bool = False
+            Дебаг - вывод в консоль параметров отправляемых запросов и ответов
+        :param print_logs: bool = False
+            Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
+            Если True - логи выводятся принтами
+        :param check_exceptions: bool = False
+            Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
+            кроме тех, на которых завязана логика
+        """
+
         super().__init__()
 
         self.browser: Browser | None = None
@@ -26,18 +39,25 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
 
         self.cdp_network_handler: Any = cdp.network.RequestWillBeSent
 
+        self.ignore_exceptions = (Exception,)
+        self.debug = debug
+        self.print_logs = print_logs
+        self.check_exceptions = check_exceptions
+
+        return None
+
     async def _backoff_open_new_page(
-            self,
-            url: str,
-            is_page_loaded_check: Callable,
-            check_page: Callable = None,  # type: ignore[assignment]
-            check_page_args: dict | None = None,
-            load_timeout: int = 30,
-            increase_by_seconds: int = 10,
-            iter_count: int = 10,
-            catch_requests_handler: Callable = None,  # type: ignore[assignment]
-            new_tab: bool = True,
-            new_window: bool = False
+        self,
+        url: str,
+        is_page_loaded_check: Callable,
+        check_page: Callable = None,  # type: ignore[assignment]
+        check_page_args: dict | None = None,
+        load_timeout: int = 30,
+        increase_by_seconds: int = 10,
+        iter_count: int = 10,
+        catch_requests_handler: Callable = None,  # type: ignore[assignment]
+        new_tab: bool = True,
+        new_window: bool = False,
     ) -> Tab | None:
         """
         Открывает страницу по переданному url,
@@ -107,22 +127,23 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
                     await page.close()
                 if self.debug:
                     logger.backoff_exception(
-                        ex=Ex,
-                        iteration=i,
-                        print_logs=self.print_logs,
-                        url=url
+                        ex=Ex, iteration=i, print_logs=self.print_logs, url=url
                     )
             await asyncio.sleep(i * increase_by_seconds)
 
         return None
 
     async def _make_request_from_page(
-            self,
-            page: Tab,
-            url: str | list[str],
-            method: str,
-            request_body: str | dict | None = None
-    ) -> str | list[str]:
+        self,
+        page: Tab,
+        url: str | list[str],
+        method: str,
+        request_body: str | dict | None = None,
+        iter_count: int = 10,
+        increase_by_seconds: int = 10,
+        ignore_exceptions: tuple | str = "default",
+        timeout: int = 30,
+    ) -> str | list[str] | None:
         """
         Выполняет запрос через JS со страницы
 
@@ -135,29 +156,52 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             HTTP-метод
         :param request_body: str | dict | None = None
             Тело запроса
+        :param iter_count: int = 10
+            Количество попыток отправки запроса
+        :param increase_by_seconds: int = 10
+            Значение, на которое увеличивается время ожидания
+            на каждой итерации
+        :param ignore_exceptions: tuple | str = 'default'
+            Возможность передать ошибки, которые будут обрабатываться в backoff.
+            Если ничего не передано, обрабатываются дефолтные
         :return:
             Текст с запрашиваемой страницы
         """
 
-        tasks: list = []
-        if isinstance(url, list):
-            for one_url in url:
-                script = await self.__make_js_script(one_url, method, request_body)
-                tasks.append(page.evaluate(script, await_promise=True))
-        else:
-            script = await self.__make_js_script(url, method, request_body)
-            tasks.append(page.evaluate(script, await_promise=True))
+        for i in range(1, iter_count + 1):
+            try:
+                if ignore_exceptions == "default":
+                    ignore_exceptions = self.ignore_exceptions
 
-        responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
-        if responses and len(responses) == 1:
-            return responses[0]
-        return responses
+                tasks: list = []
+                if isinstance(url, list):
+                    for one_url in url:
+                        script = await self.__make_js_script(one_url, method, request_body)
+                        tasks.append(
+                            self.__task_with_timeout(
+                                page.evaluate(script, await_promise=True), timeout
+                            )
+                        )
+                else:
+                    script = await self.__make_js_script(url, method, request_body)
+                    tasks.append(
+                        self.__task_with_timeout(page.evaluate(script, await_promise=True), timeout)
+                    )
+
+                responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
+                if responses and len(responses) == 1:
+                    return responses[0]
+                return responses
+            except ignore_exceptions if not self.check_exceptions else () as Ex:
+                if self.debug:
+                    logger.backoff_exception(Ex, i, self.print_logs, "")
+                await asyncio.sleep(i * increase_by_seconds)
+                continue
+
+        return None
 
     async def __make_js_script(
-            self,
-            url: str | list[str],
-            method: str,
-            request_body: str | dict | None = None
+        self, url: str | list[str], method: str, request_body: str | dict | None = None
     ) -> str:
         script = """
                     fetch("%s", {
@@ -170,17 +214,18 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
                     .then(response => response.text());
                 """ % (url, method)  # noqa: UP031
         if request_body is not None:
-            script = script.replace(
-                'REQUEST_BODY',
-                f'body: JSON.stringify({request_body})'
-            )
+            script = script.replace("REQUEST_BODY", f"body: JSON.stringify({request_body})")
         else:
-            script = script.replace('REQUEST_BODY,', '')
+            script = script.replace("REQUEST_BODY,", "")
 
         if self.debug:
-            logger.info_log(f'JS request\n\n{script}', print_logs=self.print_logs)
+            logger.info_log(f"JS request\n\n{script}", print_logs=self.print_logs)
 
         return script
+
+    @staticmethod
+    async def __task_with_timeout(task: Coroutine[Any, Any, Any], timeout: int) -> Any:
+        return await asyncio.wait_for(task, timeout)
 
     @staticmethod
     async def _make_chrome_proxy_extension(host: str, port: int, login: str, password: str) -> str:
@@ -252,9 +297,9 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         """
 
         current_directory = os.path.dirname(os.path.abspath(__file__))
-        with open(f'{current_directory}/nodriver_proxy_extension/background.js', 'w') as f:
+        with open(f"{current_directory}/nodriver_proxy_extension/background.js", "w") as f:
             f.write(background_js)
-        with open(f'{current_directory}/nodriver_proxy_extension/manifest.json', 'w') as f:
+        with open(f"{current_directory}/nodriver_proxy_extension/manifest.json", "w") as f:
             f.write(manifest_json)
 
-        return f'{current_directory}/nodriver_proxy_extension'
+        return f"{current_directory}/nodriver_proxy_extension"
