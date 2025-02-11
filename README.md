@@ -480,15 +480,6 @@ if __name__ == '__main__':
         WebElement
 
 # AsyncNodriverBaseParser
-#### ```__init__```
-    :param debug: bool = False
-        Дебаг - вывод в консоль параметров отправляемых запросов и ответов
-    :param print_logs: bool = False
-        Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
-        Если True - логи выводятся принтами
-    :param check_exceptions: bool = False
-        Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
-        кроме тех, на которых завязана логика
 #### ```backoff_open_new_page```
     Открывает страницу по переданному url,
     в случае ошибки открывает повторно через время
@@ -556,14 +547,6 @@ if __name__ == '__main__':
         HTTP-метод
     :param request_body: str | dict | None = None
         Тело запроса
-    :param iter_count: int = 10
-        Количество попыток отправки запроса
-    :param increase_by_seconds: int = 10
-        Значение, на которое увеличивается время ожидания
-        на каждой итерации
-    :param ignore_exceptions: tuple | str = 'default'
-        Возможность передать ошибки, которые будут обрабатываться в backoff.
-        Если ничего не передано, обрабатываются дефолтные
     :return:
         Текст с запрашиваемой страницы
 

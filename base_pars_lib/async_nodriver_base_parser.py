@@ -15,20 +15,7 @@ class BrowserIsNotInitError(Exception):
 
 
 class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
-    def __init__(
-        self, debug: bool = False, print_logs: bool = False, check_exceptions: bool = False
-    ) -> None:
-        """
-        :param debug: bool = False
-            Дебаг - вывод в консоль параметров отправляемых запросов и ответов
-        :param print_logs: bool = False
-            Если False - логи выводятся модулем logging, что не отображается на сервере в journalctl
-            Если True - логи выводятся принтами
-        :param check_exceptions: bool = False
-            Позволяет посмотреть внутренние ошибки библиотеки, отключает все try/except конструкции,
-            кроме тех, на которых завязана логика
-        """
-
+    def __init__(self) -> None:
         super().__init__()
 
         self.browser: Browser | None = None
@@ -38,11 +25,6 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         self.print_logs: bool = False
 
         self.cdp_network_handler: Any = cdp.network.RequestWillBeSent
-
-        self.ignore_exceptions = (Exception,)
-        self.debug = debug
-        self.print_logs = print_logs
-        self.check_exceptions = check_exceptions
 
     async def _backoff_open_new_page(
         self,
@@ -132,16 +114,8 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         return None
 
     async def _make_request_from_page(
-        self,
-        page: Tab,
-        url: str | list[str],
-        method: str,
-        request_body: str | dict | None = None,
-        iter_count: int = 10,
-        increase_by_seconds: int = 10,
-        ignore_exceptions: tuple | str = "default",
-        timeout: int = 30,
-    ) -> str | list[str] | None:
+        self, page: Tab, url: str | list[str], method: str, request_body: str | dict | None = None
+    ) -> str | list[str]:
         """
         Выполняет запрос через JS со страницы
 
@@ -154,51 +128,18 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             HTTP-метод
         :param request_body: str | dict | None = None
             Тело запроса
-        :param iter_count: int = 10
-            Количество попыток отправки запроса
-        :param increase_by_seconds: int = 10
-            Значение, на которое увеличивается время ожидания
-            на каждой итерации
-        :param ignore_exceptions: tuple | str = 'default'
-            Возможность передать ошибки, которые будут обрабатываться в backoff.
-            Если ничего не передано, обрабатываются дефолтные
         :return:
             Текст с запрашиваемой страницы
         """
-
-        if ignore_exceptions == "default":
-            ignore_exceptions = self.ignore_exceptions
 
         tasks: list = []
         if isinstance(url, list):
             for one_url in url:
                 script = await self.__make_js_script(one_url, method, request_body)
-                tasks.append(
-                    self.__fetch(
-                        page=page,
-                        script=script,
-                        await_promise=True,
-                        timeout=timeout,
-                        iter_count=iter_count,
-                        increase_by_seconds=increase_by_seconds,
-                        ignore_exceptions=ignore_exceptions,  # type: ignore[arg-type]
-                        url_for_logs=one_url,
-                    )
-                )
+                tasks.append(page.evaluate(script, await_promise=True))
         else:
             script = await self.__make_js_script(url, method, request_body)
-            tasks.append(
-                self.__fetch(
-                    page=page,
-                    script=script,
-                    await_promise=True,
-                    timeout=timeout,
-                    iter_count=iter_count,
-                    increase_by_seconds=increase_by_seconds,
-                    ignore_exceptions=ignore_exceptions,  # type: ignore[arg-type]
-                    url_for_logs=url,
-                )
-            )
+            tasks.append(page.evaluate(script, await_promise=True))
 
         responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
         if responses and len(responses) == 1:
@@ -227,29 +168,6 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             logger.info_log(f"JS request\n\n{script}", print_logs=self.print_logs)
 
         return script
-
-    async def __fetch(
-        self,
-        page: Tab,
-        script: str,
-        await_promise: bool,
-        timeout: int,
-        iter_count: int,
-        increase_by_seconds: int,
-        ignore_exceptions: tuple,
-        url_for_logs: str,
-    ) -> str | None:
-        for i in range(1, iter_count + 1):
-            try:
-                return await asyncio.wait_for(
-                    page.evaluate(script, await_promise=await_promise), timeout
-                )
-            except ignore_exceptions if not self.check_exceptions else () as Ex:
-                if self.debug:
-                    logger.backoff_exception(Ex, i, self.print_logs, url_for_logs)
-                await asyncio.sleep(i * increase_by_seconds)
-                continue
-        return None
 
     @staticmethod
     async def _make_chrome_proxy_extension(host: str, port: int, login: str, password: str) -> str:
