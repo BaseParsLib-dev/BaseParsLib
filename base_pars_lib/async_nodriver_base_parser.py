@@ -44,8 +44,6 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         self.print_logs = print_logs
         self.check_exceptions = check_exceptions
 
-        return None
-
     async def _backoff_open_new_page(
         self,
         url: str,
@@ -168,37 +166,40 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             Текст с запрашиваемой страницы
         """
 
-        for i in range(1, iter_count + 1):
-            try:
-                if ignore_exceptions == "default":
-                    ignore_exceptions = self.ignore_exceptions
+        if ignore_exceptions == "default":
+            ignore_exceptions = self.ignore_exceptions
 
-                tasks: list = []
-                if isinstance(url, list):
-                    for one_url in url:
-                        script = await self.__make_js_script(one_url, method, request_body)
-                        tasks.append(
-                            self.__task_with_timeout(
-                                page.evaluate(script, await_promise=True), timeout
-                            )
-                        )
-                else:
-                    script = await self.__make_js_script(url, method, request_body)
-                    tasks.append(
-                        self.__task_with_timeout(page.evaluate(script, await_promise=True), timeout)
+        tasks: list = []
+        if isinstance(url, list):
+            for one_url in url:
+                script = await self.__make_js_script(one_url, method, request_body)
+                tasks.append(
+                    self.__fetch_task(
+                        task=page.evaluate(script, await_promise=True),
+                        timeout=timeout,
+                        iter_count=iter_count,
+                        increase_by_seconds=increase_by_seconds,
+                        ignore_exceptions=ignore_exceptions,  # type: ignore[arg-type]
+                        url_for_logs=one_url,
                     )
+                )
+        else:
+            script = await self.__make_js_script(url, method, request_body)
+            tasks.append(
+                self.__fetch_task(
+                    task=page.evaluate(script, await_promise=True),
+                    timeout=timeout,
+                    iter_count=iter_count,
+                    increase_by_seconds=increase_by_seconds,
+                    ignore_exceptions=ignore_exceptions,  # type: ignore[arg-type]
+                    url_for_logs=url,
+                )
+            )
 
-                responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
-                if responses and len(responses) == 1:
-                    return responses[0]
-                return responses
-            except ignore_exceptions if not self.check_exceptions else () as Ex:
-                if self.debug:
-                    logger.backoff_exception(Ex, i, self.print_logs, "")
-                await asyncio.sleep(i * increase_by_seconds)
-                continue
-
-        return None
+        responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
+        if responses and len(responses) == 1:
+            return responses[0]
+        return responses
 
     async def __make_js_script(
         self, url: str | list[str], method: str, request_body: str | dict | None = None
@@ -223,9 +224,24 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
 
         return script
 
-    @staticmethod
-    async def __task_with_timeout(task: Coroutine[Any, Any, Any], timeout: int) -> Any:
-        return await asyncio.wait_for(task, timeout)
+    async def __fetch_task(
+        self,
+        task: Coroutine[Any, Any, Any],
+        timeout: int,
+        iter_count: int,
+        increase_by_seconds: int,
+        ignore_exceptions: tuple,
+        url_for_logs: str,
+    ) -> str | None:
+        for i in range(1, iter_count + 1):
+            try:
+                return await asyncio.wait_for(task, timeout)
+            except ignore_exceptions if not self.check_exceptions else () as Ex:
+                if self.debug:
+                    logger.backoff_exception(Ex, i, self.print_logs, url_for_logs)
+                await asyncio.sleep(i * increase_by_seconds)
+                continue
+        return None
 
     @staticmethod
     async def _make_chrome_proxy_extension(host: str, port: int, login: str, password: str) -> str:
