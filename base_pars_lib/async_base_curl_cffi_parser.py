@@ -174,7 +174,9 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             random_sleep_time_every_request: list | bool = False,
             params: dict | bool = False,
             impersonate: str | None = None,
-            debug_curl_cffi: bool = False
+            debug_curl_cffi: bool = False,
+            match_headers_to_urls: bool = False,
+            match_cookies_to_urls: bool = False
     ) -> tuple[Response | None]:
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -202,10 +204,10 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             Прокси
         :param headers: dict | list = None
             Заголовки запроса, возможно передать в виде списка,
-            тогда выбирутся рандомно
+            тогда выберутся рандомно
         :param cookies: dict | list = None
             Куки запроса, возможно передать в виде списка,
-            тогда выбирутся рандомно
+            тогда выберутся рандомно
         :param data: dict = None
             Передаваемые данные
         :param json: dict = None
@@ -240,6 +242,12 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         :param debug_curl_cffi: bool = False
             Дебаг от curl-cffi, выводит подробную информацию о каждом запросе.
             Не зависит от debug, передаваемый при инициализации класса
+        :param match_headers_to_urls: bool = False
+            Если True, каждому URL из списка будет соответствовать свой header (по порядку).
+            Если False, header выбирается рандомно.
+        :param match_cookies_to_urls: bool = False
+            Если True, каждому URL из списка будет соответствовать свой cookie (по порядку).
+            Если False, cookie выбирается рандомно.
 
         :return:
             Возвращает список ответов от сайта.
@@ -249,18 +257,38 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         if ignore_exceptions == 'default':
             ignore_exceptions = self.ignore_exceptions
 
-        request_params = await self.__get_request_params(
-            method, verify, with_random_useragent, proxies, headers, cookies, data, json,
-            params
-        )
-
         async with AsyncSession(
                 max_clients=len(urls),
                 timeout=timeout,
                 debug=debug_curl_cffi
         ) as session:
-            tasks = [
-                self.__fetch(
+            tasks = []
+
+            for i, url in enumerate(urls):
+
+                # Выбор хэдеров: соответствие URL или случайный
+                if isinstance(headers, list):
+                    if match_headers_to_urls and len(headers) == len(urls):
+                        current_headers = headers[i]
+                    else:
+                        current_headers = random.choice(headers)
+                else:
+                    current_headers = headers
+
+                # Выбор куков: соответствие URL или случайный
+                if isinstance(cookies, list):
+                    if match_cookies_to_urls and len(cookies) == len(urls):
+                        current_cookies = cookies[i]
+                    else:
+                        current_cookies = random.choice(cookies)
+                else:
+                    current_cookies = cookies
+
+                request_params = await self.__get_request_params(
+                    method, verify, with_random_useragent, proxies, current_headers, current_cookies, data, json, params
+                )
+
+            tasks.append(self.__fetch(
                     session=session,
                     url=url,
                     params=request_params,
@@ -274,8 +302,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
                     save_bad_urls=save_bad_urls,
                     random_sleep_time_every_request=random_sleep_time_every_request,
                     impersonate=impersonate
-                ) for url in urls
-            ]
+                ))
+
             return await asyncio.gather(*tasks)  # type: ignore[return-value]
 
     async def __get_request_params(
