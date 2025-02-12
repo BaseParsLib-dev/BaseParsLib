@@ -12,10 +12,10 @@ from base_pars_lib.core.async_requests_parser_base import AiohttpResponse, Async
 
 class AsyncBaseParser(AsyncRequestsParserBase):
     def __init__(
-        self,
-        debug: bool = False,
-        print_logs: bool = False,
-        check_exceptions: bool = False
+            self,
+            debug: bool = False,
+            print_logs: bool = False,
+            check_exceptions: bool = False
     ) -> None:
         """
         :param debug: bool = False
@@ -256,24 +256,8 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             tasks = []
 
             for i, url in enumerate(urls):
-
-                # Выбор хэдеров: соответствие URL или случайный
-                if isinstance(headers, list):
-                    if match_headers_to_urls and len(headers) == len(urls):
-                        current_headers = headers[i]
-                    else:
-                        current_headers = random.choice(headers)
-                else:
-                    current_headers = headers
-
-                # Выбор куков: соответствие URL или случайный
-                if isinstance(cookies, list):
-                    if match_cookies_to_urls and len(cookies) == len(urls):
-                        current_cookies = cookies[i]
-                    else:
-                        current_cookies = random.choice(cookies)
-                else:
-                    current_cookies = cookies
+                current_headers = self.__select_value(headers, match_headers_to_urls, i, len(urls))
+                current_cookies = self.__select_value(cookies, match_cookies_to_urls, i, len(urls))
 
                 request_params = await self.__get_request_params(
                     method, verify, with_random_useragent, proxies, current_headers, current_cookies, data, json, params
@@ -379,3 +363,20 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         except Exception if not self.check_exceptions else () as Ex:
             logger.info_log(f'forming AiohttpResponse error {Ex}', self.print_logs)
             return None
+
+    @staticmethod
+    def __select_value(value: dict | list | None, match_to_urls: bool, index: int, urls_length: int):
+        """
+        Выбирает значение (headers/cookies) для запроса.
+
+        :param value: dict | list | None - Заголовки или cookies.
+        :param match_to_urls: bool - Нужно ли привязывать к URL.
+        :param index: int - Текущий индекс URL.
+        :param urls_length: int - Длина списка URL.
+        :return: dict | None - Выбранное значение.
+        """
+        if isinstance(value, list):
+            if match_to_urls and len(value) == urls_length:
+                return value[index]
+            return random.choice(value)
+        return value

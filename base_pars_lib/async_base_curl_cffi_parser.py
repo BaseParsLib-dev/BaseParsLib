@@ -265,44 +265,28 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             tasks = []
 
             for i, url in enumerate(urls):
-
-                # Выбор хэдеров: соответствие URL или случайный
-                if isinstance(headers, list):
-                    if match_headers_to_urls and len(headers) == len(urls):
-                        current_headers = headers[i]
-                    else:
-                        current_headers = random.choice(headers)
-                else:
-                    current_headers = headers
-
-                # Выбор куков: соответствие URL или случайный
-                if isinstance(cookies, list):
-                    if match_cookies_to_urls and len(cookies) == len(urls):
-                        current_cookies = cookies[i]
-                    else:
-                        current_cookies = random.choice(cookies)
-                else:
-                    current_cookies = cookies
+                current_headers = self.__select_value(headers, match_headers_to_urls, i, len(urls))
+                current_cookies = self.__select_value(cookies, match_cookies_to_urls, i, len(urls))
 
                 request_params = await self.__get_request_params(
                     method, verify, with_random_useragent, proxies, current_headers, current_cookies, data, json, params
                 )
 
             tasks.append(self.__fetch(
-                    session=session,
-                    url=url,
-                    params=request_params,
-                    ignore_exceptions=ignore_exceptions,
-                    iter_count=iter_count,
-                    iter_count_for_50x_errors=iter_count_for_50x_errors,
-                    increase_by_seconds=increase_by_seconds,
-                    increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
-                    ignore_404=ignore_404,
-                    long_wait_for_50x=long_wait_for_50x,
-                    save_bad_urls=save_bad_urls,
-                    random_sleep_time_every_request=random_sleep_time_every_request,
-                    impersonate=impersonate
-                ))
+                session=session,
+                url=url,
+                params=request_params,
+                ignore_exceptions=ignore_exceptions,
+                iter_count=iter_count,
+                iter_count_for_50x_errors=iter_count_for_50x_errors,
+                increase_by_seconds=increase_by_seconds,
+                increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
+                ignore_404=ignore_404,
+                long_wait_for_50x=long_wait_for_50x,
+                save_bad_urls=save_bad_urls,
+                random_sleep_time_every_request=random_sleep_time_every_request,
+                impersonate=impersonate
+            ))
 
             return await asyncio.gather(*tasks)  # type: ignore[return-value]
 
@@ -375,3 +359,20 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
     @staticmethod
     async def __get_random_impersonate() -> str:
         return random.choice(['chrome', 'edge', 'safari', 'safari_ios', 'chrome_android'])
+
+    @staticmethod
+    def __select_value(value: dict | list | None, match_to_urls: bool, index: int, urls_length: int):
+        """
+        Выбирает значение (headers/cookies) для запроса.
+
+        :param value: dict | list | None - headers или cookies.
+        :param match_to_urls: bool - Нужно ли привязывать к URL.
+        :param index: int - Текущий индекс URL.
+        :param urls_length: int - Длина списка URL.
+        :return: dict | None - Выбранное значение headers или cookies.
+        """
+        if isinstance(value, list):
+            if match_to_urls and len(value) == urls_length:
+                return value[index]
+            return random.choice(value)
+        return value
