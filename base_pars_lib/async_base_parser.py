@@ -369,11 +369,11 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         """
         Выбирает значение (headers/cookies) для запроса.
 
-        :param value: dict | list | None - Заголовки или cookies.
+        :param value: dict | list | None - headers или cookies.
         :param match_to_urls: bool - Нужно ли привязывать к URL.
         :param index: int - Текущий индекс URL.
         :param urls_length: int - Длина списка URL.
-        :return: dict | None - Выбранное значение.
+        :return: dict | None - Выбранное значение headers или cookies.
         """
         if isinstance(value, list):
             if match_to_urls and len(value) == urls_length:
