@@ -2,6 +2,7 @@ name: codestyle check
 
 on:
   push:
+  pull_request:
 
 jobs:
   start_checking:
