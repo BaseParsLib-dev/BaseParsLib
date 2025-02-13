@@ -2,8 +2,8 @@ import asyncio
 import os
 from typing import Any, Callable
 
-from nodriver.core.browser import Browser
-from nodriver.core.tab import Tab, cdp
+from zendriver.core.browser import Browser
+from zendriver.core.tab import Tab, cdp
 
 from base_pars_lib.config import logger
 from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase
@@ -11,7 +11,7 @@ from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBas
 
 class BrowserIsNotInitError(Exception):
     def __init__(self) -> None:
-        self.message = 'BrowserIsNotInitError'
+        self.message = "BrowserIsNotInitError"
 
 
 class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
@@ -27,15 +27,17 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         self.cdp_network_handler: Any = cdp.network.RequestWillBeSent
 
     async def _backoff_open_new_page(
-            self,
-            url: str,
-            is_page_loaded_check: Callable,
-            check_page: Callable = None,  # type: ignore[assignment]
-            check_page_args: dict | None = None,
-            load_timeout: int = 30,
-            increase_by_seconds: int = 10,
-            iter_count: int = 10,
-            catch_requests_handler: Callable = None  # type: ignore[assignment]
+        self,
+        url: str,
+        is_page_loaded_check: Callable,
+        check_page: Callable = None,  # type: ignore[assignment]
+        check_page_args: dict | None = None,
+        load_timeout: int = 30,
+        increase_by_seconds: int = 10,
+        iter_count: int = 10,
+        catch_requests_handler: Callable = None,  # type: ignore[assignment]
+        new_tab: bool = True,
+        new_window: bool = False,
     ) -> Tab | None:
         """
         Открывает страницу по переданному url,
@@ -67,6 +69,10 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             В качестве аргумента принимает request.
             По дефолту запросы перехватывает cdp.network.RequestWillBeSent, но можно
             поменять на другой через параметр self.cdp_network_handler
+        :param new_tab: bool = True
+            Открыть в новой вкладке
+        :param new_window: bool = False
+            Открыть в новом окне браузера
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
@@ -78,7 +84,7 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         for i in range(1, iter_count + 1):
             page = None
             try:
-                page = await self.browser.get(url, new_tab=True)
+                page = await self.browser.get(url, new_tab=new_tab, new_window=new_window)
                 if catch_requests_handler is not None:
                     page.add_handler(self.cdp_network_handler, catch_requests_handler)
 
@@ -101,29 +107,23 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
                     await page.close()
                 if self.debug:
                     logger.backoff_exception(
-                        ex=Ex,
-                        iteration=i,
-                        print_logs=self.print_logs,
-                        url=url
+                        ex=Ex, iteration=i, print_logs=self.print_logs, url=url
                     )
             await asyncio.sleep(i * increase_by_seconds)
 
         return None
 
     async def _make_request_from_page(
-            self,
-            page: Tab,
-            url: str,
-            method: str,
-            request_body: str | dict | None = None
-    ) -> str:
+        self, page: Tab, url: str | list[str], method: str, request_body: str | dict | None = None
+    ) -> str | list[str]:
         """
         Выполняет запрос через JS со страницы
 
         :param page: Tab
             Объект страницы
-        :param url: str
+        :param url: str | list[str]
             Ссылка
+            Если передан список ссылок, запросы отправятся асинхронно
         :param method: str
             HTTP-метод
         :param request_body: str | dict | None = None
@@ -132,28 +132,42 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             Текст с запрашиваемой страницы
         """
 
-        script = """
-            fetch("%s", {
-                method: "%s",
-                REQUEST_BODY,
-                headers: {
-                    "Content-Type": "application/json;charset=UTF-8"
-                }
-            })
-            .then(response => response.text());
-        """ % (url, method)  # noqa: UP031
-        if request_body is not None:
-            script = script.replace(
-                'REQUEST_BODY',
-                f'body: JSON.stringify({request_body})'
-            )
+        tasks: list = []
+        if isinstance(url, list):
+            for one_url in url:
+                script = await self.__make_js_script(one_url, method, request_body)
+                tasks.append(page.evaluate(script, await_promise=True))
         else:
-            script = script.replace('REQUEST_BODY,', '')
+            script = await self.__make_js_script(url, method, request_body)
+            tasks.append(page.evaluate(script, await_promise=True))
+
+        responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
+        if responses and len(responses) == 1:
+            return responses[0]
+        return responses
+
+    async def __make_js_script(
+        self, url: str | list[str], method: str, request_body: str | dict | None = None
+    ) -> str:
+        script = """
+                    fetch("%s", {
+                        method: "%s",
+                        REQUEST_BODY,
+                        headers: {
+                            "Content-Type": "application/json;charset=UTF-8"
+                        }
+                    })
+                    .then(response => response.text());
+                """ % (url, method)  # noqa: UP031
+        if request_body is not None:
+            script = script.replace("REQUEST_BODY", f"body: JSON.stringify({request_body})")
+        else:
+            script = script.replace("REQUEST_BODY,", "")
 
         if self.debug:
-            logger.info_log(f'JS request\n\n{script}', print_logs=self.print_logs)
+            logger.info_log(f"JS request\n\n{script}", print_logs=self.print_logs)
 
-        return await page.evaluate(script, await_promise=True)
+        return script
 
     @staticmethod
     async def _make_chrome_proxy_extension(host: str, port: int, login: str, password: str) -> str:
@@ -225,9 +239,9 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         """
 
         current_directory = os.path.dirname(os.path.abspath(__file__))
-        with open(f'{current_directory}/nodriver_proxy_extension/background.js', 'w') as f:
+        with open(f"{current_directory}/nodriver_proxy_extension/background.js", "w") as f:
             f.write(background_js)
-        with open(f'{current_directory}/nodriver_proxy_extension/manifest.json', 'w') as f:
+        with open(f"{current_directory}/nodriver_proxy_extension/manifest.json", "w") as f:
             f.write(manifest_json)
 
-        return f'{current_directory}/nodriver_proxy_extension'
+        return f"{current_directory}/nodriver_proxy_extension"

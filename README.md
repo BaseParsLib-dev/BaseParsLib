@@ -27,7 +27,7 @@ proxy_session = rotating_proxy_auth(
     password='password'
 )
 ```
-Реализует правильную авторизацию в ротационном прокси в файле ```base_pars_lib._requests_digest_proxy```, который 
+Реализует правильную авторизацию в ротационном прокси в файле ```base_pars_lib._requests_digest_proxy```, который
 переопределяет некоторые методы библиотеки requests
 
 # BaseParser
@@ -44,13 +44,13 @@ proxy_session = rotating_proxy_auth(
         кроме тех, на которых завязана логика (например _calculate_random_cookies_headers_index)
 
 #### Метод ```_threading_method```
-    Создаёт столько потоков, сколько чанков передано в chunked_array, выполняет метод method 
+    Создаёт столько потоков, сколько чанков передано в chunked_array, выполняет метод method
     для каждого чанка в отдельном потоке
 
-        :param chunked_array: list | tuple 
+        :param chunked_array: list | tuple
             Массив из чанков с url-ами или другими данными для запроса
         :param method:
-            Метод, который работает с чанком из переданного массива и сохраняет результаты 
+            Метод, который работает с чанком из переданного массива и сохраняет результаты
             во внешний массив
 
         :return:
@@ -138,7 +138,7 @@ proxy_session = rotating_proxy_auth(
 ### Дополнительные методы библиотеки
 #### Метод ```split_on_chunks_by_chunk_len```
     Делит массив на чанки в зависимости от переданой длины чанка
-    
+
     :param array: list | tuple
         Массив, который нужно разделить на чанки
     :param chunk_len: int
@@ -150,11 +150,11 @@ proxy_session = rotating_proxy_auth(
     :param array: list | tuple
         Массив, который нужно разделить на чанки
     :param count_chunks: int
-        Количество чанков    
+        Количество чанков  
 
 #### Метод ```get_data_from_text```
     Функция вырезает нужную подстроку из строки
-    
+
     :param text: str
         Основной текст
     :param start_row: str
@@ -223,11 +223,11 @@ from base_pars_lib import BaseParser
 
 
 class MyParser(BaseParser):
-    
+
     proxies = {
         'http': f'http://username:password@proxy_dns'
     }
-    
+
     def get_my_ip(self):
         return self._make_backoff_request(
             url='http://api.ipify.org/?format=json',
@@ -466,17 +466,17 @@ if __name__ == '__main__':
 #### ```__init__```
     param driver: WebDriver
         Драйвер селениума или аппиума
-    :param timeout: 
-        Таймаут, который можно использовать в коде, 
+    :param timeout:
+        Таймаут, который можно использовать в коде,
         чтобы дожидаться появления каких-то объектов
 #### ```_get_element_with_wait```
     Получает элемент по какому-либо селениум-тегу (ID, название и т.д.)
-    :param by: 
+    :param by:
         Селениум-тег. Можно передать, например AppiumBy.ID из
         from appium.webdriver.common.appiumby import AppiumBy
-    :param element: 
+    :param element:
         Сам тег
-    :return: 
+    :return:
         WebElement
 
 # AsyncNodriverBaseParser
@@ -510,6 +510,10 @@ if __name__ == '__main__':
         В качестве аргумента принимает request.
         По дефолту запросы перехватывает cdp.network.RequestWillBeSent, но можно
         поменять на другой через параметр self.cdp_network_handler
+    :param new_tab: bool = True
+        Открыть в новой вкладке
+    :param new_window: bool = False
+        Открыть в новом окне браузера
 
     :return:
         Объект страницы или None в случае, если за все попытки не удалось открыть
@@ -536,8 +540,9 @@ if __name__ == '__main__':
 
     :param page: Tab
         Объект страницы
-    :param url: str
+    :param url: str | list[str]
         Ссылка
+        Если передан список ссылок, запросы отправятся асинхронно
     :param method: str
         HTTP-метод
     :param request_body: str | dict | None = None
