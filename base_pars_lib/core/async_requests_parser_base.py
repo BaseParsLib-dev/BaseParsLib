@@ -26,18 +26,18 @@ class AsyncRequestsParserBase:
         self.bad_urls: list[Any] = []
 
     async def _check_response(
-            self,
-            response: None | AiohttpResponse | Response,
-            iteration: int,
-            url: str,
-            increase_by_seconds: int,
-            iter_count: int,
-            save_bad_urls: bool,
-            ignore_404: bool,
-            long_wait_for_50x: bool,
-            iteration_for_50x: int,
-            iter_count_for_50x_errors: int,
-            increase_by_minutes_for_50x_errors: int
+        self,
+        response: None | AiohttpResponse | Response,
+        iteration: int,
+        url: str,
+        increase_by_seconds: int,
+        iter_count: int,
+        save_bad_urls: bool,
+        ignore_404: bool,
+        long_wait_for_50x: bool,
+        iteration_for_50x: int,
+        iter_count_for_50x_errors: int,
+        increase_by_minutes_for_50x_errors: int,
     ) -> tuple[bool, None | AiohttpResponse | Response]:
         """
         Метод выполняется в теле цикла и проверяет респонз. Позвращает кортеж, в котором:
@@ -47,7 +47,7 @@ class AsyncRequestsParserBase:
 
         if response is None:
             if self.debug:
-                logger.info_log(f'response is None, iter: {iteration}, {url}', self.print_logs)
+                logger.info_log(f"response is None, iter: {iteration}, {url}", self.print_logs)
             await asyncio.sleep(iteration * increase_by_seconds)
             return False, None
 
@@ -65,17 +65,13 @@ class AsyncRequestsParserBase:
                 return True, response
             iteration_for_50x += 1
             if self.debug:
-                logger.backoff_status_code(
-                    response.status_code, iteration, url, self.print_logs
-                )
+                logger.backoff_status_code(response.status_code, iteration, url, self.print_logs)
             await asyncio.sleep(iteration * increase_by_minutes_for_50x_errors * 60)
             return False, None
 
         if response.status_code != HTTPStatus.OK:
             if self.debug:
-                logger.backoff_status_code(
-                    response.status_code, iteration, url, self.print_logs
-                )
+                logger.backoff_status_code(response.status_code, iteration, url, self.print_logs)
             await asyncio.sleep(iteration * increase_by_seconds)
 
         return False, None
@@ -89,22 +85,17 @@ class AsyncRequestsParserBase:
             self.bad_urls.remove(url)
 
     async def _get_by_random_index(
-            self,
-            item: list[dict] | dict,
-            random_index: int,
-            item_name: str
+        self, item: list[dict] | dict, random_index: int, item_name: str
     ) -> dict:
-        if type(item) is list:
+        if isinstance(item, list):
             item = item[random_index]
             if self.debug:
-                logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
+                logger.info_log(f"{item_name} index: {random_index}", self.print_logs)
         return item  # type: ignore[return-value]
 
     @staticmethod
     async def _method_in_series(
-            chunked_array: list | tuple,
-            async_method: Callable,
-            sleep_time: int = 0
+        chunked_array: list | tuple, async_method: Callable, sleep_time: int = 0
     ) -> None:
         """
         Выполняет метод method для каждого чанка последовательно
@@ -129,8 +120,7 @@ class AsyncRequestsParserBase:
 
     @staticmethod
     async def _calculate_random_cookies_headers_index(
-            cookies: list[dict] | dict,
-            headers: list[dict] | dict
+        cookies: list[dict] | dict, headers: list[dict] | dict
     ) -> int:
         upper_index = min(len(cookies), len(headers))
         if not upper_index:
@@ -139,3 +129,22 @@ class AsyncRequestsParserBase:
             return random.randint(0, upper_index - 1)
         except ValueError:
             return 0
+
+    @staticmethod
+    def _select_value(
+        value: dict | list | None, match_to_urls: bool, index: int, urls_length: int
+    ) -> Any:
+        """
+        Выбирает значение (headers/cookies) для запроса.
+
+        :param value: dict | list | None - headers или cookies.
+        :param match_to_urls: bool - Нужно ли привязывать к URL.
+        :param index: int - Текущий индекс URL.
+        :param urls_length: int - Длина списка URL.
+        :return: dict | None - Выбранное значение headers или cookies.
+        """
+        if isinstance(value, list):
+            if match_to_urls and len(value) == urls_length:
+                return value[index]
+            return random.choice(value)
+        return value

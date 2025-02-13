@@ -12,10 +12,7 @@ from base_pars_lib.core.async_requests_parser_base import AiohttpResponse, Async
 
 class AsyncBaseParser(AsyncRequestsParserBase):
     def __init__(
-            self,
-            debug: bool = False,
-            print_logs: bool = False,
-            check_exceptions: bool = False
+        self, debug: bool = False, print_logs: bool = False, check_exceptions: bool = False
     ) -> None:
         """
         :param debug: bool = False
@@ -39,7 +36,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             aiohttp.client_exceptions.ServerDisconnectedError,
             aiohttp.client_exceptions.ClientOSError,
             aiohttp.client_exceptions.ClientHttpProxyError,
-            asyncio.TimeoutError
+            asyncio.TimeoutError,
         )
 
         self.check_exceptions = check_exceptions
@@ -50,20 +47,20 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         self.bad_urls: list = []
 
     async def __fetch(  # type: ignore[return]
-            self,
-            url: str,
-            session: aiohttp.ClientSession,
-            params: dict,
-            ignore_exceptions: tuple | str = 'default',
-            iter_count: int = 10,
-            iter_count_for_50x_errors: int = 3,
-            increase_by_seconds: int = 10,
-            increase_by_minutes_for_50x_errors: int = 20,
-            ignore_404: bool = False,
-            long_wait_for_50x: bool = False,
-            save_bad_urls: bool = False,
-            random_sleep_time_every_request: list[float | int] | bool = False,
-            get_raw_aiohttp_response_content: bool = False,
+        self,
+        url: str,
+        session: aiohttp.ClientSession,
+        params: dict,
+        ignore_exceptions: tuple | str = "default",
+        iter_count: int = 10,
+        iter_count_for_50x_errors: int = 3,
+        increase_by_seconds: int = 10,
+        increase_by_minutes_for_50x_errors: int = 20,
+        ignore_404: bool = False,
+        long_wait_for_50x: bool = False,
+        save_bad_urls: bool = False,
+        random_sleep_time_every_request: list[float | int] | bool = False,
+        get_raw_aiohttp_response_content: bool = False,
     ) -> AiohttpResponse | bytes | None:
         """
         Отправляет запрос с настройками из _make_backoff_request
@@ -115,7 +112,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             await asyncio.sleep(
                 random.uniform(
                     random_sleep_time_every_request[0],  # type: ignore[index]
-                    random_sleep_time_every_request[1]  # type: ignore[index]
+                    random_sleep_time_every_request[1],  # type: ignore[index]
                 )
             )
 
@@ -137,7 +134,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
                         long_wait_for_50x=long_wait_for_50x,
                         iteration_for_50x=iteration_for_50x,
                         iter_count_for_50x_errors=iter_count_for_50x_errors,
-                        increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors
+                        increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
                     )
                     if is_cycle_end:
                         return response_  # type: ignore[return-value]
@@ -152,30 +149,30 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         return None
 
     async def _make_backoff_request(
-            self,
-            urls: list,
-            method: str = 'GET',
-            iter_count: int = 10,
-            iter_count_for_50x_errors: int = 3,
-            increase_by_seconds: int = 10,
-            increase_by_minutes_for_50x_errors: int = 20,
-            verify: bool = True,
-            with_random_useragent: bool = True,
-            proxies: str | None = None,
-            headers: dict | list | None = None,
-            cookies: dict | list | None = None,
-            data: dict | None = None,
-            json: dict | None = None,
-            ignore_exceptions: tuple | str = 'default',
-            ignore_404: bool = False,
-            long_wait_for_50x: bool = False,
-            save_bad_urls: bool = False,
-            timeout: int = 30,
-            random_sleep_time_every_request: list | bool = False,
-            params: dict | bool = False,
-            get_raw_aiohttp_response_content: bool = False,
-            match_headers_to_urls: bool = False,
-            match_cookies_to_urls: bool = False
+        self,
+        urls: list,
+        method: str = "GET",
+        iter_count: int = 10,
+        iter_count_for_50x_errors: int = 3,
+        increase_by_seconds: int = 10,
+        increase_by_minutes_for_50x_errors: int = 20,
+        verify: bool = True,
+        with_random_useragent: bool = True,
+        proxies: str | None = None,
+        headers: dict | list | None = None,
+        cookies: dict | list | None = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        ignore_exceptions: tuple | str = "default",
+        ignore_404: bool = False,
+        long_wait_for_50x: bool = False,
+        save_bad_urls: bool = False,
+        timeout: int = 30,
+        random_sleep_time_every_request: list | bool = False,
+        params: dict | bool = False,
+        get_raw_aiohttp_response_content: bool = False,
+        match_headers_to_urls: bool = False,
+        match_cookies_to_urls: bool = False,
     ) -> tuple[AiohttpResponse | None]:
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -249,49 +246,59 @@ class AsyncBaseParser(AsyncRequestsParserBase):
                 status: int
         """
 
-        if ignore_exceptions == 'default':
+        if ignore_exceptions == "default":
             ignore_exceptions = self.ignore_exceptions
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
             tasks = []
 
             for i, url in enumerate(urls):
-                current_headers = self.__select_value(headers, match_headers_to_urls, i, len(urls))
-                current_cookies = self.__select_value(cookies, match_cookies_to_urls, i, len(urls))
+                current_headers = self._select_value(headers, match_headers_to_urls, i, len(urls))
+                current_cookies = self._select_value(cookies, match_cookies_to_urls, i, len(urls))
 
                 request_params = await self.__get_request_params(
-                    method, verify, with_random_useragent, proxies, current_headers, current_cookies, data, json, params
+                    method=method,
+                    verify=verify,
+                    with_random_useragent=with_random_useragent,
+                    proxies=proxies,
+                    headers=current_headers,
+                    cookies=current_cookies,
+                    data=data,
+                    json=json,
+                    params=params,
                 )
 
-                tasks.append(self.__fetch(
-                    session=session,
-                    url=url,
-                    params=request_params,
-                    ignore_exceptions=ignore_exceptions,
-                    iter_count=iter_count,
-                    iter_count_for_50x_errors=iter_count_for_50x_errors,
-                    increase_by_seconds=increase_by_seconds,
-                    increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
-                    ignore_404=ignore_404,
-                    long_wait_for_50x=long_wait_for_50x,
-                    save_bad_urls=save_bad_urls,
-                    random_sleep_time_every_request=random_sleep_time_every_request,
-                    get_raw_aiohttp_response_content=get_raw_aiohttp_response_content
-                ))
+                tasks.append(
+                    self.__fetch(
+                        session=session,
+                        url=url,
+                        params=request_params,
+                        ignore_exceptions=ignore_exceptions,
+                        iter_count=iter_count,
+                        iter_count_for_50x_errors=iter_count_for_50x_errors,
+                        increase_by_seconds=increase_by_seconds,
+                        increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
+                        ignore_404=ignore_404,
+                        long_wait_for_50x=long_wait_for_50x,
+                        save_bad_urls=save_bad_urls,
+                        random_sleep_time_every_request=random_sleep_time_every_request,
+                        get_raw_aiohttp_response_content=get_raw_aiohttp_response_content,
+                    )
+                )
 
-            return await asyncio.gather(*tasks)
+            return await asyncio.gather(*tasks)  # type: ignore[return-value]
 
     async def __get_request_params(
-            self,
-            method: str,
-            verify: bool,
-            with_random_useragent: bool,
-            proxies: str | None,
-            headers: dict | list | None,
-            cookies: dict | list | None,
-            data: dict | None,
-            json: dict | None,
-            params: dict | bool | None = None
+        self,
+        method: str,
+        verify: bool,
+        with_random_useragent: bool,
+        proxies: str | None,
+        headers: dict | list | None,
+        cookies: dict | list | None,
+        data: dict | None,
+        json: dict | None,
+        params: dict | bool | None = None,
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -325,25 +332,25 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         random_index = await self._calculate_random_cookies_headers_index(
             cookies=cookies, headers=headers
         )
-        headers = await self._get_by_random_index(headers, random_index, 'Headers')
-        cookies = await self._get_by_random_index(cookies, random_index, 'Cookies')
+        headers = await self._get_by_random_index(headers, random_index, "Headers")
+        cookies = await self._get_by_random_index(cookies, random_index, "Cookies")
 
         if with_random_useragent:
-            headers['User-Agent'] = self.user_agent.random
+            headers["User-Agent"] = self.user_agent.random
 
         request_params: dict = {
-            'method': method.upper(),
-            'headers': headers,
-            'cookies': cookies,
-            'ssl': verify,
-            'data': data,
-            'json': json
+            "method": method.upper(),
+            "headers": headers,
+            "cookies": cookies,
+            "ssl": verify,
+            "data": data,
+            "json": json,
         }
 
         if proxies is not None:
-            request_params['proxy'] = proxies
+            request_params["proxy"] = proxies
         if params:
-            request_params['params'] = params
+            request_params["params"] = params
 
         return request_params
 
@@ -352,7 +359,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             try:
                 text = await response.text()
             except UnicodeDecodeError as Ex:
-                text = f'Encoding error: {Ex}'
+                text = f"Encoding error: {Ex}"
             try:
                 json = await response.json()
             except aiohttp.client_exceptions.ContentTypeError:
@@ -361,22 +368,5 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             status = response.status
             return AiohttpResponse(text=text, json=json, url=response_url, status_code=status)
         except Exception if not self.check_exceptions else () as Ex:
-            logger.info_log(f'forming AiohttpResponse error {Ex}', self.print_logs)
+            logger.info_log(f"forming AiohttpResponse error {Ex}", self.print_logs)
             return None
-
-    @staticmethod
-    def __select_value(value: dict | list | None, match_to_urls: bool, index: int, urls_length: int):
-        """
-        Выбирает значение (headers/cookies) для запроса.
-
-        :param value: dict | list | None - headers или cookies.
-        :param match_to_urls: bool - Нужно ли привязывать к URL.
-        :param index: int - Текущий индекс URL.
-        :param urls_length: int - Длина списка URL.
-        :return: dict | None - Выбранное значение headers или cookies.
-        """
-        if isinstance(value, list):
-            if match_to_urls and len(value) == urls_length:
-                return value[index]
-            return random.choice(value)
-        return value
