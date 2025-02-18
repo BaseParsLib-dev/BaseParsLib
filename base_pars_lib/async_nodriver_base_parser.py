@@ -142,7 +142,7 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             tasks.append(page.evaluate(script, await_promise=True))
 
         responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
-        if responses and len(responses) == 1:
+        if responses and len(responses) == 1 and not isinstance(url, list):
             return responses[0]
         return responses
 
