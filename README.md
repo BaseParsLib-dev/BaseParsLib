@@ -224,6 +224,7 @@ class MyParser(BaseParser):
         )
 ```
 
+<a name="класс_asyncbaseparser"></a>
 # AsyncBaseParser
 #### ```__init__```
     :param debug: bool = False
@@ -471,7 +472,7 @@ if __name__ == '__main__':
     :return:
         WebElement
 
-<a name="asyncnodriverbaseparser"></a>
+<a name="класс_asyncnodriverbaseparser"></a>
 # AsyncNodriverBaseParser
 #### ```backoff_open_new_page```
     Открывает страницу по переданному url,
@@ -543,7 +544,7 @@ if __name__ == '__main__':
     :return:
         Текст с запрашиваемой страницы
 
-<a name="asyncbasecurlcffiparser"></a>
+<a name="класс_asyncbasecurlcffiparser"></a>
 # AsyncBaseCurlCffiParser
 #### ```__init__```
     :param debug: bool = False
