@@ -1,19 +1,37 @@
 # Библиотека BaseParsLib
 
 Реализует:
-* Класс BaseParser, работающий с потоками и отправляющий backoff-запросы
-* Класс AsyncBaseParser, работающий асинхронно и отправляющий backoff-запросы
-* Класс AsyncPlaywrightBaseParser, работающий асинхронно с браузером Playwright
-* Класс WebDriverBaseParser, реализующий работу с селениумом или аппиумом (для парсинга мобильных приложений)
-* Метод rotating_proxy_auth, авторизующийся в ротационном прокси
+* Асинхронные классы и классы, работающие с потоками. Backoff-запросы
+* Асинхронные классы, работающие с различными браузерами
+* Методы для работы с прокси
 * Методы для работы с данными
 
-# Установка и примеры использования
+# Навигация
+ - [Окружение, установка и примеры использования](#окружение_установка_и_примеры_использования)
+ - [Авторизация в ротационном прокси](#авторизация_в_ротационном_прокси)
+ - [Класс BaseParser](#класс_baseparser)
+ - [Дополнительные методы библиотеки](#дополнительные_методы_библиотеки)
+ - [Применение методов BaseParser](#применение_методов_baseparser)
+ - [Класс AsyncBaseParser](#класс_asyncbaseparser)
+ - [Применение методов AsyncBaseParser](#применение_методов_asyncbaseparser)
+ - [Класс AsyncPlaywrightBaseParser](#класс_asyncplaywrightbaseparser)
+ - [Класс WebDriverBaseParser](#класс_webdriverbaseparser)
+ - [Класс AsyncNodriverBaseParser](#класс_asyncnodriverbaseparser)
+ - [Класс AsyncBaseCurlCffiParser](#класс_asyncbasecurlcffiparser)
+<br /> <br />
 
+<a name="окружение_установка_и_примеры_использования"></a>
+# Окружение, установка и примеры использования
+
+### Версия Python
+3.11
+
+### Установка
 ```shell
 pip install git+https://github.com/BaseParsLib-dev/BaseParsLib.git
 ```
 
+<a name="авторизация_в_ротационном_прокси"></a>
 ### Авторизация в ротационном прокси
 Ротация для прокси от webshare, может не работать с другими
 
@@ -30,6 +48,7 @@ proxy_session = rotating_proxy_auth(
 Реализует правильную авторизацию в ротационном прокси в файле ```base_pars_lib._requests_digest_proxy```, который
 переопределяет некоторые методы библиотеки requests
 
+<a name="класс_baseparser"></a>
 # BaseParser
 #### ```__init__```
     :param requests_session: = None
@@ -135,6 +154,7 @@ proxy_session = rotating_proxy_auth(
     :return:
         response
 
+<a name="дополнительные_методы_библиотеки"></a>
 ### Дополнительные методы библиотеки
 #### Метод ```split_on_chunks_by_chunk_len```
     Делит массив на чанки в зависимости от переданой длины чанка
@@ -167,7 +187,8 @@ proxy_session = rotating_proxy_auth(
         Обрезать правую границу
     :return: str
 
-### Применение методов библиотеки
+<a name="применение_методов_baseparser"></a>
+### Применение методов BaseParser
 
 ```python
 from base_pars_lib import BaseParser
@@ -328,7 +349,9 @@ class MyParser(BaseParser):
     :return:
         None
 
-### Применение методов библиотеки
+<a name="применение_методов_asyncbaseparser"></a>
+### Применение методов AsyncBaseParser
+
 100 запросов отправляются асинхронно, но по чанкам по 10 штук (как указано в пользовательском методе run)
 ```python
 import asyncio
@@ -364,6 +387,7 @@ if __name__ == '__main__':
     print(responses)
 ```
 
+<a name="класс_asyncplaywrightbaseparser"></a>
 # AsyncPlaywrightBaseParser
 #### ```_method_in_series```
     Выполняет метод method для каждого чанка последовательно
@@ -462,6 +486,7 @@ if __name__ == '__main__':
     :return:
         None
 
+<a name="класс_webdriverbaseparser"></a>
 # WebDriverBaseParser
 #### ```__init__```
     param driver: WebDriver
@@ -479,6 +504,7 @@ if __name__ == '__main__':
     :return:
         WebElement
 
+<a name="asyncnodriverbaseparser"></a>
 # AsyncNodriverBaseParser
 #### ```backoff_open_new_page```
     Открывает страницу по переданному url,
@@ -550,6 +576,7 @@ if __name__ == '__main__':
     :return:
         Текст с запрашиваемой страницы
 
+<a name="asyncbasecurlcffiparser"></a>
 # AsyncBaseCurlCffiParser
 #### ```__init__```
     :param debug: bool = False
