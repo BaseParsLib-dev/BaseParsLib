@@ -10,7 +10,6 @@
  - [Окружение, установка и примеры использования](#окружение_установка_и_примеры_использования)
  - [Авторизация в ротационном прокси](#авторизация_в_ротационном_прокси)
  - [Класс BaseParser](#класс_baseparser)
- - [Дополнительные методы библиотеки](#дополнительные_методы_библиотеки)
  - [Применение методов BaseParser](#применение_методов_baseparser)
  - [Класс AsyncBaseParser](#класс_asyncbaseparser)
  - [Применение методов AsyncBaseParser](#применение_методов_asyncbaseparser)
@@ -18,6 +17,7 @@
  - [Класс WebDriverBaseParser](#класс_webdriverbaseparser)
  - [Класс AsyncNodriverBaseParser](#класс_asyncnodriverbaseparser)
  - [Класс AsyncBaseCurlCffiParser](#класс_asyncbasecurlcffiparser)
+  - [Дополнительные методы библиотеки](#дополнительные_методы_библиотеки)
 <br /> <br />
 
 <a name="окружение_установка_и_примеры_использования"></a>
@@ -153,39 +153,6 @@ proxy_session = rotating_proxy_auth(
 
     :return:
         response
-
-<a name="дополнительные_методы_библиотеки"></a>
-### Дополнительные методы библиотеки
-#### Метод ```split_on_chunks_by_chunk_len```
-    Делит массив на чанки в зависимости от переданой длины чанка
-
-    :param array: list | tuple
-        Массив, который нужно разделить на чанки
-    :param chunk_len: int
-        Размер чанка
-
-#### Метод ```split_on_chunks_by_count_chunks```
-    Делит массив на чанки в зависимости от переданого количества чанков
-
-    :param array: list | tuple
-        Массив, который нужно разделить на чанки
-    :param count_chunks: int
-        Количество чанков  
-
-#### Метод ```get_data_from_text```
-    Функция вырезает нужную подстроку из строки
-
-    :param text: str
-        Основной текст
-    :param start_row: str
-        Левая граница, по которой вырезать
-    :param end_row: str
-        Правая граница, по которой вырезать
-    :param cut_start_row: bool = True
-        Обрезать левую границу
-    :param cut_end_row: bool = True
-        Обрезать правую границу
-    :return: str
 
 <a name="применение_методов_baseparser"></a>
 ### Применение методов BaseParser
@@ -656,3 +623,36 @@ if __name__ == '__main__':
     :return:
         Возвращает список ответов от сайта.
         Какие-то из ответов могут быть None, если произошла ошибка из ignore_exceptions
+
+<a name="дополнительные_методы_библиотеки"></a>
+### Дополнительные методы библиотеки
+#### Метод ```split_on_chunks_by_chunk_len```
+    Делит массив на чанки в зависимости от переданой длины чанка
+
+    :param array: list | tuple
+        Массив, который нужно разделить на чанки
+    :param chunk_len: int
+        Размер чанка
+
+#### Метод ```split_on_chunks_by_count_chunks```
+    Делит массив на чанки в зависимости от переданого количества чанков
+
+    :param array: list | tuple
+        Массив, который нужно разделить на чанки
+    :param count_chunks: int
+        Количество чанков  
+
+#### Метод ```get_data_from_text```
+    Функция вырезает нужную подстроку из строки
+
+    :param text: str
+        Основной текст
+    :param start_row: str
+        Левая граница, по которой вырезать
+    :param end_row: str
+        Правая граница, по которой вырезать
+    :param cut_start_row: bool = True
+        Обрезать левую границу
+    :param cut_end_row: bool = True
+        Обрезать правую границу
+    :return: str
