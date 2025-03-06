@@ -17,7 +17,7 @@
  - [Класс WebDriverBaseParser](#класс_webdriverbaseparser)
  - [Класс AsyncNodriverBaseParser](#класс_asyncnodriverbaseparser)
  - [Класс AsyncBaseCurlCffiParser](#класс_asyncbasecurlcffiparser)
-  - [Дополнительные методы библиотеки](#дополнительные_методы_библиотеки)
+ - [Дополнительные методы библиотеки](#дополнительные_методы_библиотеки)
 <br /> <br />
 
 <a name="окружение_установка_и_примеры_использования"></a>
