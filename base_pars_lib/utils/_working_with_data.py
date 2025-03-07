@@ -42,3 +42,20 @@ def split_on_chunks_by_count_chunks(
             end += 1
         yield array[start:end]
         start = end
+
+
+def split_dict_on_chunks_by_chunk_len(
+    dictionary: dict,
+    chunk_len: int
+) -> Iterator[dict]:
+    """
+    Делит словарь на чанки в зависимости от переданой длины чанка
+
+    :param dictionary: dict
+        Словарь, который нужно разделить на чанки
+    :param chunk_len: int
+        Размер чанка
+    """
+    items = list(dictionary.items())
+    for i in range(0, len(items), chunk_len):
+        yield dict(items[i:i + chunk_len])
