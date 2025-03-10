@@ -161,15 +161,15 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         proxies: str | None = None,
         headers: dict | list | None = None,
         cookies: dict | list | None = None,
-        data: list[dict | None] | None = None,
-        json: list[dict | None] | None = None,
+        data: list[dict | None] | dict | None = None,
+        json: list[dict | None] | dict | None = None,
         ignore_exceptions: tuple | str = "default",
         ignore_404: bool = False,
         long_wait_for_50x: bool = False,
         save_bad_urls: bool = False,
         timeout: int = 30,
         random_sleep_time_every_request: list | bool = False,
-        params: dict | bool | None = None,
+        params: dict | None = None,
         get_raw_aiohttp_response_content: bool = False,
         match_headers_to_urls: bool = False,
         match_cookies_to_urls: bool = False,
@@ -204,9 +204,9 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         :param cookies: dict | list = None
             Куки запроса, возможно передать в виде списка,
             тогда выберутся рандомно
-        :param data: list[dict | None] | None = None,
+        :param data: list[dict | None] | dict | None = None
             Список данных для отправки в теле запроса или один общий словарь
-        :param json: list[dict | None] | None = None,
+        :param json: list[dict | None] | dict | None = None,
             Список JSON-данных для отправки в теле запроса или один общий JSON
         :param ignore_exceptions: tuple = 'default'
             Возможность передать ошибки, которые будут обрабатываться в backoff.
@@ -224,7 +224,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             Время максимального ожидания ответа
         :param random_sleep_time_every_request: list = False
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
-        :param params: dict | bool | None = None,
+        :param params: dict | None = None,
             Словарь параметров запроса
         :param get_raw_aiohttp_response_content: bool = False
             При True возвращает не модель AiohttpResponse, а просто контент из response.read()
@@ -252,15 +252,8 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
             tasks = []
 
-            url_count = len(urls)
-            max_requests = max(
-                len(data) if isinstance(data, list) else 0,
-                len(json) if isinstance(json, list) else 0,
-                url_count,
-            )
-
-            data_list = data if isinstance(data, list) else [data] * max_requests
-            json_list = json if isinstance(json, list) else [json] * max_requests
+            url_count, max_requests, data_list, json_list = await self._prepare_request_data(
+                urls=urls, data=data, json=json)
 
             for i in range(max_requests):
                 url = urls[i % url_count]
@@ -313,7 +306,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         cookies: dict | list | None,
         data: dict | None,
         json: dict | None,
-        params: dict | bool | None = None,
+        params: dict | None = None,
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -336,7 +329,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             Данные запроса
         :param json: dict | None
             Данные запроса
-        :param params: dict = False
+        :param params: dict | None = None
             Словарь параметров запроса
         :return:
         """
