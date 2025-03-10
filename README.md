@@ -266,10 +266,10 @@ class MyParser(BaseParser):
     :param cookies: dict | list = None
         Куки запроса, возможно передать в виде списка,
         тогда выбирутся рандомно
-    :param data: dict = None
-        Передаваемые данные
-    :param json: dict = None
-        Передаваемые данные
+    :param data: list[dict] | dict | None = None,
+        Список данных для отправки в теле запроса или один общий словарь
+    :param json: list[dict] | dict | None = None,
+        Список JSON-данных для отправки в теле запроса или один общий JSON
     :param ignore_exceptions: tuple = 'default'
         Возможность передать ошибки, которые будут обрабатываться в backoff.
         Если ничего не передано, обрабатываются дефолтные:
@@ -288,7 +288,7 @@ class MyParser(BaseParser):
             Время максимального ожидания ответа
     :param random_sleep_time_every_request: list = False
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
-    :param params: dict = False
+    :param params: dict | bool | None = None,
             Словарь параметров запроса
     :param get_raw_aiohttp_response_content: bool = False
             При True возвращает не модель AiohttpResponse, а просто контент из response.read()
@@ -586,10 +586,10 @@ if __name__ == '__main__':
     :param cookies: dict | list = None
         Куки запроса, возможно передать в виде списка,
         тогда выбирутся рандомно
-    :param data: dict = None
-        Передаваемые данные
-    :param json: dict = None
-        Передаваемые данные
+    :param data: list[dict] | dict | None = None,
+        Список данных для отправки в теле запроса или один общий словарь
+    :param json: list[dict] | dict | None = None,
+        Список JSON-данных для отправки в теле запроса или один общий JSON
     :param ignore_exceptions: tuple = 'default'
         Возможность передать ошибки, которые будут обрабатываться в backoff.
         Если ничего не передано, обрабатываются дефолтные
@@ -606,7 +606,7 @@ if __name__ == '__main__':
         Время максимального ожидания ответа
     :param random_sleep_time_every_request: list = False
         Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
-    :param params: dict = False
+    :param params: dict | bool | None = None,
         Словарь параметров запроса
     :param impersonate: str | None = None
         Имитируемый браузер, если None, выбирается рандомно для каждого запроса из:
@@ -657,3 +657,11 @@ if __name__ == '__main__':
     :param cut_end_row: bool = True
         Обрезать правую границу
     :return: str
+
+#### Метод ```split_dict_on_chunks_by_chunk_len```
+    Делит словарь на чанки в зависимости от переданой длины чанка
+
+    :param dictionary: dict
+        Словарь, который нужно разделить на чанки
+    :param chunk_len: int
+        Размер чанка

@@ -161,15 +161,15 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         proxies: str | None = None,
         headers: dict | list | None = None,
         cookies: dict | list | None = None,
-        data: dict | None = None,
-        json: dict | None = None,
+        data: list[dict | None] | dict | None = None,
+        json: list[dict | None] | dict | None = None,
         ignore_exceptions: tuple | str = "default",
         ignore_404: bool = False,
         long_wait_for_50x: bool = False,
         save_bad_urls: bool = False,
         timeout: int = 30,
         random_sleep_time_every_request: list | bool = False,
-        params: dict | bool = False,
+        params: dict | None = None,
         get_raw_aiohttp_response_content: bool = False,
         match_headers_to_urls: bool = False,
         match_cookies_to_urls: bool = False,
@@ -204,10 +204,10 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         :param cookies: dict | list = None
             Куки запроса, возможно передать в виде списка,
             тогда выберутся рандомно
-        :param data: dict = None
-            Передаваемые данные
-        :param json: dict = None
-            Передаваемые данные
+        :param data: list[dict | None] | dict | None = None
+            Список данных для отправки в теле запроса или один общий словарь
+        :param json: list[dict | None] | dict | None = None,
+            Список JSON-данных для отправки в теле запроса или один общий JSON
         :param ignore_exceptions: tuple = 'default'
             Возможность передать ошибки, которые будут обрабатываться в backoff.
             Если ничего не передано, обрабатываются дефолтные
@@ -224,7 +224,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             Время максимального ожидания ответа
         :param random_sleep_time_every_request: list = False
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
-        :param params: dict = False
+        :param params: dict | None = None,
             Словарь параметров запроса
         :param get_raw_aiohttp_response_content: bool = False
             При True возвращает не модель AiohttpResponse, а просто контент из response.read()
@@ -252,9 +252,17 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
             tasks = []
 
-            for i, url in enumerate(urls):
-                current_headers = self._select_value(headers, match_headers_to_urls, i, len(urls))
-                current_cookies = self._select_value(cookies, match_cookies_to_urls, i, len(urls))
+            url_count, max_requests, data_list, json_list = await self._prepare_request_data(
+                urls=urls, data=data, json=json)
+
+            for i in range(max_requests):
+                url = urls[i % url_count]
+                current_headers = self._select_value(headers, match_headers_to_urls, i,
+                                                     max_requests)
+                current_cookies = self._select_value(cookies, match_cookies_to_urls, i,
+                                                     max_requests)
+                request_data = data_list[i] if i < len(data_list) else None
+                request_json = json_list[i] if i < len(json_list) else None
 
                 request_params = await self.__get_request_params(
                     method=method,
@@ -263,8 +271,8 @@ class AsyncBaseParser(AsyncRequestsParserBase):
                     proxies=proxies,
                     headers=current_headers,
                     cookies=current_cookies,
-                    data=data,
-                    json=json,
+                    data=request_data,
+                    json=request_json,
                     params=params,
                 )
 
@@ -298,7 +306,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         cookies: dict | list | None,
         data: dict | None,
         json: dict | None,
-        params: dict | bool | None = None,
+        params: dict | None = None,
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -321,7 +329,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             Данные запроса
         :param json: dict | None
             Данные запроса
-        :param params: dict = False
+        :param params: dict | None = None
             Словарь параметров запроса
         :return:
         """
