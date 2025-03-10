@@ -26,18 +26,18 @@ class AsyncRequestsParserBase:
         self.bad_urls: list[Any] = []
 
     async def _check_response(
-            self,
-            response: None | AiohttpResponse | Response,
-            iteration: int,
-            url: str,
-            increase_by_seconds: int,
-            iter_count: int,
-            save_bad_urls: bool,
-            ignore_404: bool,
-            long_wait_for_50x: bool,
-            iteration_for_50x: int,
-            iter_count_for_50x_errors: int,
-            increase_by_minutes_for_50x_errors: int,
+        self,
+        response: None | AiohttpResponse | Response,
+        iteration: int,
+        url: str,
+        increase_by_seconds: int,
+        iter_count: int,
+        save_bad_urls: bool,
+        ignore_404: bool,
+        long_wait_for_50x: bool,
+        iteration_for_50x: int,
+        iter_count_for_50x_errors: int,
+        increase_by_minutes_for_50x_errors: int,
     ) -> tuple[bool, None | AiohttpResponse | Response]:
         """
         Метод выполняется в теле цикла и проверяет респонз. Позвращает кортеж, в котором:
@@ -85,7 +85,7 @@ class AsyncRequestsParserBase:
             self.bad_urls.remove(url)
 
     async def _get_by_random_index(
-            self, item: list[dict] | dict, random_index: int, item_name: str
+        self, item: list[dict] | dict, random_index: int, item_name: str
     ) -> dict:
         if isinstance(item, list):
             item = item[random_index]
@@ -95,7 +95,7 @@ class AsyncRequestsParserBase:
 
     @staticmethod
     async def _method_in_series(
-            chunked_array: list | tuple, async_method: Callable, sleep_time: int = 0
+        chunked_array: list | tuple, async_method: Callable, sleep_time: int = 0
     ) -> None:
         """
         Выполняет метод method для каждого чанка последовательно
@@ -120,7 +120,7 @@ class AsyncRequestsParserBase:
 
     @staticmethod
     async def _calculate_random_cookies_headers_index(
-            cookies: list[dict] | dict, headers: list[dict] | dict
+        cookies: list[dict] | dict, headers: list[dict] | dict
     ) -> int:
         upper_index = min(len(cookies), len(headers))
         if not upper_index:
@@ -132,7 +132,7 @@ class AsyncRequestsParserBase:
 
     @staticmethod
     def _select_value(
-            value: dict | list | None, match_to_urls: bool, index: int, urls_length: int
+        value: dict | list | None, match_to_urls: bool, index: int, urls_length: int
     ) -> Any:
         """
         Выбирает значение (headers/cookies) для запроса.
@@ -150,9 +150,9 @@ class AsyncRequestsParserBase:
         return value
 
     @staticmethod
-    async def _prepare_request_data(urls: list, data: list[dict | None] | dict | None,
-                                    json: list[dict | None] | dict | None) -> (
-                                    tuple)[int, int, list[dict | None], list[dict | None]]:
+    async def _prepare_request_data(
+        urls: list, data: list[dict | None] | dict | None, json: list[dict | None] | dict | None
+    ) -> tuple[int, int, list[dict | None], list[dict | None]]:
         """
         Подготавливает данные для запросов, нормализуя их в соответствии с количеством url |
         data | json.
@@ -175,7 +175,7 @@ class AsyncRequestsParserBase:
             - json_list: Список данных для JSON. Если json не был списком, он дублируется
               до длины max_requests.
         """
-        #
+
         url_count = len(urls)
         max_requests = max(
             len(data) if isinstance(data, list) else 0,
