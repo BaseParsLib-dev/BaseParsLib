@@ -1,15 +1,17 @@
-import requests
 import json
 import os
 
+import requests
 
 # URL для проверки IP
 IPIFY_URL = "https://api.ipify.org"
 
 
 # Тесты для проверки IP через прокси
-def test_proxy():
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../parser_data.json'), 'r') as f:
+def test_proxy() -> None:
+    with open(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "../parser_data.json")
+    ) as f:
         data = json.loads(f.read())
 
     proxy_info = data.get("proxy", {})

@@ -1,4 +1,4 @@
-from typing import Iterator
+from collections.abc import Iterator
 
 
 def split_on_chunks_by_chunk_len(array: list | tuple, chunk_len: int) -> Iterator:

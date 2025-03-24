@@ -1,7 +1,7 @@
 from base_pars_lib.utils import get_data_from_text
 
 
-def test_get_data_from_text():
+def test_get_data_from_text() -> None:
     # Тестирование стандартного случая
     text = "Hello, this is a sample text. Start here. This is the data we want. End here."
     start_row = "Start here."
@@ -11,22 +11,30 @@ def test_get_data_from_text():
 
     # Тестирование без обрезки левой границы
     result = get_data_from_text(text, start_row, end_row, cut_start_row=False)
-    assert result == "Start here. This is the data we want. ", "Ошибка при вырезании подстроки без обрезки левой границы"
+    assert (
+        result == "Start here. This is the data we want. "
+    ), "Ошибка при вырезании подстроки без обрезки левой границы"
 
     # Тестирование без обрезки правой границы
     result = get_data_from_text(text, start_row, end_row, cut_end_row=False)
-    assert result == " This is the data we want. End here." , "Ошибка при вырезании подстроки без обрезки правой границы"
+    assert (
+        result == " This is the data we want. End here."
+    ), "Ошибка при вырезании подстроки без обрезки правой границы"
 
     # Тестирование без обрезки обеих границ
     result = get_data_from_text(text, start_row, end_row, cut_start_row=False, cut_end_row=False)
-    assert result == "Start here. This is the data we want. End here.", "Ошибка при вырезании подстроки без обрезки обеих границ"
+    assert (
+        result == "Start here. This is the data we want. End here."
+    ), "Ошибка при вырезании подстроки без обрезки обеих границ"
 
     # Тестирование случая, когда границы не найдены
     result = get_data_from_text(text, "Not found", "End here.")
     assert result == "", "Ошибка при вырезании подстроки, когда левая граница не найдена"
 
     result = get_data_from_text(text, "Start here.", "Not found")
-    assert result == " This is the data we want. End here", "Ошибка при вырезании подстроки, когда правая граница не найдена"
+    assert (
+        result == " This is the data we want. End here"
+    ), "Ошибка при вырезании подстроки, когда правая граница не найдена"
 
     # Тестирование случая, когда обе границы не найдены
     result = get_data_from_text(text, "Not found", "Not found")
