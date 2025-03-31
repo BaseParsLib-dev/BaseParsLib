@@ -5,6 +5,8 @@ import pytest
 from pytest_mock import MockerFixture
 
 from base_pars_lib import BaseParser, WebDriverBaseParser
+from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase
+from base_pars_lib.core.async_requests_parser_base import AsyncRequestsParserBase
 
 
 @pytest.fixture(scope="module")
@@ -36,3 +38,13 @@ def mock_driver() -> Mock:
 def web_driver_base_parser(mock_driver: Mock) -> WebDriverBaseParser:
     """Создаем экземпляр WebDriverBaseParser с мок-драйвером."""
     return WebDriverBaseParser(driver=mock_driver)
+
+
+@pytest.fixture
+def async_requests_parser() -> AsyncRequestsParserBase:
+    return AsyncRequestsParserBase()
+
+
+@pytest.fixture
+def async_browsers_parser() -> AsyncBrowsersParserBase:
+    return AsyncBrowsersParserBase()
