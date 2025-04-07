@@ -2,6 +2,7 @@ import unittest
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from curl_cffi.requests.models import Response
 
 from base_pars_lib import AsyncBaseCurlCffiParser
@@ -41,7 +42,45 @@ class TestAsyncBaseCurlCffiParser(unittest.TestCase):
             url, mock_async_session, params, ignore_404=True
         )
 
-        self.assertEqual(response, mock_response_404)
+        assert response == mock_response_404
+
+    @patch("curl_cffi.requests.AsyncSession")
+    @pytest.mark.parametrize(
+        "ignore_404, ignore_exceptions, save_bad_urls, impersonate, expected_status",
+        [
+            (True, False, False, False, 404),  # ignore_404 = True, ожидаем 404
+            (False, True, False, False, 404),  # ignore_exceptions = True, ожидаем 404
+            (False, False, True, False, 404),  # save_bad_urls = True, ожидаем 404
+            (False, False, False, True, 404),  # impersonate = True, ожидаем 404
+        ],
+    )
+    async def test_make_backoff_request_various_params(
+        self,
+        mock_async_session: Any,
+        ignore_404: bool,
+        ignore_exceptions: bool,
+        save_bad_urls: bool,
+        impersonate: bool,
+        expected_status: int,
+    ) -> None:
+        # Mocking the response to return 404
+        mock_response_404 = MagicMock(spec=Response)
+        mock_response_404.status_code = 404
+        mock_async_session.return_value.request = AsyncMock(return_value=mock_response_404)
+
+        urls: List[str] = ["http://example.com"]
+        params: Dict[str, Any] = {
+            "ignore_404": ignore_404,
+            "ignore_exceptions": ignore_exceptions,
+            "save_bad_urls": save_bad_urls,
+            "impersonate": impersonate,
+        }
+
+        responses = await self.parser._make_backoff_request(urls, **params)
+
+        assert len(responses) == 1
+        assert responses[0] is not None
+        assert responses[0].status_code == expected_status
 
     @patch("curl_cffi.requests.AsyncSession")
     async def test_make_backoff_request_success(self, mock_async_session: Any) -> None:
@@ -62,8 +101,9 @@ class TestAsyncBaseCurlCffiParser(unittest.TestCase):
         mock_response_500.status_code = 500
         mock_response_200 = MagicMock(spec=Response)
         mock_response_200.status_code = 200
+
         mock_async_session.return_value.request = AsyncMock(
-            side_effect=[mock_response_500, mock_response_200]
+            side_effect=[mock_response_500, mock_response_500, mock_response_200]
         )
 
         urls: List[str] = ["http://example.com"]

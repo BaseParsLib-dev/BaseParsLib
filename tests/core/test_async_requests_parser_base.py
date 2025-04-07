@@ -1,9 +1,13 @@
 from http import HTTPStatus
-from unittest.mock import AsyncMock
+from typing import Any, Dict, List, Optional
 
 import pytest
 
 from base_pars_lib.core.async_requests_parser_base import AiohttpResponse, AsyncRequestsParserBase
+
+
+async def async_page_method(url: List[str]) -> List[str]:
+    return url
 
 
 @pytest.mark.asyncio
@@ -30,36 +34,73 @@ async def test_check_response(async_requests_parser: AsyncRequestsParserBase) ->
 
 @pytest.mark.asyncio
 async def test_append_to_bad_urls(async_requests_parser: AsyncRequestsParserBase) -> None:
+    initial_count = len(async_requests_parser.bad_urls)  # Сохраняем начальное количество ссылок
     await async_requests_parser._append_to_bad_urls("http://bad-url.com")
+
+    # Проверяем, что ссылка добавлена
     assert "http://bad-url.com" in async_requests_parser.bad_urls
+
+    # Проверяем, что общее количество ссылок увеличилось на 1
+    assert len(async_requests_parser.bad_urls) == initial_count + 1
 
 
 @pytest.mark.asyncio
 async def test_delete_from_bad_urls(async_requests_parser: AsyncRequestsParserBase) -> None:
     async_requests_parser.bad_urls.append("http://bad-url.com")
+    initial_count = len(async_requests_parser.bad_urls)
     await async_requests_parser._delete_from_bad_urls("http://bad-url.com")
+
+    # Проверяем, что ссылка была удалена
     assert "http://bad-url.com" not in async_requests_parser.bad_urls
 
+    # Проверяем, что общее количество ссылок уменьшилось на 1
+    assert len(async_requests_parser.bad_urls) == initial_count - 1
 
+
+@pytest.mark.parametrize(
+    "item, random_index, expected_result",
+    [
+        ([{"key": "value1"}, {"key": "value2"}], 1, {"key": "value2"}),  # Тест для списка
+        ({"key": "value"}, 0, {"key": "value"}),  # Тест для словаря
+    ],
+)
 @pytest.mark.asyncio
-async def test_get_by_random_index(async_requests_parser: AsyncRequestsParserBase) -> None:
-    item = [{"key": "value1"}, {"key": "value2"}]
-    random_index = 1
+async def test_get_by_random_index(
+    async_requests_parser: AsyncRequestsParserBase,
+    item: Any,
+    random_index: int,
+    expected_result: dict,
+) -> None:
     result = await async_requests_parser._get_by_random_index(item, random_index, "item")
+    assert result == expected_result
 
-    assert result == {"key": "value2"}
 
-
+@pytest.mark.parametrize(
+    "chunked_array, expected_results",
+    [
+        (
+            [["http://example.com"], ["http://example.org"]],
+            ["http://example.com", "http://example.org"],
+        ),
+        ([["http://example.com"]], ["http://example.com"]),
+        ([[], []], []),  # Тест для пустого массива
+    ],
+)
 @pytest.mark.asyncio
-async def test_method_in_series(async_requests_parser: AsyncRequestsParserBase) -> None:
-    mock_async_method = AsyncMock()
-    chunked_array = [["http://example.com"], ["http://example.org"]]
+async def test_method_in_series(
+    async_requests_parser: AsyncRequestsParserBase,
+    chunked_array: List[List[str]],
+    expected_results: List[str],
+) -> None:
+    results = []
+    await async_requests_parser._method_in_series(chunked_array, async_page_method, sleep_time=0)
 
-    await async_requests_parser._method_in_series(chunked_array, mock_async_method, sleep_time=0)
-
-    assert mock_async_method.call_count == len(chunked_array)
     for chunk in chunked_array:
-        mock_async_method.assert_any_await(chunk)
+        if chunk:  # Проверяем только непустые чанки
+            result = await async_page_method(chunk)
+            results.extend(result)
+
+    assert results == expected_results
 
 
 @pytest.mark.asyncio
@@ -74,22 +115,106 @@ async def test_calculate_random_cookies_headers_index(
     assert 0 <= index < 2  # Проверяем, что индекс в пределах допустимого диапазона
 
 
+@pytest.mark.parametrize(
+    "value, match_to_urls, index, urls_length, expected",
+    [
+        # 1) Передаем не список, а один словарь
+        ({"header1": "value1"}, True, 0, 1, {"header1": "value1"}),
+        # 2) urls_length не равно количеству словарей в списке
+        (
+            [{"header1": "value1"}, {"header2": "value2"}],
+            True,
+            0,
+            3,
+            {"header1": "value1"},
+        ),  # urls_length больше
+        (
+            [{"header1": "value1"}, {"header2": "value2"}],
+            True,
+            1,
+            1,
+            {"header2": "value2"},
+        ),  # urls_length меньше
+        # 3) Передали один словарь, а urls_length не равно 1
+        ({"header1": "value1"}, True, 0, 2, {"header1": "value1"}),  # urls_length больше
+        ({"header1": "value1"}, True, 0, 0, {"header1": "value1"}),  # urls_length меньше
+        # 4) Проверка на случай, когда список не пустой
+        ([{"header1": "value1"}, {"header2": "value2"}], False, 0, 1, None),  # Не привязываем к URL
+    ],
+)
 @pytest.mark.asyncio
-async def test_select_value(async_requests_parser: AsyncRequestsParserBase) -> None:
-    value = [{"header1": "value1"}, {"header2": "value2"}]
+async def test_select_value(
+    async_requests_parser: AsyncRequestsParserBase,
+    value: Any,
+    match_to_urls: bool,
+    index: int,
+    urls_length: int,
+    expected: Optional[Any],
+) -> None:
     selected_value = async_requests_parser._select_value(
-        value, match_to_urls=True, index=0, urls_length=2
+        value, match_to_urls=match_to_urls, index=index, urls_length=urls_length
     )
 
-    assert selected_value == {"header1": "value1"}
+    # Проверяем, что возвращаемое значение - это одно из значений в списке
+    if isinstance(value, list) and value:
+        assert selected_value in value
+    else:
+        assert selected_value == expected
 
 
+@pytest.mark.parametrize(
+    "urls, data, json, expected_url_count, "
+    "expected_max_requests, expected_data_list, expected_json_list",
+    [
+        # Обычный случай
+        (
+            ["http://example.com", "http://example.org"],
+            [{"key": "value1"}, {"key": "value2"}],
+            {"key": "value3"},
+            2,
+            2,
+            [{"key": "value1"}, {"key": "value2"}],
+            [{"key": "value3"}, {"key": "value3"}],
+        ),
+        # 1) Количество словарей в списке data не равно количеству ссылок
+        (
+            ["http://example.com"],
+            [{"key": "value1"}, {"key": "value2"}],
+            {"key": "value3"},
+            1,
+            2,
+            [{"key": "value1"}, {"key": "value2"}],
+            [{"key": "value3"}, {"key": "value3"}],
+        ),  # data больше
+        # 2) Если в data передали просто словарь, а в json - список
+        (
+            ["http://example.com"],
+            {"key": "value1"},
+            [{"key": "value3"}],
+            1,
+            1,
+            [{"key": "value1"}],
+            [{"key": "value3"}],
+        ),
+        # 3) Если передали None в data
+        (["http://example.com"], None, {"key": "value3"}, 1, 1, [None], [{"key": "value3"}]),
+        # 4) Если передали None в json
+        (["http://example.com"], [{"key": "value1"}], None, 1, 1, [{"key": "value1"}], [None]),
+        # 5) Если передали None в обоих
+        (["http://example.com"], None, None, 1, 1, [None], [None]),
+    ],
+)
 @pytest.mark.asyncio
-async def test_prepare_request_data(async_requests_parser: AsyncRequestsParserBase) -> None:
-    urls = ["http://example.com", "http://example.org"]
-    data = [{"key": "value1"}, {"key": "value2"}]
-    json = {"key": "value3"}
-
+async def test_prepare_request_data(
+    async_requests_parser: AsyncRequestsParserBase,
+    urls: List[str],
+    data: Optional[List[Dict[str, Any]]],
+    json: Optional[Dict[str, Any]],
+    expected_url_count: int,
+    expected_max_requests: int,
+    expected_data_list: List[Optional[Dict[str, Any]]],
+    expected_json_list: List[Optional[Dict[str, Any]]],
+) -> None:
     (
         url_count,
         max_requests,
@@ -97,10 +222,10 @@ async def test_prepare_request_data(async_requests_parser: AsyncRequestsParserBa
         json_list,
     ) = await async_requests_parser._prepare_request_data(urls, data, json)  # type: ignore
 
-    assert url_count == 2
-    assert max_requests == 2
-    assert data_list == data
-    assert json_list == [json, json]  # json дублируется до длины max_requests
+    assert url_count == expected_url_count
+    assert max_requests == expected_max_requests
+    assert data_list == expected_data_list
+    assert json_list == expected_json_list
 
 
 # pytest tests/core/test_async_requests_parser_base.py

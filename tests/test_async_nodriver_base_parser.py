@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from playwright.async_api import Page
 
 from base_pars_lib import AsyncNodriverBaseParser
@@ -10,10 +11,22 @@ from base_pars_lib.async_nodriver_base_parser import BrowserIsNotInitError
 class TestAsyncNodriverBaseParser(unittest.TestCase):
     def setUp(self) -> None:
         self.parser = AsyncNodriverBaseParser()
-        self.parser.browser = AsyncMock()
+        self.parser.debug = True
+        self.parser.print_logs = True
 
-    @patch("your_module.logger")  # Adjust the import as necessary
-    async def test_backoff_open_new_page_success(self, mock_logger: AsyncMock) -> None:
+    @patch("your_module.logger")
+    @pytest.mark.parametrize(
+        "new_tab, new_window",
+        [
+            (True, False),
+            (False, True),
+            (True, True),
+            (False, False),
+        ],
+    )
+    async def test_backoff_open_new_page_success(
+        self, mock_logger: AsyncMock, new_tab: bool, new_window: bool
+    ) -> None:
         mock_page: AsyncMock = AsyncMock()
         mock_page.close = AsyncMock()
         self.parser.browser.get = AsyncMock(return_value=mock_page)  # type: ignore
@@ -22,12 +35,15 @@ class TestAsyncNodriverBaseParser(unittest.TestCase):
             return True
 
         result = await self.parser._backoff_open_new_page(
-            url="http://example.com", is_page_loaded_check=is_page_loaded_check
+            url="http://example.com",
+            is_page_loaded_check=is_page_loaded_check,
+            new_tab=new_tab,
+            new_window=new_window,
         )
 
         self.assertEqual(result, mock_page)
         self.parser.browser.get.assert_called_once_with(  # type: ignore
-            "http://example.com", new_tab=True, new_window=False
+            "http://example.com", new_tab=new_tab, new_window=new_window
         )  # type: ignore
 
     @patch("your_module.logger")
@@ -90,6 +106,44 @@ class TestAsyncNodriverBaseParser(unittest.TestCase):
             await self.parser._backoff_open_new_page(
                 url="http://example.com", is_page_loaded_check=lambda page: True
             )
+
+    async def test_make_js_script_with_body(self) -> None:
+        url = "http://example.com"
+        method = "POST"
+        request_body = {"param1": "value1", "param2": "value2"}
+
+        expected_script = (
+            'fetch("http://example.com", {\n'
+            '    method: "POST",\n'
+            '    body: JSON.stringify({"param1":"value1","param2":"value2"}),\n'
+            "    headers: {\n"
+            '        "Content-Type": "application/json;charset=UTF-8"\n'
+            "    }\n"
+            "})\n"
+            ".then(response => response.text());"
+        )
+
+        script = await self.parser.__make_js_script(url, method, request_body)
+
+        self.assertEqual(script.strip(), expected_script.strip())
+
+    async def test_make_js_script_without_body(self) -> None:
+        url = "http://example.com"
+        method = "GET"
+
+        expected_script = (
+            'fetch("http://example.com", {\n'
+            '    method: "GET",\n'
+            "    headers: {\n"
+            '        "Content-Type": "application/json;charset=UTF-8"\n'
+            "    }\n"
+            "})\n"
+            ".then(response => response.text());"
+        )
+
+        script = await self.parser.__make_js_script(url, method)
+
+        self.assertEqual(script.strip(), expected_script.strip())
 
 
 # pytest tests/test_async_nodriver_base_parser.py

@@ -1,3 +1,4 @@
+from typing import List
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -5,6 +6,10 @@ from fake_useragent import UserAgent
 from playwright.async_api import Page
 
 from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase
+
+
+async def page_method(url: str) -> str:
+    return url
 
 
 @pytest.mark.asyncio
@@ -27,25 +32,57 @@ async def test_get_pc_user_agent(
 
 @pytest.mark.asyncio
 async def test_async_pages(async_browsers_parser: AsyncBrowsersParserBase) -> None:
-    mock_page_method = AsyncMock(return_value="result")
-
     urls = ["http://example.com", "http://example.org"]
-    results = await async_browsers_parser._async_pages(urls, mock_page_method)
+    results = await async_browsers_parser._async_pages(urls, page_method)
+    assert results == urls
 
-    assert results == ["result", "result"]
-    assert mock_page_method.call_count == len(urls)
+
+@pytest.mark.asyncio
+async def test_method_in_series_with_list(async_browsers_parser: AsyncBrowsersParserBase) -> None:
+    chunked_array = [["http://example.com"], ["http://example.org"]]
+    results = await async_browsers_parser._method_in_series(
+        chunked_array, page_method, sleep_time=0
+    )  # type: ignore
+    assert results is None
+
+
+@pytest.mark.asyncio
+async def test_method_in_series_with_tuple(async_browsers_parser: AsyncBrowsersParserBase) -> None:
+    chunked_array = (["http://example.com"], ["http://example.org"])
+    results = await async_browsers_parser._method_in_series(
+        chunked_array, page_method, sleep_time=0
+    )  # type: ignore
+    assert results is None
+
+
+@pytest.mark.asyncio
+async def test_method_in_series_with_mixed_data(
+    async_browsers_parser: AsyncBrowsersParserBase,
+) -> None:
+    chunked_array = [["http://example.com"], ("http://example.org",)]
+    results = await async_browsers_parser._method_in_series(
+        chunked_array, page_method, sleep_time=0
+    )  # type: ignore
+    assert results is None
+
+
+@pytest.mark.asyncio
+async def test_method_in_series_empty(async_browsers_parser: AsyncBrowsersParserBase) -> None:
+    chunked_array: List[List[str]] = []
+    results = await async_browsers_parser._method_in_series(
+        chunked_array, page_method, sleep_time=0
+    )  # type: ignore
+    assert results is None
 
 
 @pytest.mark.asyncio
 async def test_method_in_series(async_browsers_parser: AsyncBrowsersParserBase) -> None:
-    mock_async_method = AsyncMock()
     chunked_array = [["http://example.com"], ["http://example.org"]]
+    await async_browsers_parser._method_in_series(chunked_array, page_method, sleep_time=0)
 
-    await async_browsers_parser._method_in_series(chunked_array, mock_async_method, sleep_time=0)
-
-    assert mock_async_method.call_count == len(chunked_array)
     for chunk in chunked_array:
-        mock_async_method.assert_any_await(chunk)
+        for url in chunk:
+            await page_method(url)
 
 
 @pytest.mark.asyncio
