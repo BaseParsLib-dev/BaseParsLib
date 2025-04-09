@@ -1,5 +1,6 @@
-import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
+
+import pytest
 
 from base_pars_lib.core._requests_digest_proxy import (
     HTTPProxyDigestAuth,
@@ -8,68 +9,51 @@ from base_pars_lib.core._requests_digest_proxy import (
 )
 
 
-class TestHTTPProxyDigestAuth(unittest.TestCase):
-    @patch("requests.auth.HTTPDigestAuth.build_digest_header")
-    def test_build_digest_header(self, mock_build_digest_header: MagicMock) -> None:
-        # Настройка
-        username = "user"
-        password = "pass"
-        auth = HTTPProxyDigestAuth(username, password)
+@pytest.mark.parametrize("method, url", [("GET", "http://example.com")])
+@patch("requests.auth.HTTPDigestAuth.build_digest_header")
+def test_build_digest_header(
+    mock_build_digest_header: Mock, auth: HTTPProxyDigestAuth, method: str, url: str
+) -> None:
+    auth.build_digest_header(method, url)
 
-        # Вызов метода
-        url = "http://example.com"
-        method = "GET"
-        auth.build_digest_header(method, url)
-
-        # Проверка, что метод был вызван
-        mock_build_digest_header.assert_called_once_with(method, url)
-
-    def test_call_method(self) -> None:
-        # Настройка
-        username = "user"
-        password = "pass"
-        auth = HTTPProxyDigestAuth(username, password)
-
-        # Создание мок-объекта запроса
-        mock_request = MagicMock()
-        mock_request.method = "GET"
-        mock_request.url = "http://example.com"
-
-        # Вызов метода
-        result = auth(mock_request)
-
-        # Проверка, что возвращается запрос
-        self.assertEqual(result, mock_request)
+    # Проверка, что метод был вызван
+    mock_build_digest_header.assert_called_once_with(method, url)
 
 
-class TestHTTPProxyResponse(unittest.TestCase):
-    @patch("http.client.HTTPResponse._read_status")
-    def test_read_status(self, mock_read_status: MagicMock) -> None:
-        # Настройка
-        mock_read_status.return_value = (1, 407, "Proxy Authentication Required")
+def test_call_method(auth: HTTPProxyDigestAuth, mock_request: Mock) -> None:
+    result = auth(mock_request)
 
-        # Создание экземпляра HTTPProxyResponse
-        mock_socket = MagicMock()
-        response = HTTPProxyResponse(mock_socket)
+    # Проверка, что возвращается запрос
+    assert result == mock_request
 
-        # Вызов метода
-        with self.assertRaises(ProxyError):
-            response._read_status()
 
-    @patch("http.client.HTTPResponse._check_close")
-    def test_check_close(self, mock_check_close: MagicMock) -> None:
-        # Настройка
-        mock_check_close.return_value = True
+@pytest.mark.parametrize("mock_read_status_return", [(1, 407, "Proxy Authentication Required")])
+@patch("http.client.HTTPResponse._read_status")
+def test_read_status(
+    mock_read_status: Mock, mock_socket: Mock, mock_read_status_return: tuple
+) -> None:
+    mock_read_status.return_value = mock_read_status_return
 
-        # Создание экземпляра HTTPProxyResponse
-        mock_socket = MagicMock()
-        response = HTTPProxyResponse(mock_socket)
+    # Создание экземпляра HTTPProxyResponse
+    response = HTTPProxyResponse(mock_socket)
 
-        # Вызов метода
-        result = response._check_close()
+    # Вызов метода
+    with pytest.raises(ProxyError):
+        response._read_status()
 
-        # Проверка, что метод _check_close возвращает True
-        self.assertTrue(result)
+
+@patch("http.client.HTTPResponse._check_close")
+def test_check_close(mock_check_close: Mock, mock_socket: Mock) -> None:
+    mock_check_close.return_value = True
+
+    # Создание экземпляра HTTPProxyResponse
+    response = HTTPProxyResponse(mock_socket)
+
+    # Вызов метода
+    result = response._check_close()
+
+    # Проверка, что метод _check_close возвращает True
+    assert result is True
 
 
 # pytest tests/core/test_requests_digest_proxy.py
