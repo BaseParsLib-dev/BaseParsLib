@@ -116,27 +116,40 @@ def test_get_by_random_index_with_list(base_parser: BaseParser) -> None:
 
 
 @pytest.mark.parametrize(
-    "cookies, headers, expected_index",
+    "cookies, headers, expected_max_index",
     [
         (
             [{"cookie1": "value1"}, {"cookie2": "value2"}],
             [{"header1": "value1"}, {"header2": "value2"}, {"header3": "value3"}],
-            0,
-        ),  # Ожидаем, что индекс будет в пределах
-        ([], [], 0),  # Пустые списки
-        ([{"cookie1": "value1"}], [], 0),  # Один пустой список
+            1,  # Максимальный индекс для cookies (2 элемента)
+        ),
+        (
+            [],
+            [],
+            0,  # Нет элементов
+        ),
+        (
+            [{"cookie1": "value1"}],
+            [],
+            0,  # Только один элемент в cookies
+        ),
+        (
+            [],
+            [{"header1": "value1"}],
+            0,  # Только один элемент в headers
+        ),
     ],
 )
 def test_calculate_random_cookies_headers_index(
     base_parser: BaseParser,
     cookies: List[Dict[str, str]],
     headers: List[Dict[str, str]],
-    expected_index: int,
+    expected_max_index: int,
 ) -> None:
     index = base_parser._calculate_random_cookies_headers_index(cookies, headers)
 
     # Проверяем, что индекс находится в допустимых пределах
-    assert index == expected_index
+    assert 0 <= index <= expected_max_index
 
 
 def test_make_request_with_valid_params(base_parser: BaseParser) -> None:
