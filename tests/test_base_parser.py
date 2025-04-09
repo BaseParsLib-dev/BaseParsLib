@@ -7,12 +7,21 @@ from requests.models import Response
 from base_pars_lib.base_parser import BaseParser
 
 
-def test_make_request_success(base_parser: BaseParser, mock_requests_session: Mock) -> None:
+@pytest.mark.parametrize(
+    "status_code, expected_status",
+    [
+        (200, 200),  # Успешный запрос
+        (404, 404),  # Неуспешный запрос
+    ],
+)
+def test_make_request(
+    base_parser: BaseParser, mock_requests_session: Mock, status_code: int, expected_status: int
+) -> None:
     # Создание мок ответа
     mock_response = Response()
-    mock_response.status_code = 200
+    mock_response.status_code = status_code
     mock_requests_session.request.return_value = mock_response
-    params: dict[str, str] = {
+    params: Dict[str, str] = {
         "method": "GET",
         "url": "http://example.com",
     }
@@ -20,23 +29,7 @@ def test_make_request_success(base_parser: BaseParser, mock_requests_session: Mo
 
     # Проверяем, что метод request был вызван
     mock_requests_session.request.assert_called_once_with(**params)
-    assert response.status_code == 200
-
-
-def test_make_request_failure(base_parser: BaseParser, mock_requests_session: Mock) -> None:
-    # Создание мок ответа с ошибкой
-    mock_response = Response()
-    mock_response.status_code = 404
-    mock_requests_session.request.return_value = mock_response
-    params: dict[str, str] = {
-        "method": "GET",
-        "url": "http://example.com",
-    }
-    response = base_parser._make_request(params)
-
-    # Проверяем, что метод request был вызван
-    mock_requests_session.request.assert_called_once_with(**params)
-    assert response.status_code == 404
+    assert response.status_code == expected_status
 
 
 def test_make_backoff_request_success(base_parser: BaseParser, mock_requests_session: Mock) -> None:
@@ -122,37 +115,28 @@ def test_get_by_random_index_with_list(base_parser: BaseParser) -> None:
     assert result in item
 
 
-def test_calculate_random_cookies_headers_index(base_parser: BaseParser) -> None:
-    cookies: List[Dict[str, str]] = [{"cookie1": "value1"}, {"cookie2": "value2"}]
-    headers: List[Dict[str, str]] = [
-        {"header1": "value1"},
-        {"header2": "value2"},
-        {"header3": "value3"},
-    ]
+@pytest.mark.parametrize(
+    "cookies, headers, expected_index",
+    [
+        (
+            [{"cookie1": "value1"}, {"cookie2": "value2"}],
+            [{"header1": "value1"}, {"header2": "value2"}, {"header3": "value3"}],
+            0,
+        ),  # Ожидаем, что индекс будет в пределах
+        ([], [], 0),  # Пустые списки
+        ([{"cookie1": "value1"}], [], 0),  # Один пустой список
+    ],
+)
+def test_calculate_random_cookies_headers_index(
+    base_parser: BaseParser,
+    cookies: List[Dict[str, str]],
+    headers: List[Dict[str, str]],
+    expected_index: int,
+) -> None:
     index = base_parser._calculate_random_cookies_headers_index(cookies, headers)
 
     # Проверяем, что индекс находится в допустимых пределах
-    assert 0 <= index < min(len(cookies), len(headers))
-
-
-def test_calculate_random_cookies_headers_index_with_empty_lists(base_parser: BaseParser) -> None:
-    cookies: List[Dict[str, str]] = []
-    headers: List[Dict[str, str]] = []
-    index = base_parser._calculate_random_cookies_headers_index(cookies, headers)
-
-    # Проверяем, что индекс равен 0
-    assert index == 0
-
-
-def test_calculate_random_cookies_headers_index_with_one_empty_list(
-    base_parser: BaseParser,
-) -> None:
-    cookies: List[Dict[str, str]] = [{"cookie1": "value1"}]
-    headers: List[Dict[str, str]] = []
-    index = base_parser._calculate_random_cookies_headers_index(cookies, headers)
-
-    # Проверяем, что индекс равен 0
-    assert index == 0
+    assert index == expected_index
 
 
 def test_make_request_with_valid_params(base_parser: BaseParser) -> None:
