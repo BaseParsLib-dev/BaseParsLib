@@ -1,9 +1,9 @@
 import asyncio
 from typing import Callable
 
+from playwright.async_api import Browser, Page
 
 from base_pars_lib.config import logger
-from playwright.async_api import Page, Browser
 
 
 class BrowserIsNotInitError(Exception):
@@ -144,10 +144,10 @@ class AsyncCamoufoxBaseParser:
                         }
                     })
                     .then(response => response.text());
-                """ % (
+                """ % (  # noqa: UP031
             url,
             method,
-        )  # noqa: UP031
+        )
         if request_body is not None:
             script = script.replace(
                 "REQUEST_BODY", f"body: JSON.stringify({request_body})"
