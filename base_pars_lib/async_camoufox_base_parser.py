@@ -1,5 +1,5 @@
 import asyncio
-from typing import Callable
+from typing import Callable, Any
 
 from playwright.async_api import Browser, Page
 
@@ -28,7 +28,7 @@ class AsyncCamoufoxBaseParser:
         load_timeout: int = 30,
         increase_by_seconds: int = 10,
         iter_count: int = 10,
-        **new_page_kwargs,
+        **new_page_kwargs: Any,
     ) -> Page | None:
         """
         Открывает страницу по переданному url,
