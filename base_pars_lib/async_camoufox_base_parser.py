@@ -4,11 +4,7 @@ from typing import Any, Callable
 from playwright.async_api import Browser, Page
 
 from base_pars_lib.config import logger
-
-
-class BrowserIsNotInitError(Exception):
-    def __init__(self) -> None:
-        self.message = "BrowserIsNotInitError"
+from base_pars_lib.exceptions.browser import BrowserIsNotInitError
 
 
 class AsyncCamoufoxBaseParser:

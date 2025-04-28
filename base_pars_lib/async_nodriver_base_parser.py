@@ -7,11 +7,7 @@ from zendriver.core.tab import Tab, cdp
 
 from base_pars_lib.config import logger
 from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase
-
-
-class BrowserIsNotInitError(Exception):
-    def __init__(self) -> None:
-        self.message = "BrowserIsNotInitError"
+from base_pars_lib.exceptions.browser import BrowserIsNotInitError
 
 
 class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
