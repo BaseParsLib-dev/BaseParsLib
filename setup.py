@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="BaseParsLib",
-    version="0.3.1",
+    version="0.3.11",
     packages=[
         "base_pars_lib",
         "base_pars_lib.utils",
@@ -19,6 +19,7 @@ setup(
         "zendriver==0.4.1",
         "selenium==4.26.1",
         "curl-cffi==0.7.4",
-        "camoufox==0.4.11"
+        "camoufox==0.4.11",
+        "geoip2==5.0.1"
     ],
 )
