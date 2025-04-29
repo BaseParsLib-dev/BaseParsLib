@@ -5,7 +5,7 @@ import pytest
 from playwright.async_api import Page
 
 from base_pars_lib import AsyncNodriverBaseParser
-from base_pars_lib.async_nodriver_base_parser import BrowserIsNotInitError
+from base_pars_lib.exceptions.browser import BrowserIsNotInitError
 
 
 class TestAsyncNodriverBaseParser(unittest.TestCase):
