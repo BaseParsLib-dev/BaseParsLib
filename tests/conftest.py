@@ -6,7 +6,13 @@ import pytest
 from aiohttp import ClientResponse, ClientSession
 from pytest_mock import MockerFixture
 
-from base_pars_lib import AsyncBaseCurlCffiParser, AsyncBaseParser, BaseParser, WebDriverBaseParser
+from base_pars_lib import (
+    AsyncBaseCurlCffiParser,
+    AsyncBaseParser,
+    AsyncCamoufoxBaseParser,
+    BaseParser,
+    WebDriverBaseParser,
+)
 from base_pars_lib.core._requests_digest_proxy import HTTPProxyDigestAuth
 from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase
 from base_pars_lib.core.async_requests_parser_base import AsyncRequestsParserBase
@@ -115,3 +121,8 @@ def mock_async_session() -> Mock:
 @pytest.fixture
 def async_base_curl_cffi_parser() -> AsyncBaseCurlCffiParser:
     return AsyncBaseCurlCffiParser(debug=True, print_logs=True)
+
+
+@pytest.fixture
+def async_camoufox_base_parser() -> AsyncCamoufoxBaseParser:
+    return AsyncCamoufoxBaseParser()
