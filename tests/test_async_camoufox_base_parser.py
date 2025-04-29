@@ -1,9 +1,8 @@
-import asyncio
-import time
+from typing import Any
 
 import pytest
-from playwright.async_api import Page
 from camoufox.async_api import AsyncCamoufox
+from playwright.async_api import Page
 
 from base_pars_lib import AsyncCamoufoxBaseParser
 
@@ -17,7 +16,10 @@ async def is_page_loaded_check_failure(_page: Page) -> bool:
 
 
 async def check_page(_page: Page, test_row: str) -> bool:
-    return "This domain is for use in illustrative examples in documents" + test_row in await _page.content()
+    return (
+            "This domain is for use in illustrative examples in documents" +
+            test_row in await _page.content()
+    )
 
 
 @pytest.mark.parametrize(
@@ -84,25 +86,25 @@ async def check_page(_page: Page, test_row: str) -> bool:
 )
 @pytest.mark.asyncio
 async def test_backoff_open_new_page(
-        params: dict[str, any],
-        results: dict[str, any],
+        params: dict[str, Any],
+        results: dict[str, Any],
         async_camoufox_base_parser: AsyncCamoufoxBaseParser
 ) -> None:
     browser_manager = AsyncCamoufox()
     await browser_manager.__aenter__()
-    async_camoufox_base_parser.browser = browser_manager.browser
+    async_camoufox_base_parser.browser = browser_manager.browser  # type: ignore[assignment]
 
     page = await async_camoufox_base_parser._backoff_open_new_page(**params)
 
     if (
         params.get("is_page_loaded_check") == is_page_loaded_check_failure or
         params.get("url") == "url" or
-        params.get("check_page_args").get("test_row") == "check_page_fail"
+        params.get("check_page_args").get("test_row") == "check_page_fail"  # type: ignore[union-attr]
     ):
         assert results.get("page") is None
     else:
-        assert page.url == results.get("url")
-        assert results.get("content_part") in await page.content()
+        assert page.url == results.get("url")  # type: ignore[union-attr]
+        assert results.get("content_part") in await page.content()  # type: ignore[union-attr]
 
     await browser_manager.__aexit__()
 
@@ -141,13 +143,13 @@ async def test_backoff_open_new_page(
 )
 @pytest.mark.asyncio
 async def test_make_request_from_page(
-    params: dict[str, any],
-    results: dict[str, any],
+    params: dict[str, Any],
+    results: dict[str, Any],
     async_camoufox_base_parser: AsyncCamoufoxBaseParser
 ) -> None:
     browser_manager = AsyncCamoufox()
     await browser_manager.__aenter__()
-    async_camoufox_base_parser.browser = browser_manager.browser
+    async_camoufox_base_parser.browser = browser_manager.browser  # type: ignore[assignment]
 
     page = await async_camoufox_base_parser._backoff_open_new_page(
         url="http://example.com/",
@@ -158,18 +160,18 @@ async def test_make_request_from_page(
     )
 
     response = await async_camoufox_base_parser._make_request_from_page(
-        page=page,
-        url=params.get("url_to_request_from_page"),
-        method=params.get("method")
+        page=page,  # type: ignore[arg-type]
+        url=params.get("url_to_request_from_page"),  # type: ignore[arg-type]
+        method=params.get("method")  # type: ignore[arg-type]
     )
 
     if isinstance(params.get("url_to_request_from_page"), str):
         assert results.get("response_part") in response
     elif isinstance(params.get("url_to_request_from_page"), list):
         assert isinstance(response, list)
-        assert len(response) == len(params.get("url_to_request_from_page"))
+        assert len(response) == len(params.get("url_to_request_from_page"))  # type: ignore[arg-type]
         for rsp in response:
-            assert results.get("response_part") in rsp
+            assert str(results.get("response_part")) in rsp
 
     await browser_manager.__aexit__()
 

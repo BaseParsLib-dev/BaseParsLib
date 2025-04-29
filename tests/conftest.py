@@ -9,9 +9,9 @@ from pytest_mock import MockerFixture
 from base_pars_lib import (
     AsyncBaseCurlCffiParser,
     AsyncBaseParser,
+    AsyncCamoufoxBaseParser,
     BaseParser,
     WebDriverBaseParser,
-    AsyncCamoufoxBaseParser
 )
 from base_pars_lib.core._requests_digest_proxy import HTTPProxyDigestAuth
 from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase
