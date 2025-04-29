@@ -1,4 +1,3 @@
-import platform
 from typing import Any
 
 import pytest
