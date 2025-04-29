@@ -1,3 +1,4 @@
+import platform
 from typing import Any
 
 import pytest
@@ -90,7 +91,9 @@ async def test_backoff_open_new_page(
         results: dict[str, Any],
         async_camoufox_base_parser: AsyncCamoufoxBaseParser
 ) -> None:
-    browser_manager = AsyncCamoufox()
+    browser_manager = AsyncCamoufox(
+        headless="virtual" if platform.system() == "linux" else False
+    )
     await browser_manager.__aenter__()
     async_camoufox_base_parser.browser = browser_manager.browser  # type: ignore[assignment]
 
@@ -147,7 +150,9 @@ async def test_make_request_from_page(
     results: dict[str, Any],
     async_camoufox_base_parser: AsyncCamoufoxBaseParser
 ) -> None:
-    browser_manager = AsyncCamoufox()
+    browser_manager = AsyncCamoufox(
+        headless="virtual" if platform.system() == "linux" else False
+    )
     await browser_manager.__aenter__()
     async_camoufox_base_parser.browser = browser_manager.browser  # type: ignore[assignment]
 
