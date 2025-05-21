@@ -1,7 +1,7 @@
-from http import HTTPStatus
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Callable
 
 import pytest
+from curl_cffi.requests.models import Response
 
 from base_pars_lib.core.async_requests_parser_base import AiohttpResponse, AsyncRequestsParserBase
 
@@ -10,26 +10,130 @@ async def async_page_method(url: List[str]) -> List[str]:
     return url
 
 
+async def check_page(
+        response: AiohttpResponse | Response,
+        test_arg: bool | None = None
+) -> bool:
+    if test_arg is None:
+        return response.text == "Hihi"
+    return test_arg
+
+
+@pytest.mark.parametrize(
+    "params, response_status_code, results",
+    [
+        (  # Базовая ситуация
+            {
+                "iteration": 1,
+                "url": "http://example.com",
+                "increase_by_seconds": 1,
+                "iter_count": 3,
+                "save_bad_urls": False,
+                "ignore_404": False,
+                "long_wait_for_50x": False,
+                "iteration_for_50x": 0,
+                "iter_count_for_50x_errors": 0,
+                "increase_by_minutes_for_50x_errors": 0,
+                "check_page": check_page,
+                "check_page_args": {"test_arg": None},
+            },
+            200,
+            {
+                "result": True,
+                "response_returned": True
+            }
+        ),
+        (  # Проверка, когда check_page взвращает False (+ проверка работы check_page_args)
+            {
+                "iteration": 1,
+                "url": "http://example.com",
+                "increase_by_seconds": 1,
+                "iter_count": 3,
+                "save_bad_urls": False,
+                "ignore_404": False,
+                "long_wait_for_50x": False,
+                "iteration_for_50x": 0,
+                "iter_count_for_50x_errors": 0,
+                "increase_by_minutes_for_50x_errors": 0,
+                "check_page": check_page,
+                "check_page_args": {"test_arg": False},
+            },
+            200,
+            {
+                "result": False,
+                "response_returned": True
+            }
+        ),
+        (  # Проверка сбора bad_urls + проверка возврата значений при статус коде не 200
+            {
+                "iteration": 1,
+                "url": "http://example.com",
+                "increase_by_seconds": 1,
+                "iter_count": 3,
+                "save_bad_urls": True,
+                "ignore_404": False,
+                "long_wait_for_50x": False,
+                "iteration_for_50x": 0,
+                "iter_count_for_50x_errors": 0,
+                "increase_by_minutes_for_50x_errors": 0,
+                "check_page": check_page,
+                "check_page_args": {"test_arg": None},
+            },
+            403,
+            {
+                "result": False,
+                "response_returned": False
+            }
+        ),
+        (  # Проверка iteration == iter_count
+            {
+                "iteration": 3,
+                "url": "http://example.com",
+                "increase_by_seconds": 1,
+                "iter_count": 3,
+                "save_bad_urls": False,
+                "ignore_404": False,
+                "long_wait_for_50x": False,
+                "iteration_for_50x": 0,
+                "iter_count_for_50x_errors": 0,
+                "increase_by_minutes_for_50x_errors": 0,
+                "check_page": check_page,
+                "check_page_args": {"test_arg": None},
+            },
+            403,
+            {
+                "result": True,
+                "response_returned": True
+            }
+        )
+    ],
+)
 @pytest.mark.asyncio
-async def test_check_response(async_requests_parser: AsyncRequestsParserBase) -> None:
+async def test_check_response(
+        async_requests_parser: AsyncRequestsParserBase,
+        params: dict[str, Any],
+        response_status_code: int,
+        results: dict[str, Any],
+) -> None:
     response = AiohttpResponse(
-        text="OK", json=None, url="http://example.com", status_code=HTTPStatus.OK
+        text="Hihi",
+        json={"hi": "hihi"},
+        url=params["url"],
+        status_code=response_status_code,
     )
 
     result, resp = await async_requests_parser._check_response(
-        response, 1, "http://example.com", 1, 3, False, False, False, 0, 0, 0
+        response,
+        **params
     )
 
-    assert result is True
-    assert resp == response
-
-    # Тестируем с None
-    result, resp = await async_requests_parser._check_response(
-        None, 1, "http://example.com", 1, 3, False, False, False, 0, 0, 0
-    )
-
-    assert result is False
-    assert resp is None
+    assert result == results["result"]
+    if results["response_returned"]:
+        assert resp == response
+    else:
+        assert resp is None
+    if params["save_bad_urls"]:
+        assert params["url"] in async_requests_parser.bad_urls
 
 
 @pytest.mark.asyncio
