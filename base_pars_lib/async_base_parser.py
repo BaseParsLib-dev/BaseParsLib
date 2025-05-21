@@ -51,7 +51,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         url: str,
         session: aiohttp.ClientSession,
         params: dict,
-        check_page: Callable = None,
+        check_page: Callable = None,  # type: ignore[assignment]
         check_page_args: dict | None = None,
         ignore_exceptions: tuple | str = "default",
         iter_count: int = 10,

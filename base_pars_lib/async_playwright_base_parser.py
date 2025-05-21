@@ -123,6 +123,7 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
                         old_page = page
                 else:
                     return page
+
             except Exception as Ex:
                 if page:
                     await page.close()
