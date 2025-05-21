@@ -25,6 +25,9 @@ class AsyncRequestsParserBase:
 
         self.bad_urls: list[Any] = []
 
+    # TODO: Переписать под паттерн цепочка обязанностей
+    #  (https://refactoring.guru/ru/design-patterns/chain-of-responsibility)
+    #  очень запутаный код
     async def _check_response(
         self,
         response: None | AiohttpResponse | Response,
@@ -38,8 +41,8 @@ class AsyncRequestsParserBase:
         iteration_for_50x: int,
         iter_count_for_50x_errors: int,
         increase_by_minutes_for_50x_errors: int,
-        check_page: Callable = None,  # type: ignore[assignment]
-        check_page_args: dict | None = None,
+        check_page: Callable,
+        check_page_args: dict | None,
     ) -> tuple[bool, None | AiohttpResponse | Response]:
         """
         Метод выполняется в теле цикла и проверяет респонз. Позвращает кортеж, в котором:
@@ -53,7 +56,10 @@ class AsyncRequestsParserBase:
             await asyncio.sleep(iteration * increase_by_seconds)
             return False, None
 
-        if response.status_code == HTTPStatus.OK or iteration == iter_count:
+        if iteration == iter_count:
+            return True, response
+
+        if response.status_code == HTTPStatus.OK:
             if check_page is not None:
                 if check_page_args is not None:
                     check_page_status = await check_page(response, **check_page_args)

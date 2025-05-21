@@ -220,6 +220,8 @@ async def test_check_response_200(async_base_parser: Any) -> None:
         iteration_for_50x=1,
         iter_count_for_50x_errors=3,
         increase_by_minutes_for_50x_errors=20,
+        check_page=None,
+        check_page_args=None,
     )
 
     assert is_cycle_end is True
@@ -243,6 +245,8 @@ async def test_check_response_404_ignored(async_base_parser: Any) -> None:
         iteration_for_50x=1,
         iter_count_for_50x_errors=3,
         increase_by_minutes_for_50x_errors=20,
+        check_page=None,
+        check_page_args=None,
     )
 
     assert is_cycle_end is True
@@ -264,6 +268,8 @@ async def test_check_response_500_retry(async_base_parser: Any) -> None:
         iteration_for_50x=1,
         iter_count_for_50x_errors=3,
         increase_by_minutes_for_50x_errors=20,
+        check_page=None,
+        check_page_args=None,
     )
 
     assert is_cycle_end is False
