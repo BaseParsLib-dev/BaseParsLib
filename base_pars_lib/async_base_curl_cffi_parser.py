@@ -1,5 +1,6 @@
 import asyncio
 import random
+from typing import Callable
 
 import curl_cffi
 import urllib3
@@ -47,6 +48,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         url: str,
         session: AsyncSession,
         params: dict,
+        check_page: Callable,
+        check_page_args: dict | None,
         ignore_exceptions: tuple | str = "default",
         iter_count: int = 10,
         iter_count_for_50x_errors: int = 3,
@@ -98,6 +101,13 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
                 "chrome_android"
             Можно передать свой. Можно так же передать название с версией - "chrome107",
             но не рекоммендуется. Если не использовать версию, ставится автоматически последняя
+        :param check_page: Callable
+            Можно передать асинхронную функцию, в которой будут дополнительные проверки страницы
+            (например на то, страница с капчей ли это)
+            Функция обязательно должна принимать объект Response и возвращать
+            True или False, где True - вернуть страницу, False - попытаться открыть заново
+        :param check_page_args: dict | None
+            Дополнительные параметры для check_page, если требуются
 
         :return:
             Ответ от сайта. Если на протяжении всех попыток запросов сайт не отдавал код 200,
@@ -133,6 +143,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
                     iteration_for_50x=iteration_for_50x,
                     iter_count_for_50x_errors=iter_count_for_50x_errors,
                     increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
+                    check_page=check_page,
+                    check_page_args=check_page_args,
                 )
                 if is_cycle_end:
                     return response_  # type: ignore[return-value]
@@ -172,6 +184,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         debug_curl_cffi: bool = False,
         match_headers_to_urls: bool = False,
         match_cookies_to_urls: bool = False,
+        check_page: Callable = None,  # type: ignore[assignment]
+        check_page_args: dict | None = None,
     ) -> tuple[Response | None]:
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -243,6 +257,13 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         :param match_cookies_to_urls: bool = False
             Если True, каждому URL из списка будет соответствовать свой cookie (по порядку).
             Если False, cookie выбирается рандомно.
+        :param check_page: Callable = None
+            Можно передать асинхронную функцию, в которой будут дополнительные проверки страницы
+            (например на то, страница с капчей ли это)
+            Функция обязательно должна принимать объект Response и возвращать
+            True или False, где True - вернуть страницу, False - попытаться открыть заново
+        :param check_page_args: dict | None = None
+            Дополнительные параметры для check_page, если требуются
 
         :return:
             Возвращает список ответов от сайта.
@@ -296,6 +317,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
                         save_bad_urls=save_bad_urls,
                         random_sleep_time_every_request=random_sleep_time_every_request,
                         impersonate=impersonate,
+                        check_page=check_page,
+                        check_page_args=check_page_args,
                     )
                 )
 

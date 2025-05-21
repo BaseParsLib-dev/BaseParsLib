@@ -38,6 +38,8 @@ class AsyncRequestsParserBase:
         iteration_for_50x: int,
         iter_count_for_50x_errors: int,
         increase_by_minutes_for_50x_errors: int,
+        check_page: Callable = None,  # type: ignore[assignment]
+        check_page_args: dict | None = None,
     ) -> tuple[bool, None | AiohttpResponse | Response]:
         """
         Метод выполняется в теле цикла и проверяет респонз. Позвращает кортеж, в котором:
@@ -52,9 +54,21 @@ class AsyncRequestsParserBase:
             return False, None
 
         if response.status_code == HTTPStatus.OK or iteration == iter_count:
-            if save_bad_urls:
-                await self._delete_from_bad_urls(url)
-            return True, response
+            if check_page is not None:
+                if check_page_args is not None:
+                    check_page_status = await check_page(response, **check_page_args)
+                else:
+                    check_page_status = await check_page(response)
+                if check_page_status:
+                    if save_bad_urls:
+                        await self._delete_from_bad_urls(url)
+                    return True, response
+                else:
+                    return False, response
+            else:
+                if save_bad_urls:
+                    await self._delete_from_bad_urls(url)
+                return True, response
         if save_bad_urls and response.status_code != HTTPStatus.NOT_FOUND:
             await self._append_to_bad_urls(url)
         if response.status_code == HTTPStatus.NOT_FOUND and ignore_404:

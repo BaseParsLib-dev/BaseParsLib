@@ -1,6 +1,6 @@
 import asyncio
 import random
-from typing import Any
+from typing import Any, Callable
 
 import aiohttp
 import urllib3
@@ -51,6 +51,8 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         url: str,
         session: aiohttp.ClientSession,
         params: dict,
+        check_page: Callable = None,
+        check_page_args: dict | None = None,
         ignore_exceptions: tuple | str = "default",
         iter_count: int = 10,
         iter_count_for_50x_errors: int = 3,
@@ -95,6 +97,13 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
         :param get_raw_aiohttp_response_content: bool = False
             При True возвращает не модель AiohttpResponse, а просто контент из response.read()
+        :param check_page: Callable = None
+            Можно передать асинхронную функцию, в которой будут дополнительные проверки страницы
+            (например на то, страница с капчей ли это)
+            Функция обязательно должна принимать объект Response и возвращать
+            True или False, где True - вернуть страницу, False - попытаться открыть заново
+        :param check_page_args: dict | None = None
+            Дополнительные параметры для check_page, если требуются
 
         :return:
             Ответ от сайта. Если на протяжении всех попыток запросов сайт не отдавал код 200,
@@ -135,6 +144,8 @@ class AsyncBaseParser(AsyncRequestsParserBase):
                         iteration_for_50x=iteration_for_50x,
                         iter_count_for_50x_errors=iter_count_for_50x_errors,
                         increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
+                        check_page=check_page,
+                        check_page_args=check_page_args,
                     )
                     if is_cycle_end:
                         return response_  # type: ignore[return-value]
@@ -173,6 +184,8 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         get_raw_aiohttp_response_content: bool = False,
         match_headers_to_urls: bool = False,
         match_cookies_to_urls: bool = False,
+        check_page: Callable = None,  # type: ignore[assignment]
+        check_page_args: dict | None = None,
     ) -> tuple[AiohttpResponse | None]:
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -234,6 +247,13 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         :param match_cookies_to_urls: bool = False
             Если True, каждому URL из списка будет соответствовать свой cookie (по порядку).
             Если False, cookie выбирается рандомно.
+        :param check_page: Callable = None
+            Можно передать асинхронную функцию, в которой будут дополнительные проверки страницы
+            (например на то, страница с капчей ли это)
+            Функция обязательно должна принимать объект Response и возвращать
+            True или False, где True - вернуть страницу, False - попытаться открыть заново
+        :param check_page_args: dict | None = None
+            Дополнительные параметры для check_page, если требуются
 
         :return:
             Возвращает список ответов от сайта.
@@ -291,6 +311,8 @@ class AsyncBaseParser(AsyncRequestsParserBase):
                         save_bad_urls=save_bad_urls,
                         random_sleep_time_every_request=random_sleep_time_every_request,
                         get_raw_aiohttp_response_content=get_raw_aiohttp_response_content,
+                        check_page=check_page,
+                        check_page_args=check_page_args,
                     )
                 )
 
