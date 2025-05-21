@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Dict, List, Optional
 
 import pytest
 from curl_cffi.requests.models import Response
