@@ -72,7 +72,7 @@ class AsyncRequestsParserBase:
                 else:
                     if self.debug:
                         logger.info_log(
-                            "check_page returned False, iter: {iteration}, {url}", self.print_logs
+                            f"check_page returned False, iter: {iteration}, {url}", self.print_logs
                         )
                         await asyncio.sleep(iteration * increase_by_seconds)
                     return False, response
