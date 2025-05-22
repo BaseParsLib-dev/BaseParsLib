@@ -50,14 +50,14 @@ class AsyncRequestsParserBase:
             AiohttpResponse | Response - сам респонз
         """
 
+        if iteration == iter_count:
+            return True, response
+
         if response is None:
             if self.debug:
                 logger.info_log(f"response is None, iter: {iteration}, {url}", self.print_logs)
             await asyncio.sleep(iteration * increase_by_seconds)
             return False, None
-
-        if iteration == iter_count:
-            return True, response
 
         if response.status_code == HTTPStatus.OK:
             if check_page is not None:
@@ -81,7 +81,7 @@ class AsyncRequestsParserBase:
             return True, response
 
         if 599 >= response.status_code >= 500 and long_wait_for_50x:
-            if iteration_for_50x > iter_count_for_50x_errors:
+            if iteration_for_50x == iter_count_for_50x_errors:
                 return True, response
             iteration_for_50x += 1
             if self.debug:
