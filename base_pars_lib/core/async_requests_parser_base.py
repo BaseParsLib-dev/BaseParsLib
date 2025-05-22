@@ -70,6 +70,11 @@ class AsyncRequestsParserBase:
                         await self._delete_from_bad_urls(url)
                     return True, response
                 else:
+                    if self.debug:
+                        logger.info_log(
+                            "check_page returned False, iter: {iteration}, {url}", self.print_logs
+                        )
+                        await asyncio.sleep(iteration * increase_by_seconds)
                     return False, response
             else:
                 if save_bad_urls:
