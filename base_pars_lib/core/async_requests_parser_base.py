@@ -25,6 +25,9 @@ class AsyncRequestsParserBase:
 
         self.bad_urls: list[Any] = []
 
+    # TODO: Переписать под паттерн цепочка обязанностей
+    #  (https://refactoring.guru/ru/design-patterns/chain-of-responsibility)
+    #  очень запутаный код
     async def _check_response(
         self,
         response: None | AiohttpResponse | Response,
@@ -38,6 +41,8 @@ class AsyncRequestsParserBase:
         iteration_for_50x: int,
         iter_count_for_50x_errors: int,
         increase_by_minutes_for_50x_errors: int,
+        check_page: Callable,
+        check_page_args: dict | None,
     ) -> tuple[bool, None | AiohttpResponse | Response]:
         """
         Метод выполняется в теле цикла и проверяет респонз. Позвращает кортеж, в котором:
@@ -45,23 +50,38 @@ class AsyncRequestsParserBase:
             AiohttpResponse | Response - сам респонз
         """
 
+        if iteration == iter_count:
+            return True, response
+
         if response is None:
             if self.debug:
                 logger.info_log(f"response is None, iter: {iteration}, {url}", self.print_logs)
             await asyncio.sleep(iteration * increase_by_seconds)
             return False, None
 
-        if response.status_code == HTTPStatus.OK or iteration == iter_count:
-            if save_bad_urls:
-                await self._delete_from_bad_urls(url)
-            return True, response
+        if response.status_code == HTTPStatus.OK:
+            if check_page is not None:
+                if check_page_args is not None:
+                    check_page_status = await check_page(response, **check_page_args)
+                else:
+                    check_page_status = await check_page(response)
+                if check_page_status:
+                    if save_bad_urls:
+                        await self._delete_from_bad_urls(url)
+                    return True, response
+                else:
+                    return False, response
+            else:
+                if save_bad_urls:
+                    await self._delete_from_bad_urls(url)
+                return True, response
         if save_bad_urls and response.status_code != HTTPStatus.NOT_FOUND:
             await self._append_to_bad_urls(url)
         if response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
             return True, response
 
         if 599 >= response.status_code >= 500 and long_wait_for_50x:
-            if iteration_for_50x > iter_count_for_50x_errors:
+            if iteration_for_50x == iter_count_for_50x_errors:
                 return True, response
             iteration_for_50x += 1
             if self.debug:

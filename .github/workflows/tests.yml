@@ -1,12 +1,8 @@
-name: CI Workflow
+name: tests
 
 on:
   push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
 
 jobs:
   test:
@@ -28,4 +24,4 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests  # Запуск тестов из папки tests
+          pytest tests
