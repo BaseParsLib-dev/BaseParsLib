@@ -1,6 +1,7 @@
 import asyncio
 from typing import Any, Callable
 
+from camoufox.async_api import AsyncCamoufox
 from playwright.async_api import Browser, Page
 
 from base_pars_lib.config import logger
@@ -10,10 +11,57 @@ from base_pars_lib.exceptions.browser import BrowserIsNotInitError
 class AsyncCamoufoxBaseParser:
     def __init__(self) -> None:
         self.browser: Browser | None = None
+        self.browser_manager: AsyncCamoufox | None = None
 
         self.debug: bool = False
 
         self.print_logs: bool = False
+
+    async def _create_browser(
+            self,
+            proxy: dict[str, str] | None = None,
+            headless: bool | str = "virtual",
+            os: str = "linux",
+            geoip: bool = True,
+    ) -> Browser:
+        """
+        Создаёт браузер-менеджер и браузер
+
+        :param proxy: dict[str, str] | None
+            Прокси в формате:
+            {
+                "server": f"http://<host>:<port>",
+                "username": <login>,
+                "password": <password>,
+            }
+        :param headless: bool | str = "virtual"
+            Показывать или не показывать окно браузера, значение
+            virtual (поддерживается только в linux)
+            создаёт виртуальный дисплей, что позволяет эмулировать экран в системе
+        :param os: str = "linux"
+            Возможность подменить ОС
+        :param geoip: bool = True
+            Браузер будет использовать долготу, ширину, часовой пояс, страну,
+            локаль переданного прокси
+        :return: Объект браузера
+        """
+
+        self.browser_manager = AsyncCamoufox(
+            headless=headless,
+            os=os,
+            geoip=geoip,
+            proxy=proxy,
+        )
+        await self.browser_manager.__aenter__()
+        self.browser = self.browser_manager.browser  # type: ignore[assignment]
+        return self.browser  # type: ignore[return-value]
+
+    async def _close_browser(self) -> None:
+        if self.browser_manager is not None:
+            await self.browser_manager.__aexit__()
+            self.browser_manager = None
+            self.browser = None
+        return None
 
     async def _backoff_open_new_page(
         self,
