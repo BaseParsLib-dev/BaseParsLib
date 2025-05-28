@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 from camoufox.async_api import AsyncCamoufox
-from playwright.async_api import Page
+from playwright.async_api import BrowserType, Page
 
 from base_pars_lib import AsyncCamoufoxBaseParser
 
@@ -174,6 +174,22 @@ async def test_make_request_from_page(
             assert str(results.get("response_part")) in rsp
 
     await browser_manager.__aexit__()
+
+
+@pytest.mark.asyncio
+async def test_create_and_close_browser(
+        async_camoufox_base_parser: AsyncCamoufoxBaseParser
+) -> None:
+    browser = await async_camoufox_base_parser._create_browser(headless=True)
+    assert isinstance(browser.browser_type, BrowserType)  # type: ignore[union-attr]
+    assert (
+            async_camoufox_base_parser.browser_manager.browser.browser_type is  # type: ignore[union-attr]
+            browser.browser_type
+    )
+
+    await async_camoufox_base_parser._close_browser()
+    assert async_camoufox_base_parser.browser is None
+    assert async_camoufox_base_parser.browser_manager is None
 
 
 # pytest tests/test_async_camoufox_base_parser.py

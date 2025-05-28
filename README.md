@@ -17,6 +17,7 @@
  - [Класс WebDriverBaseParser](#класс_webdriverbaseparser)
  - [Класс AsyncNodriverBaseParser](#класс_asyncnodriverbaseparser)
  - [Класс AsyncBaseCurlCffiParser](#класс_asyncbasecurlcffiparser)
+ - [Класс AsyncCamoufoxBaseParser](#класс_asynccamoufoxbaseparser)
  - [Дополнительные методы библиотеки](#дополнительные_методы_библиотеки)
 <br /> <br />
 
@@ -638,6 +639,77 @@ if __name__ == '__main__':
     :return:
         Возвращает список ответов от сайта.
         Какие-то из ответов могут быть None, если произошла ошибка из ignore_exceptions
+
+<a name="класс_asynccamoufoxbaseparser"></a>
+### AsyncCamoufoxBaseParser
+#### Метод ```_create_browser```
+    Создаёт браузер-менеджер и браузер
+
+    :param proxy: dict[str, str] | None
+        Прокси в формате:
+        {
+            "server": f"http://<host>:<port>",
+            "username": <login>,
+            "password": <password>,
+        }
+    :param headless: bool | str = "virtual"
+        Показывать или не показывать окно браузера, значение
+        virtual (поддерживается только в linux)
+        создаёт виртуальный дисплей, что позволяет эмулировать экран в системе
+    :param os: str = "linux"
+        Возможность подменить ОС
+    :param geoip: bool = True
+        Браузер будет использовать долготу, ширину, часовой пояс, страну,
+        локаль переданного прокси
+    :return: Объект браузера
+
+#### Метод ```_close_browser```
+    Закрывает браузер, если он создан
+
+#### Метод ```_backoff_open_new_page```
+    Открывает страницу по переданному url,
+    в случае ошибки открывает повторно через время
+
+    !!! Для работы требуются созданный объект self.browser: Browser
+    Если не создан, будет получена ошибка BrowserIsNotInitException
+
+    :param url: str
+        Ссылка на страницу
+    :param check_page: Callable = None
+        Можно передать асинхронную функцию, в которой будут дополнительные проверки страницы
+        (например на то, страница с капчей ли это)
+        Функция обязательно должна принимать объект страницы плейрайт (Page) и возвращать
+        True или False, где True - вернуть страницу, False - попытаться открыть заново
+    :param check_page_args: dict = None
+        Дополнительные параметры для check_page
+    :param load_timeout: int = 30
+        Таймаут для загрузки страницы
+    :param increase_by_seconds: int = 10
+        Кол-во секунд, на которое увеличивается задержка между попытками
+    :param iter_count: int = 10
+        Кол-во попыток
+    :param is_page_loaded_check: Callable = None
+        Можно передать функцию проверки того, что страница загружена.
+        В качестве первого параметра функция обязательно должна принимать объект страницы: Tab
+    :param new_page_kwargs:
+        Дополнительные аргументы для new_page()
+    :return:
+        Объект страницы или None в случае, если за все попытки не удалось открыть
+
+#### Метод ```_make_request_from_page```
+    Выполняет запрос через JS со страницы
+
+    :param page: Tab
+        Объект страницы
+    :param url: str | list[str]
+        Ссылка
+        Если передан список ссылок, запросы отправятся асинхронно
+    :param method: str
+        HTTP-метод
+    :param request_body: str | dict | None = None
+        Тело запроса
+    :return:
+        Текст с запрашиваемой страницы
 
 <a name="дополнительные_методы_библиотеки"></a>
 ### Дополнительные методы библиотеки
