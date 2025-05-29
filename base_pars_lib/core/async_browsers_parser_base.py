@@ -5,10 +5,15 @@ from fake_useragent import UserAgent
 from playwright.async_api import Page
 from zendriver.core.tab import Tab
 
+from base_pars_lib.config import logger
+
 
 class AsyncBrowsersParserBase:
     def __init__(self) -> None:
         self.user_agent = UserAgent()
+
+        self.debug = False
+        self.print_logs = False
 
     async def _get_pc_user_agent(self) -> str:
         while True:
@@ -19,6 +24,60 @@ class AsyncBrowsersParserBase:
                 'iPad' not in user_agent
             ):
                 return user_agent
+
+    async def _make_js_script(
+            self,
+            url: str,
+            method: str,
+            request_body: str | dict | list | None = None,
+            headers: str | dict | None = None,
+    ) -> str:
+        """
+        Возвращает JS-скрипт запроса в виде строки. Для запросов через браузер
+
+        :param url: str
+            Ссылка для запроса
+        :param method: str
+            Метод запроса
+        :param request_body: str | dict | list | None = None
+            Тело запроса
+        :param headers: str | dict | None = None
+            Хедеры запроса
+        :return: str
+            JS-скрипт запроса в виде строки
+        """
+        script = """
+                    fetch("%s", {
+                        method: "%s",
+                        REQUEST_BODY,
+                        HEADERS
+                    })
+                    .then(response => response.text());
+                """ % (  # noqa: UP031
+            url,
+            method,
+        )
+
+        if request_body is not None:
+            script = script.replace(
+                "REQUEST_BODY", f"body: JSON.stringify({request_body})"
+            )
+        else:
+            script = script.replace("REQUEST_BODY,", "")
+
+        if headers is not None:
+            script = script.replace(
+                "HEADERS", f"headers: {headers}"
+            )
+        else:
+            script = script.replace(
+                "HEADERS", 'headers: {"Content-Type": "application/json;charset=UTF-8"}'
+            )
+
+        if self.debug:
+            logger.info_log(f"JS request\n\n{script}", print_logs=self.print_logs)
+
+        return script
 
     @staticmethod
     async def _async_pages(pages_urls: list | tuple, page_method: Callable) -> tuple[Any]:

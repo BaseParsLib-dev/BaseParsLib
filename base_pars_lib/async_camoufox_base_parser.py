@@ -5,11 +5,14 @@ from camoufox.async_api import AsyncCamoufox
 from playwright.async_api import Browser, Page
 
 from base_pars_lib.config import logger
+from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase
 from base_pars_lib.exceptions.browser import BrowserIsNotInitError
 
 
-class AsyncCamoufoxBaseParser:
+class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
     def __init__(self) -> None:
+        super().__init__()
+
         self.browser: Browser | None = None
         self.browser_manager: AsyncCamoufox | None = None
 
@@ -192,31 +195,3 @@ class AsyncCamoufoxBaseParser:
         if responses and len(responses) == 1 and not isinstance(url, list):
             return responses[0]
         return responses
-
-    async def __make_js_script(
-        self, url: str | list[str], method: str, request_body: str | dict | None = None
-    ) -> str:
-        script = """
-                    fetch("%s", {
-                        method: "%s",
-                        REQUEST_BODY,
-                        headers: {
-                            "Content-Type": "application/json;charset=UTF-8"
-                        }
-                    })
-                    .then(response => response.text());
-                """ % (  # noqa: UP031
-            url,
-            method,
-        )
-        if request_body is not None:
-            script = script.replace(
-                "REQUEST_BODY", f"body: JSON.stringify({request_body})"
-            )
-        else:
-            script = script.replace("REQUEST_BODY,", "")
-
-        if self.debug:
-            logger.info_log(f"JS request\n\n{script}", print_logs=self.print_logs)
-
-        return script

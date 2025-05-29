@@ -149,29 +149,6 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             return responses[0]
         return responses
 
-    async def __make_js_script(
-        self, url: str | list[str], method: str, request_body: str | dict | None = None
-    ) -> str:
-        script = """
-                    fetch("%s", {
-                        method: "%s",
-                        REQUEST_BODY,
-                        headers: {
-                            "Content-Type": "application/json;charset=UTF-8"
-                        }
-                    })
-                    .then(response => response.text());
-                """ % (url, method)  # noqa: UP031
-        if request_body is not None:
-            script = script.replace("REQUEST_BODY", f"body: JSON.stringify({request_body})")
-        else:
-            script = script.replace("REQUEST_BODY,", "")
-
-        if self.debug:
-            logger.info_log(f"JS request\n\n{script}", print_logs=self.print_logs)
-
-        return script
-
     @staticmethod
     async def _make_chrome_proxy_extension(host: str, port: int, login: str, password: str) -> str:
         """
