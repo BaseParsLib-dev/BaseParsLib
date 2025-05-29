@@ -110,7 +110,12 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         return None
 
     async def _make_request_from_page(
-        self, page: Tab, url: str | list[str], method: str, request_body: str | dict | None = None
+            self,
+            page: Tab,
+            url: str | list[str],
+            method: str,
+            request_body: str | dict | None = None,
+            headers: str | dict | None = None,
     ) -> str | list[str]:
         """
         Выполняет запрос через JS со страницы
@@ -124,6 +129,8 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
             HTTP-метод
         :param request_body: str | dict | None = None
             Тело запроса
+        :param headers: str | dict | None = None
+            Хедеры запроса
         :return:
             Текст с запрашиваемой страницы
         """
@@ -131,10 +138,10 @@ class AsyncNodriverBaseParser(AsyncBrowsersParserBase):
         tasks: list = []
         if isinstance(url, list):
             for one_url in url:
-                script = await self.__make_js_script(one_url, method, request_body)
+                script = await self._make_js_script(one_url, method, request_body, headers)
                 tasks.append(page.evaluate(script, await_promise=True))
         else:
-            script = await self.__make_js_script(url, method, request_body)
+            script = await self._make_js_script(url, method, request_body, headers)
             tasks.append(page.evaluate(script, await_promise=True))
 
         responses = await asyncio.gather(*tasks)  # type: ignore[return-value]

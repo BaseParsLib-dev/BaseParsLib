@@ -154,11 +154,12 @@ class AsyncCamoufoxBaseParser:
         return None
 
     async def _make_request_from_page(
-        self,
-        page: Page,
-        url: str | list[str],
-        method: str,
-        request_body: str | dict | None = None,
+            self,
+            page: Page,
+            url: str | list[str],
+            method: str,
+            request_body: str | dict | list | None = None,
+            headers: str | dict | None = None,
     ) -> str | list[str]:
         """
         Выполняет запрос через JS со страницы
@@ -172,6 +173,8 @@ class AsyncCamoufoxBaseParser:
             HTTP-метод
         :param request_body: str | dict | None = None
             Тело запроса
+        :param headers: str | dict | None = None
+            Хедеры запроса
         :return:
             Текст с запрашиваемой страницы
         """
@@ -179,10 +182,10 @@ class AsyncCamoufoxBaseParser:
         tasks: list = []
         if isinstance(url, list):
             for one_url in url:
-                script = await self.__make_js_script(one_url, method, request_body)
+                script = await self._make_js_script(one_url, method, request_body, headers)
                 tasks.append(page.evaluate(script))
         else:
-            script = await self.__make_js_script(url, method, request_body)
+            script = await self._make_js_script(url, method, request_body, headers)
             tasks.append(page.evaluate(script))
 
         responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
