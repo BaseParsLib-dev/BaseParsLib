@@ -110,7 +110,7 @@ class AsyncCamoufoxBaseParser:
             Кол-во секунд, на которое увеличивается задержка между попытками
         :param iter_count: int = 10
             Кол-во попыток
-        :param is_page_loaded_check: Callable = None
+        :param is_page_loaded_check: Callable
             Можно передать функцию проверки того, что страница загружена.
             В качестве первого параметра функция обязательно должна принимать объект страницы: Tab
         :param new_page_kwargs:
