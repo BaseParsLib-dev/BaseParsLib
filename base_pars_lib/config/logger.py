@@ -7,7 +7,7 @@ logging.basicConfig(
 )
 
 
-def backoff_exception(ex: Exception, iteration: int, print_logs: bool, url: str) -> None:
+def backoff_exception(ex: Exception, iteration: int, print_logs: bool, url: str = "") -> None:
     if print_logs:
         print(f'{datetime.now()} - info - backoff_exception - {ex}: iter {iteration}: url {url}')
     else:
