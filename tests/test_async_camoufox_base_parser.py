@@ -180,11 +180,11 @@ async def test_make_request_from_page(
 async def test_create_and_close_browser(
         async_camoufox_base_parser: AsyncCamoufoxBaseParser
 ) -> None:
-    browser = await async_camoufox_base_parser._create_browser(headless=True)
+    browser = await async_camoufox_base_parser._backoff_create_browser(headless=True)
     assert isinstance(browser.browser_type, BrowserType)  # type: ignore[union-attr]
     assert (
             async_camoufox_base_parser.browser_manager.browser.browser_type is  # type: ignore[union-attr]
-            browser.browser_type
+            browser.browser_type  # type: ignore[union-attr]
     )
 
     await async_camoufox_base_parser._close_browser()

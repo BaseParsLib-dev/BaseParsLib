@@ -642,7 +642,7 @@ if __name__ == '__main__':
 
 <a name="класс_asynccamoufoxbaseparser"></a>
 ### AsyncCamoufoxBaseParser
-#### Метод ```_create_browser```
+#### Метод ```_backoff_create_browser```
     Создаёт браузер-менеджер и браузер
 
     :param proxy: dict[str, str] | None
@@ -661,6 +661,10 @@ if __name__ == '__main__':
     :param geoip: bool = True
         Браузер будет использовать долготу, ширину, часовой пояс, страну,
         локаль переданного прокси
+    :param increase_by_seconds: int = 10
+        Кол-во секунд, на которое увеличивается задержка между попытками
+    :param iter_count: int = 10
+        Кол-во попыток
     :return: Объект браузера
 
 #### Метод ```_close_browser```

@@ -17,13 +17,15 @@ class AsyncCamoufoxBaseParser:
 
         self.print_logs: bool = False
 
-    async def _create_browser(
+    async def _backoff_create_browser(
             self,
             proxy: dict[str, str] | None = None,
             headless: bool | str = "virtual",
             os: str = "linux",
             geoip: bool = True,
-    ) -> Browser:
+            increase_by_seconds: int = 10,
+            iter_count: int = 10,
+    ) -> Browser | None:
         """
         Создаёт браузер-менеджер и браузер
 
@@ -43,18 +45,30 @@ class AsyncCamoufoxBaseParser:
         :param geoip: bool = True
             Браузер будет использовать долготу, ширину, часовой пояс, страну,
             локаль переданного прокси
+        :param increase_by_seconds: int = 10
+            Кол-во секунд, на которое увеличивается задержка между попытками
+        :param iter_count: int = 10
+            Кол-во попыток
         :return: Объект браузера
         """
 
-        self.browser_manager = AsyncCamoufox(
-            headless=headless,
-            os=os,
-            geoip=geoip,
-            proxy=proxy,
-        )
-        await self.browser_manager.__aenter__()
-        self.browser = self.browser_manager.browser  # type: ignore[assignment]
-        return self.browser  # type: ignore[return-value]
+        for i in range(1, iter_count + 1):
+            try:
+                self.browser_manager = AsyncCamoufox(
+                    headless=headless,
+                    os=os,
+                    geoip=geoip,
+                    proxy=proxy,
+                )
+                await self.browser_manager.__aenter__()
+                self.browser = self.browser_manager.browser  # type: ignore[assignment]
+                return self.browser  # type: ignore[return-value]
+            except Exception as Ex:
+                if self.debug:
+                    logger.backoff_exception(Ex, iteration=i, print_logs=self.print_logs)
+                await asyncio.sleep(i * increase_by_seconds)
+
+        return None
 
     async def _close_browser(self) -> None:
         if self.browser_manager is not None:
