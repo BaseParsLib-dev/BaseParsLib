@@ -81,15 +81,15 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
         return None
 
     async def _backoff_open_new_page(
-        self,
-        url: str,
-        is_page_loaded_check: Callable,
-        check_page: Callable = None,  # type: ignore[assignment]
-        check_page_args: dict | None = None,
-        load_timeout: int = 30,
-        increase_by_seconds: int = 10,
-        iter_count: int = 10,
-        **new_page_kwargs: Any,
+            self,
+            url: str,
+            is_page_loaded_check: Callable,
+            check_page: Callable = None,  # type: ignore[assignment]
+            check_page_args: dict | None = None,
+            load_timeout: int = 30,
+            increase_by_seconds: int = 10,
+            iter_count: int = 10,
+            **new_page_kwargs: Any,
     ) -> Page | None:
         """
         Открывает страницу по переданному url,
