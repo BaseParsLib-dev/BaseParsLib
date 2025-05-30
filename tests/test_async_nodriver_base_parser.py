@@ -8,6 +8,7 @@ from base_pars_lib import AsyncNodriverBaseParser
 from base_pars_lib.exceptions.browser import BrowserIsNotInitError
 
 
+# TODO: Нерабочие тесты, переделать
 class TestAsyncNodriverBaseParser(unittest.TestCase):
     def setUp(self) -> None:
         self.parser = AsyncNodriverBaseParser()
@@ -64,7 +65,7 @@ class TestAsyncNodriverBaseParser(unittest.TestCase):
 
     async def test_make_request_from_page_single_url(self) -> None:
         mock_page: AsyncMock = AsyncMock()
-        self.parser._make_js_script = AsyncMock(return_value="mock_script")
+        self.parser._make_js_script = AsyncMock(return_value="mock_script")  # type: ignore[method-assign]
         mock_page.evaluate = AsyncMock(return_value="response_text")
 
         response = await self.parser._make_request_from_page(mock_page, "http://example.com", "GET")
@@ -74,7 +75,7 @@ class TestAsyncNodriverBaseParser(unittest.TestCase):
 
     async def test_make_request_from_page_multiple_urls(self) -> None:
         mock_page: AsyncMock = AsyncMock()
-        self.parser._make_js_script = AsyncMock(return_value="mock_script")
+        self.parser._make_js_script = AsyncMock(return_value="mock_script")  # type: ignore[method-assign]
         mock_page.evaluate = AsyncMock(return_value="response_text")
 
         response = await self.parser._make_request_from_page(
