@@ -84,6 +84,7 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             self,
             url: str,
             is_page_loaded_check: Callable,
+            page: Page | None = None,
             check_page: Callable = None,  # type: ignore[assignment]
             check_page_args: dict | None = None,
             load_timeout: int = 30,
@@ -118,6 +119,9 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             В качестве первого параметра функция обязательно должна принимать объект страницы: Tab
         :param new_page_kwargs:
             Дополнительные аргументы для new_page()
+        :param page: Page | None = None
+            Возможность передать страницу, чтобы открыть новую вместо неё
+            (т.к. new_page создаёт новый объект браузера)
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
         """
@@ -126,9 +130,9 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             raise BrowserIsNotInitError
 
         for i in range(1, iter_count + 1):
-            page = None
             try:
-                page = await self.browser.new_page(**new_page_kwargs)
+                if page is None:
+                    page = await self.browser.new_page(**new_page_kwargs)
                 await page.goto(url)
 
                 for _ in range(load_timeout):
@@ -148,6 +152,7 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             except Exception as Ex:
                 if page:
                     await page.close()
+                    page = None
                 if self.debug:
                     logger.backoff_exception(
                         ex=Ex, iteration=i, print_logs=self.print_logs, url=url
