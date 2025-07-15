@@ -77,6 +77,8 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
         if self.browser_manager is not None:
             await self.browser_manager.__aexit__()
             self.browser_manager = None
+        if self.browser is not None:
+            await self.browser.close()
             self.browser = None
         return None
 
