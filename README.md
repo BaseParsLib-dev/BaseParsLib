@@ -549,6 +549,10 @@ if __name__ == '__main__':
         HTTP-метод
     :param request_body: str | dict | None = None
         Тело запроса
+    :param headers: str | dict | None = None
+        Хедеры запроса
+    :param log_request: bool = False
+        Вывод JS-кода запроса
     :return:
         Текст с запрашиваемой страницы
 
@@ -715,6 +719,10 @@ if __name__ == '__main__':
         HTTP-метод
     :param request_body: str | dict | None = None
         Тело запроса
+    :param headers: str | dict | None = None
+        Хедеры запроса
+    :param log_request: bool = False
+        Вывод JS-кода запроса
     :return:
         Текст с запрашиваемой страницы
 

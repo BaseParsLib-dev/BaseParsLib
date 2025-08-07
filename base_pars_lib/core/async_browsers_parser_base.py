@@ -31,6 +31,7 @@ class AsyncBrowsersParserBase:
             method: str,
             request_body: str | dict | list | None = None,
             headers: str | dict | None = None,
+            log_request: bool = False,
     ) -> str:
         """
         Возвращает JS-скрипт запроса в виде строки. Для запросов через браузер
@@ -43,6 +44,8 @@ class AsyncBrowsersParserBase:
             Тело запроса
         :param headers: str | dict | None = None
             Хедеры запроса
+        :param log_request: bool = False
+            Вывод кода JS-запроса
         :return: str
             JS-скрипт запроса в виде строки
         """
@@ -74,7 +77,7 @@ class AsyncBrowsersParserBase:
                 "HEADERS", 'headers: {"Content-Type": "application/json;charset=UTF-8"}'
             )
 
-        if self.debug:
+        if log_request:
             logger.info_log(f"JS request\n\n{script}", print_logs=self.print_logs)
 
         return script
