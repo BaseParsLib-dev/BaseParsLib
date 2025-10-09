@@ -209,7 +209,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
-        :param proxies: str = None
+        :param proxies: str | None = None
             Прокси
         :param headers: dict | list = None
             Заголовки запроса, возможно передать в виде списка,

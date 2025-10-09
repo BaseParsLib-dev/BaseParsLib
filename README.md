@@ -639,6 +639,8 @@ if __name__ == '__main__':
         True или False, где True - вернуть страницу, False - попытаться открыть заново
     :param check_page_args: dict | None = None
         Дополнительные параметры для check_page, если требуются
+    :param debug_impersonate: bool = False
+        Выводить impersonate в консоль
 
     :return:
         Возвращает список ответов от сайта.
