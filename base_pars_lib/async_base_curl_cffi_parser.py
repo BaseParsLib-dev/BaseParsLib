@@ -60,6 +60,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         save_bad_urls: bool = False,
         random_sleep_time_every_request: list[float | int] | bool = False,
         impersonate: str | None = None,
+        debug_impersonate: bool = False,
     ) -> Response | None:
         """
         Отправляет запрос с настройками из _make_backoff_request
@@ -108,6 +109,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             True или False, где True - вернуть страницу, False - попытаться открыть заново
         :param check_page_args: dict | None
             Дополнительные параметры для check_page, если требуются
+        :param debug_impersonate: bool = False
+            Выводить impersonate в консоль
 
         :return:
             Ответ от сайта. Если на протяжении всех попыток запросов сайт не отдавал код 200,
@@ -124,7 +127,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             )
         if impersonate is None:
             impersonate = await self.__get_random_impersonate()
-            if self.debug:
+            if debug_impersonate:
                 logger.info_log(f"impersonate: {impersonate}", print_logs=self.print_logs)
 
         iteration_for_50x = 1
@@ -186,6 +189,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         match_cookies_to_urls: bool = False,
         check_page: Callable = None,  # type: ignore[assignment]
         check_page_args: dict | None = None,
+        debug_impersonate: bool = False,
     ) -> tuple[Response | None]:
         """
         Если код ответа не 200 или произошла ошибка из ignore_exceptions, отправляет запрос повторно
@@ -264,6 +268,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             True или False, где True - вернуть страницу, False - попытаться открыть заново
         :param check_page_args: dict | None = None
             Дополнительные параметры для check_page, если требуются
+        :param debug_impersonate: bool = False
+            Выводить impersonate в консоль
 
         :return:
             Возвращает список ответов от сайта.
@@ -319,6 +325,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
                         impersonate=impersonate,
                         check_page=check_page,
                         check_page_args=check_page_args,
+                        debug_impersonate=debug_impersonate,
                     )
                 )
 
