@@ -18,7 +18,7 @@ class BaseParser:
         requests_session: requests.Session = None,
         debug: bool = False,
         print_logs: bool = False,
-        check_exceptions: bool = False
+        check_exceptions: bool = False,
     ) -> None:
         """
         :param requests_session: = None
@@ -41,7 +41,7 @@ class BaseParser:
             requests.exceptions.ProxyError,
             _requests_digest_proxy.ProxyError,
             urllib3.exceptions.ProxyError,
-            requests.exceptions.ConnectionError
+            requests.exceptions.ConnectionError,
         )
 
         self.check_exceptions = check_exceptions
@@ -69,32 +69,32 @@ class BaseParser:
         else:
             response = requests.request(**params)
         if self.debug:
-            logger.info_log(f'_make_request status code: {response.status_code}', self.print_logs)
+            logger.info_log(f"_make_request status code: {response.status_code}", self.print_logs)
         return response
 
     def _make_backoff_request(
-            self,
-            url: str,
-            method: str = 'GET',
-            iter_count: int = 10,
-            iter_count_for_50x_errors: int = 3,
-            increase_by_seconds: int = 10,
-            increase_by_minutes_for_50x_errors: int = 20,
-            verify: bool = True,
-            with_random_useragent: bool = True,
-            from_one_session: bool = True,
-            proxies: list[dict] | dict | None = None,
-            headers: dict | list | None = None,
-            cookies: dict | list | None = None,
-            json: dict | None = None,
-            data: dict | None = None,
-            ignore_exceptions: tuple | str = 'default',
-            ignore_404: bool = False,
-            long_wait_for_50x: bool = False,
-            save_bad_urls: bool = False,
-            compare_headers_and_cookies_indexes: bool = True,
-            params: dict | bool = False,
-            timeout: int | None = None
+        self,
+        url: str,
+        method: str = "GET",
+        iter_count: int = 10,
+        iter_count_for_50x_errors: int = 3,
+        increase_by_seconds: int = 10,
+        increase_by_minutes_for_50x_errors: int = 20,
+        verify: bool = True,
+        with_random_useragent: bool = True,
+        from_one_session: bool = True,
+        proxies: list[dict] | dict | None = None,
+        headers: dict | list | None = None,
+        cookies: dict | list | None = None,
+        json: dict | None = None,
+        data: dict | None = None,
+        ignore_exceptions: tuple | str = "default",
+        ignore_404: bool = False,
+        long_wait_for_50x: bool = False,
+        save_bad_urls: bool = False,
+        compare_headers_and_cookies_indexes: bool = True,
+        params: dict | bool = False,
+        timeout: int | None = None,
     ) -> Any:
         """
         Если код ответа не 200 или произошла ошибка прокси, отправляет запрос повторно
@@ -166,22 +166,30 @@ class BaseParser:
             любым кодом ответа или, если произошла ошибка Proxy - возвращает None
         """
 
-        if ignore_exceptions == 'default':
+        if ignore_exceptions == "default":
             ignore_exceptions = self.ignore_exceptions
 
-        if isinstance(proxies, list):
-            proxies = random.choice(proxies)
-
         request_params = self._get_request_params(
-            url=url, compare_headers_and_cookies_indexes=compare_headers_and_cookies_indexes,
-            headers=headers, cookies=cookies, with_random_useragent=with_random_useragent,
-            method=method, verify=verify, json=json, data=data, proxies=proxies, params=params,
-            timeout=timeout
+            url=url,
+            compare_headers_and_cookies_indexes=compare_headers_and_cookies_indexes,
+            headers=headers,
+            cookies=cookies,
+            with_random_useragent=with_random_useragent,
+            method=method,
+            verify=verify,
+            json=json,
+            data=data,
+            proxies=proxies,
+            params=params,
+            timeout=timeout,
         )
 
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
+                if isinstance(request_params.get("proxies"), list):
+                    request_params["proxies"] = random.choice(request_params["proxies"])
+
                 response = self._make_request(
                     from_one_session=from_one_session, params=request_params
                 )
@@ -219,19 +227,19 @@ class BaseParser:
         return None
 
     def _get_request_params(
-            self,
-            url: str,
-            compare_headers_and_cookies_indexes: bool,
-            headers: dict | list | None = None,
-            cookies: dict | list | None = None,
-            with_random_useragent: bool = True,
-            method: str = 'GET',
-            verify: bool = True,
-            json: dict | str | None = None,
-            data: dict | str | None = None,
-            proxies: dict | None = None,
-            params: dict | bool = False,
-            timeout: int | None = None
+        self,
+        url: str,
+        compare_headers_and_cookies_indexes: bool,
+        headers: dict | list | None = None,
+        cookies: dict | list | None = None,
+        with_random_useragent: bool = True,
+        method: str = "GET",
+        verify: bool = True,
+        json: dict | str | None = None,
+        data: dict | str | None = None,
+        proxies: list[dict] | dict | None = None,
+        params: dict | bool = False,
+        timeout: int | None = None,
     ) -> dict:
         """
         Возвращает словарь параметров для запроса через requests
@@ -254,7 +262,7 @@ class BaseParser:
             json-данные
         :param data: dict = None
             Данные запроса
-        :param proxies: dict = None
+        :param proxies: list[dict] | dict | None = None
             Прокси
         :param compare_headers_and_cookies_indexes: bool
             Если True, индекс для списков хедеров и куков будет одинаков:
@@ -282,42 +290,39 @@ class BaseParser:
             )
         else:
             random_index = None
-        headers = self._get_by_random_index(headers, random_index, 'Headers')
-        cookies = self._get_by_random_index(cookies, random_index, 'Cookies')
+        headers = self._get_by_random_index(headers, random_index, "Headers")
+        cookies = self._get_by_random_index(cookies, random_index, "Cookies")
 
         if with_random_useragent:
-            headers['User-Agent'] = self.user_agent.random
+            headers["User-Agent"] = self.user_agent.random
 
         request_params: dict = {
-            'method': method.upper(),
-            'url': url,
-            'headers': headers,
-            'cookies': cookies,
-            'verify': verify,
-            'json': json,
-            'data': data,
-            'timeout': timeout
+            "method": method.upper(),
+            "url": url,
+            "headers": headers,
+            "cookies": cookies,
+            "verify": verify,
+            "json": json,
+            "data": data,
+            "timeout": timeout,
         }
 
         if proxies is not None:
-            request_params['proxies'] = proxies
+            request_params["proxies"] = proxies
         if params:
-            request_params['params'] = params
+            request_params["params"] = params
 
         return request_params
 
     def _get_by_random_index(
-            self,
-            item: list[dict] | dict,
-            random_index: int | None,
-            item_name: str
+        self, item: list[dict] | dict, random_index: int | None, item_name: str
     ) -> dict:
-        if type(item) is list:
+        if isinstance(item, list):
             if random_index is None:
                 random_index = random.randint(0, len(item) - 1)
             item = item[random_index]
             if self.debug:
-                logger.info_log(f'{item_name} index: {random_index}', self.print_logs)
+                logger.info_log(f"{item_name} index: {random_index}", self.print_logs)
         return item  # type: ignore[return-value]
 
     def _append_to_bad_urls(self, url: Any) -> None:
@@ -329,10 +334,7 @@ class BaseParser:
             self.bad_urls.remove(url)
 
     @staticmethod
-    def _threading_method(
-            chunked_array: list | tuple,
-            method: Callable
-    ) -> None:
+    def _threading_method(chunked_array: list | tuple, method: Callable) -> None:
         """
         Создаёт столько потоков, сколько чанков передано в chunked_array,
         выполняет метод method для каждого чанка в отдельном потоке
@@ -349,10 +351,7 @@ class BaseParser:
 
         threads = []
         for chunk in chunked_array:
-            chunk_thread = Thread(
-                target=method,
-                args=(chunk,)
-            )
+            chunk_thread = Thread(target=method, args=(chunk,))
             chunk_thread.start()
             threads.append(chunk_thread)
         for thread in threads:
@@ -360,8 +359,7 @@ class BaseParser:
 
     @staticmethod
     def _calculate_random_cookies_headers_index(
-            cookies: list[dict] | dict,
-            headers: list[dict] | dict
+        cookies: list[dict] | dict, headers: list[dict] | dict
     ) -> int:
         upper_index = min(len(cookies), len(headers))
         if not upper_index:
