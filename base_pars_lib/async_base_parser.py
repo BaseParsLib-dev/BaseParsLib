@@ -128,6 +128,9 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
+                if isinstance(params.get("proxy"), list):
+                    params["proxy"] = random.choice(params["proxy"])
+
                 async with session.request(url=url, **params) as response:
                     if get_raw_aiohttp_response_content:
                         return await response.read()
@@ -269,21 +272,21 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         if ignore_exceptions == "default":
             ignore_exceptions = self.ignore_exceptions
 
-        if isinstance(proxies, list):
-            proxies = random.choice(proxies)
-
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
             tasks = []
 
             url_count, max_requests, data_list, json_list = await self._prepare_request_data(
-                urls=urls, data=data, json=json)
+                urls=urls, data=data, json=json
+            )
 
             for i in range(max_requests):
                 url = urls[i % url_count]
-                current_headers = self._select_value(headers, match_headers_to_urls, i,
-                                                     max_requests)
-                current_cookies = self._select_value(cookies, match_cookies_to_urls, i,
-                                                     max_requests)
+                current_headers = self._select_value(
+                    headers, match_headers_to_urls, i, max_requests
+                )
+                current_cookies = self._select_value(
+                    cookies, match_cookies_to_urls, i, max_requests
+                )
                 request_data = data_list[i] if i < len(data_list) else None
                 request_json = json_list[i] if i < len(json_list) else None
 
@@ -326,7 +329,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         method: str,
         verify: bool,
         with_random_useragent: bool,
-        proxies: str | None,
+        proxies: list[str] | str | None,
         headers: dict | list | None,
         cookies: dict | list | None,
         data: dict | None,
@@ -342,7 +345,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             Проверка безопасности сайта
         :param with_random_useragent: bool
             Использование рандомного юзерагента
-        :param proxies: str
+        :param proxies: list[str] | str | None
             Прокси
         :param headers: dict | list
             Заголовки запроса, возможно передать в виде списка,

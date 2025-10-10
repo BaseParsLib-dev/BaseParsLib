@@ -35,7 +35,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             urllib3.exceptions.ProxyError,
             asyncio.TimeoutError,
             curl_cffi.requests.exceptions.ConnectionError,
-            curl_cffi.requests.exceptions.Timeout
+            curl_cffi.requests.exceptions.Timeout,
         )
 
         self.check_exceptions = check_exceptions
@@ -133,6 +133,9 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
+                if isinstance(params.get("proxies"), list):
+                    params["proxies"] = random.choice(params["proxies"])
+
                 response = await session.request(url=url, impersonate=impersonate, **params)  # type: ignore[arg-type]
                 is_cycle_end, response_ = await self._check_response(
                     response=response,
@@ -279,23 +282,23 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         if ignore_exceptions == "default":
             ignore_exceptions = self.ignore_exceptions
 
-        if isinstance(proxies, list):
-            proxies = random.choice(proxies)
-
         async with AsyncSession(
             max_clients=len(urls), timeout=timeout, debug=debug_curl_cffi
         ) as session:
             tasks = []
 
             url_count, max_requests, data_list, json_list = await self._prepare_request_data(
-                urls=urls,data=data, json=json)
+                urls=urls, data=data, json=json
+            )
 
             for i in range(max_requests):
                 url = urls[i % url_count]
-                current_headers = self._select_value(headers, match_headers_to_urls, i,
-                                                     max_requests)
-                current_cookies = self._select_value(cookies, match_cookies_to_urls, i,
-                                                     max_requests)
+                current_headers = self._select_value(
+                    headers, match_headers_to_urls, i, max_requests
+                )
+                current_cookies = self._select_value(
+                    cookies, match_cookies_to_urls, i, max_requests
+                )
                 request_data = data_list[i] if i < len(data_list) else None
                 request_json = json_list[i] if i < len(json_list) else None
 
@@ -339,7 +342,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         method: str,
         verify: bool,
         with_random_useragent: bool,
-        proxies: dict | None,
+        proxies: list[dict] | dict | None,
         headers: dict | list | None,
         cookies: dict | list | None,
         data: dict | None,
@@ -355,7 +358,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             Проверка безопасности сайта
         :param with_random_useragent: bool
             Использование рандомного юзерагента
-        :param proxies: dict
+        :param proxies: list[str] | dict | None
             Прокси
         :param headers: dict | list
             Заголовки запроса, возможно передать в виде списка,
