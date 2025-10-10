@@ -169,7 +169,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
         increase_by_minutes_for_50x_errors: int = 20,
         verify: bool = True,
         with_random_useragent: bool = True,
-        proxies: str | None = None,
+        proxies: list[str] | str | None = None,
         headers: dict | list | None = None,
         cookies: dict | list | None = None,
         data: list[dict | None] | dict | None = None,
@@ -209,7 +209,7 @@ class AsyncBaseParser(AsyncRequestsParserBase):
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
-        :param proxies: str | None = None
+        :param proxies: list[str] | str | None = None
             Прокси
         :param headers: dict | list = None
             Заголовки запроса, возможно передать в виде списка,
@@ -268,6 +268,9 @@ class AsyncBaseParser(AsyncRequestsParserBase):
 
         if ignore_exceptions == "default":
             ignore_exceptions = self.ignore_exceptions
+
+        if isinstance(proxies, list):
+            proxies = random.choice(proxies)
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
             tasks = []

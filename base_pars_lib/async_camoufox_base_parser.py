@@ -1,4 +1,5 @@
 import asyncio
+import random
 from typing import Any, Callable
 
 from camoufox.async_api import AsyncCamoufox
@@ -22,7 +23,7 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
 
     async def _backoff_create_browser(
             self,
-            proxy: dict[str, str] | None = None,
+            proxy: list[dict] | dict[str, str] | None = None,
             headless: bool | str = "virtual",
             os: str = "linux",
             geoip: bool = True,
@@ -32,7 +33,7 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
         """
         Создаёт браузер-менеджер и браузер
 
-        :param proxy: dict[str, str] | None
+        :param proxy: list[dict[str, str]] | dict[str, str] | None
             Прокси в формате:
             {
                 "server": f"http://<host>:<port>",
@@ -54,6 +55,9 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             Кол-во попыток
         :return: Объект браузера
         """
+
+        if isinstance(proxy, list):
+            proxy = random.choice(proxy)
 
         for i in range(1, iter_count + 1):
             try:
