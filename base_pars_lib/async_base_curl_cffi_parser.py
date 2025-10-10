@@ -171,7 +171,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         increase_by_minutes_for_50x_errors: int = 20,
         verify: bool = True,
         with_random_useragent: bool = True,
-        proxies: dict | None = None,
+        proxies: list[dict] | dict | None = None,
         headers: dict | list | None = None,
         cookies: dict | list | None = None,
         data: list[dict | None] | dict | None = None,
@@ -213,7 +213,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             Проверка безопасности сайта
         :param with_random_useragent: bool = True
             Случайный юзер-агент
-        :param proxies: dict | None = None
+        :param proxies: list[dict] | dict | None = None
             Прокси
         :param headers: dict | list = None
             Заголовки запроса, возможно передать в виде списка,
@@ -278,6 +278,9 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
 
         if ignore_exceptions == "default":
             ignore_exceptions = self.ignore_exceptions
+
+        if isinstance(proxies, list):
+            proxies = random.choice(proxies)
 
         async with AsyncSession(
             max_clients=len(urls), timeout=timeout, debug=debug_curl_cffi

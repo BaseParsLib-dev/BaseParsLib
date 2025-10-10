@@ -83,7 +83,7 @@ class BaseParser:
             verify: bool = True,
             with_random_useragent: bool = True,
             from_one_session: bool = True,
-            proxies: dict | None = None,
+            proxies: list[dict] | dict | None = None,
             headers: dict | list | None = None,
             cookies: dict | list | None = None,
             json: dict | None = None,
@@ -120,7 +120,7 @@ class BaseParser:
             Случайный юзер-агент
         :param from_one_session: bool = True
             Использование одной сессии
-        :param proxies: dict = None
+        :param proxies: list[dict] | dict | None = None
             Прокси
         :param headers: dict | list = None
             Заголовки запроса, возможно передать в виде списка,
@@ -168,6 +168,9 @@ class BaseParser:
 
         if ignore_exceptions == 'default':
             ignore_exceptions = self.ignore_exceptions
+
+        if isinstance(proxies, list):
+            proxies = random.choice(proxies)
 
         request_params = self._get_request_params(
             url=url, compare_headers_and_cookies_indexes=compare_headers_and_cookies_indexes,

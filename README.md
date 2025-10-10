@@ -100,7 +100,7 @@ proxy_session = rotating_proxy_auth(
         Случайный юзер-агент
     :param from_one_session: bool = True
         Использование одной сессии
-    :param proxies: dict = None
+    :param proxies: list[dict] | dict | None = None
         Прокси
     :param headers: dict | list = None
         Заголовки запроса, возможно передать в виде списка,
@@ -259,7 +259,7 @@ class MyParser(BaseParser):
         Проверка безопасности сайта
     :param with_random_useragent: bool = True
         Случайный юзер-агент
-    :param proxies: str = None
+    :param proxies: list[str] | str | None = None
         Прокси
     :param headers: dict | list = None
         Заголовки запроса, возможно передать в виде списка,
@@ -590,7 +590,7 @@ if __name__ == '__main__':
         Проверка безопасности сайта
     :param with_random_useragent: bool = True
         Случайный юзер-агент
-    :param proxies: dict | None = None
+    :param proxies: list[dict] | dict | None = None
         Прокси
     :param headers: dict | list = None
         Заголовки запроса, возможно передать в виде списка,
@@ -651,7 +651,7 @@ if __name__ == '__main__':
 #### Метод ```_backoff_create_browser```
     Создаёт браузер-менеджер и браузер
 
-    :param proxy: dict[str, str] | None
+    :param proxy: list[dict[str, str]] | dict[str, str] | None = None
         Прокси в формате:
         {
             "server": f"http://<host>:<port>",
