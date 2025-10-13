@@ -56,6 +56,8 @@ class AsyncRequestsParserBase:
         if response is None:
             if self.debug:
                 logger.info_log(f"response is None, iter: {iteration}, {url}", self.print_logs)
+            if save_bad_urls:
+                await self._append_to_bad_urls(url)
             await asyncio.sleep(iteration * increase_by_seconds)
             return False, None
 
