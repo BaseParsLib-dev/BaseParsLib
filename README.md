@@ -462,6 +462,25 @@ if __name__ == '__main__':
     :return:
         None
 
+#### ```_make_request_from_page```
+    Выполняет запрос через JS со страницы
+
+    :param page: Tab
+        Объект страницы
+    :param url: str | list[str]
+        Ссылка
+        Если передан список ссылок, запросы отправятся асинхронно
+    :param method: str
+        HTTP-метод
+    :param request_body: str | dict | None = None
+        Тело запроса
+    :param headers: str | dict | None = None
+        Хедеры запроса
+    :param log_request: bool = False
+        Вывод JS-кода запроса
+    :return:
+        Текст с запрашиваемой страницы
+
 <a name="класс_webdriverbaseparser"></a>
 # WebDriverBaseParser
 #### ```__init__```

@@ -8,12 +8,7 @@ from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBas
 
 
 class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
-
-    def __init__(
-        self,
-        debug: bool = False,
-        print_logs: bool = False
-    ) -> None:
+    def __init__(self, debug: bool = False, print_logs: bool = False) -> None:
         super().__init__()
 
         self.debug = debug
@@ -101,18 +96,15 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
                     await page.set_viewport_size(viewport_size)  # type: ignore[arg-type]
 
                 if catch_requests_handler is not None:
-                    page.on('request', catch_requests_handler)
+                    page.on("request", catch_requests_handler)
                 if not load_img_mp4_mp3:
-                    await page.route(
-                        '**/*.{png,jpg,jpeg,mp4,mp3}',
-                        lambda route: route.abort()
-                    )
+                    await page.route("**/*.{png,jpg,jpeg,mp4,mp3}", lambda route: route.abort())
                 await page.goto(url, timeout=load_timeout * 1000)
 
                 if load_for_state is not None:
                     await page.wait_for_load_state(
                         load_for_state,  # type: ignore[arg-type]
-                        timeout=load_timeout * 1000
+                        timeout=load_timeout * 1000,
                     )
                 await asyncio.sleep(load_by_time)
 
@@ -128,17 +120,13 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
                 if page:
                     await page.close()
                 if self.debug:
-                    logger.backoff_exception(
-                        Ex, print_logs=self.print_logs, iteration=i, url=url
-                    )
+                    logger.backoff_exception(Ex, print_logs=self.print_logs, iteration=i, url=url)
             await asyncio.sleep(i * increase_by_seconds)
 
         return None
 
     async def _generate_new_context(
-        self,
-        headless_browser: bool,
-        user_agent: str | None = None
+        self, headless_browser: bool, user_agent: str | None = None
     ) -> None:
         """
         Создаёт playwright-контекст - открывает браузер с начальной страницей поиска гугл
@@ -159,8 +147,63 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             logger.info_log(user_agent, print_logs=self.print_logs)
         self.browser = await self.playwright.chromium.launch(  # type: ignore[union-attr]
             proxy=self.proxy,  # type: ignore[arg-type]
-            headless=headless_browser
+            headless=headless_browser,
         )
         self.context = await self.browser.new_context(user_agent=user_agent)
         page = await self.context.new_page()
-        await page.goto('https://www.google.com')
+        await page.goto("https://www.google.com")
+
+    async def _make_request_from_page(
+        self,
+        page: Page,
+        url: str | list[str],
+        method: str,
+        request_body: str | dict | list | None = None,
+        headers: str | dict | None = None,
+        log_request: bool = False,
+    ) -> str | list[str]:
+        """
+        Выполняет запрос через JS со страницы
+
+        :param page: Tab
+            Объект страницы
+        :param url: str | list[str]
+            Ссылка
+            Если передан список ссылок, запросы отправятся асинхронно
+        :param method: str
+            HTTP-метод
+        :param request_body: str | dict | None = None
+            Тело запроса
+        :param headers: str | dict | None = None
+            Хедеры запроса
+        :param log_request: bool = False
+            Вывод JS-кода запроса
+        :return:
+            Текст с запрашиваемой страницы
+        """
+
+        tasks: list = []
+        if isinstance(url, list):
+            for one_url in url:
+                script = await self._make_js_script(
+                    url=one_url,
+                    method=method,
+                    request_body=request_body,
+                    headers=headers,
+                    log_request=log_request,
+                )
+                tasks.append(page.evaluate(script))
+        else:
+            script = await self._make_js_script(
+                url=url,
+                method=method,
+                request_body=request_body,
+                headers=headers,
+                log_request=log_request,
+            )
+            tasks.append(page.evaluate(script))
+
+        responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
+        if responses and len(responses) == 1 and not isinstance(url, list):
+            return responses[0]
+        return responses
