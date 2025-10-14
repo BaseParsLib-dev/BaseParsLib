@@ -61,6 +61,7 @@ async def test_generate_new_context() -> None:
     parser.playwright.chromium.launch.assert_called_once_with(  # type: ignore
         proxy=parser.proxy,
         headless=True,  # type: ignore
+        args=None,
     )  # type: ignore
 
 
