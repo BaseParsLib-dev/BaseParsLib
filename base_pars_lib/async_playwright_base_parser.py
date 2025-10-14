@@ -33,6 +33,7 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
         load_by_time: float = 0,
         catch_requests_handler: Callable = None,  # type: ignore[assignment]
         viewport_size: dict | None = None,
+        chromium_args: list[str] | None = None,
     ) -> Page | None:
         """
         Открывает страницу по переданному url,
@@ -77,13 +78,15 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             В качестве аргумента принимает request
         :param viewport_size: dict | None = None
             Размер окна в формате {"width": 1920, "height": 1080}
+        :param chromium_args: list[str] | None = None:
+            Аргументы хромиума, например ["--ignore-certificate-errors"]
 
         :return:
             Объект страницы или None в случае, если за все попытки не удалось открыть
         """
 
         if with_new_context or self.context is None:
-            await self._generate_new_context(headless_browser)
+            await self._generate_new_context(headless_browser, chromium_args=chromium_args)
 
         old_page: Page | None = None
         for i in range(1, iter_count + 1):
@@ -126,7 +129,10 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
         return None
 
     async def _generate_new_context(
-        self, headless_browser: bool, user_agent: str | None = None
+        self,
+        headless_browser: bool,
+        user_agent: str | None = None,
+        chromium_args: list[str] | None = None,
     ) -> None:
         """
         Создаёт playwright-контекст - открывает браузер с начальной страницей поиска гугл
@@ -137,6 +143,8 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
         :param user_agent:
             Можно передать собственный юзер-агент, в противном случае выберится случайный
             юзер-агент для пользователя на ПК
+        :param chromium_args: list[str] | None = None:
+            Аргументы хромиума, например ["--ignore-certificate-errors"]
         :return:
             None
         """
@@ -148,6 +156,7 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
         self.browser = await self.playwright.chromium.launch(  # type: ignore[union-attr]
             proxy=self.proxy,  # type: ignore[arg-type]
             headless=headless_browser,
+            args=chromium_args,
         )
         self.context = await self.browser.new_context(user_agent=user_agent)
         page = await self.context.new_page()

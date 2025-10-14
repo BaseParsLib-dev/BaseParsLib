@@ -430,6 +430,8 @@ if __name__ == '__main__':
         В качестве аргумента принимает request
     :param viewport_size: dict | None = None
         Размер окна в формате {"width": 1920, "height": 1080}
+    :param chromium_args: list[str] | None = None:
+        Аргументы хромиума, например ["--ignore-certificate-errors"]
 
     :return:
         Объект страницы или None в случае, если за все попытки не удалось открыть
@@ -459,6 +461,8 @@ if __name__ == '__main__':
     :param user_agent:
         Можно передать собственный юзер-агент, в противном случае выберится случайный
         юзер-агент для пользователя на ПК
+    :param chromium_args: list[str] | None = None:
+        Аргументы хромиума, например ["--ignore-certificate-errors"]
     :return:
         None
 
