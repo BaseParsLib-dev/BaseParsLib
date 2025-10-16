@@ -1,5 +1,6 @@
 import asyncio
 import random
+from dataclasses import dataclass
 from typing import Any, Callable
 
 from camoufox.async_api import AsyncCamoufox
@@ -9,6 +10,11 @@ from base_pars_lib.config import logger
 from base_pars_lib.core.async_browsers_parser_base import AsyncBrowsersParserBase
 from base_pars_lib.exceptions.browser import BrowserIsNotInitError
 
+
+@dataclass
+class JsResponse:
+    text: str
+    url: str
 
 class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
     def __init__(self) -> None:
@@ -175,7 +181,8 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
         request_body: str | dict | list | None = None,
         headers: str | dict | None = None,
         log_request: bool = False,
-    ) -> str | list[str]:
+        return_response_object: bool = False,
+    ) -> str | list[str] | JsResponse | list[JsResponse]:
         """
         Выполняет запрос через JS со страницы
 
@@ -192,24 +199,18 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             Хедеры запроса
         :param log_request: bool = False
             Вывод JS-кода запроса
+        :param return_response_object: bool = False
+            Если True — возвращает список объектов JsResponse(text, url)
         :return:
-            Текст с запрашиваемой страницы
+            Текст с запрашиваемой страницы или объекты JsResponse
         """
 
         tasks: list = []
-        if isinstance(url, list):
-            for one_url in url:
-                script = await self._make_js_script(
-                    url=one_url,
-                    method=method,
-                    request_body=request_body,
-                    headers=headers,
-                    log_request=log_request,
-                )
-                tasks.append(page.evaluate(script))
-        else:
+        urls: list[str] = url if isinstance(url, list) else [url]
+
+        for one_url in urls:
             script = await self._make_js_script(
-                url=url,
+                url=one_url,
                 method=method,
                 request_body=request_body,
                 headers=headers,
@@ -218,6 +219,14 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             tasks.append(page.evaluate(script))
 
         responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
-        if responses and len(responses) == 1 and not isinstance(url, list):
-            return responses[0]
-        return responses
+
+        if return_response_object:
+            js_responses = [JsResponse(text=resp, url=u) for resp, u in zip(responses, urls)]
+            if not isinstance(url, list):
+                return js_responses[0]
+            return js_responses
+
+        else:
+            if responses and len(responses) == 1 and not isinstance(url, list):
+                return responses[0]
+            return responses
