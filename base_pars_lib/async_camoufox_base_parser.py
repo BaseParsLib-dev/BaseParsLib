@@ -182,6 +182,7 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
         headers: str | dict | None = None,
         log_request: bool = False,
         return_response_object: bool = False,
+        iter_count: int = 3,
     ) -> str | list[str] | JsResponse | list[JsResponse]:
         """
         Выполняет запрос через JS со страницы
@@ -201,32 +202,53 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             Вывод JS-кода запроса
         :param return_response_object: bool = False
             Если True — возвращает список объектов JsResponse(text, url)
+        :param iter_count: int = 3
+            Кол-во попыток
         :return:
             Текст с запрашиваемой страницы или объекты JsResponse
         """
 
-        tasks: list = []
         urls: list[str] = url if isinstance(url, list) else [url]
 
-        for one_url in urls:
-            script = await self._make_js_script(
-                url=one_url,
-                method=method,
-                request_body=request_body,
-                headers=headers,
-                log_request=log_request,
-            )
-            tasks.append(page.evaluate(script))
+        async def _safe_eval(one_url: str):
+            """
+            Выполняет JS-запрос через page.evaluate() с повторными попытками.
 
-        responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
+            :param one_url: str
+                URL, на который выполняется запрос.
+            :return:
+                Текст ответа от JS-запроса или None, если после всех попыток не удалось
+                получить результат.
+            """
+            for i in range(1, iter_count + 1):
+                try:
+                    script = await self._make_js_script(
+                        url=one_url,
+                        method=method,
+                        request_body=request_body,
+                        headers=headers,
+                        log_request=log_request,
+                    )
+                    return await page.evaluate(script)
+                except Exception as Ex:
+                    if self.debug:
+                        logger.backoff_exception(Ex, url=one_url, iteration=i,
+                                                 print_logs=self.print_logs)
+            return None
 
-        if return_response_object:
-            js_responses = [JsResponse(text=resp, url=u) for resp, u in zip(responses, urls)]
-            if not isinstance(url, list):
-                return js_responses[0]
-            return js_responses
+        responses = await asyncio.gather(*[_safe_eval(one_url) for one_url in urls],
+                                         return_exceptions=True)  # type: ignore[return-value]
 
-        else:
-            if responses and len(responses) == 1 and not isinstance(url, list):
-                return responses[0]
-            return responses
+        results = []
+        for resp, u in zip(responses, urls):
+            if isinstance(resp, Exception) or resp is None:
+                results.append(JsResponse(text="", url=u))
+            else:
+                results.append(JsResponse(text=resp, url=u))
+
+        if not return_response_object:
+            results = [r.text for r in results]
+
+        if isinstance(url, str):
+            return results[0]
+        return results

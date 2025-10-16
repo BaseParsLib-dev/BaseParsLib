@@ -748,8 +748,12 @@ if __name__ == '__main__':
         Хедеры запроса
     :param log_request: bool = False
         Вывод JS-кода запроса
+    :param return_response_object: bool = False
+        Если True — возвращает список объектов JsResponse(text, url)
+    :param iter_count: int = 3
+        Кол-во попыток
     :return:
-        Текст с запрашиваемой страницы
+        Текст с запрашиваемой страницы или объекты JsResponse
 
 <a name="дополнительные_методы_библиотеки"></a>
 ### Дополнительные методы библиотеки
