@@ -16,7 +16,6 @@ class JsResponse:
     text: str
     url: str
 
-
 class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
     def __init__(self) -> None:
         super().__init__()
@@ -29,13 +28,13 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
         self.print_logs: bool = False
 
     async def _backoff_create_browser(
-            self,
-            proxy: list[dict] | dict[str, str] | None = None,
-            headless: bool | str = "virtual",
-            os: str = "linux",
-            geoip: bool = True,
-            increase_by_seconds: int = 10,
-            iter_count: int = 10,
+        self,
+        proxy: list[dict] | dict[str, str] | None = None,
+        headless: bool | str = "virtual",
+        os: str = "linux",
+        geoip: bool = True,
+        increase_by_seconds: int = 10,
+        iter_count: int = 10,
     ) -> Browser | None:
         """
         Создаёт браузер-менеджер и браузер
@@ -94,16 +93,16 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
         return None
 
     async def _backoff_open_new_page(
-            self,
-            url: str,
-            is_page_loaded_check: Callable,
-            page: Page | None = None,
-            check_page: Callable = None,  # type: ignore[assignment]
-            check_page_args: dict | None = None,
-            load_timeout: int = 30,
-            increase_by_seconds: int = 10,
-            iter_count: int = 10,
-            **new_page_kwargs: Any,
+        self,
+        url: str,
+        is_page_loaded_check: Callable,
+        page: Page | None = None,
+        check_page: Callable = None,  # type: ignore[assignment]
+        check_page_args: dict | None = None,
+        load_timeout: int = 30,
+        increase_by_seconds: int = 10,
+        iter_count: int = 10,
+        **new_page_kwargs: Any,
     ) -> Page | None:
         """
         Открывает страницу по переданному url,
@@ -175,15 +174,15 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
         return None
 
     async def _make_request_from_page(
-            self,
-            page: Page,
-            url: str | list[str],
-            method: str,
-            request_body: str | dict | list | None = None,
-            headers: str | dict | None = None,
-            log_request: bool = False,
-            return_response_object: bool = False,
-            iter_count: int = 3,
+        self,
+        page: Page,
+        url: str | list[str],
+        method: str,
+        request_body: str | dict | list | None = None,
+        headers: str | dict | None = None,
+        log_request: bool = False,
+        return_response_object: bool = False,
+        iter_count: int = 3,
     ) -> str | list[str] | JsResponse | list[JsResponse]:
         """
         Выполняет запрос через JS со страницы
