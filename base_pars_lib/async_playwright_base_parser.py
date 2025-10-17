@@ -19,21 +19,21 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
         self.playwright: Playwright | None = None
 
     async def _backoff_open_new_page_on_context(
-        self,
-        url: str,
-        check_page: Callable = None,  # type: ignore[assignment]
-        check_page_args: dict | None = None,
-        load_timeout: int = 30,
-        increase_by_seconds: int = 10,
-        iter_count: int = 10,
-        with_new_context: bool = False,
-        load_img_mp4_mp3: bool = False,
-        headless_browser: bool = False,
-        load_for_state: str | None = "networkidle",
-        load_by_time: float = 0,
-        catch_requests_handler: Callable = None,  # type: ignore[assignment]
-        viewport_size: dict | None = None,
-        chromium_args: list[str] | None = None,
+            self,
+            url: str,
+            check_page: Callable = None,  # type: ignore[assignment]
+            check_page_args: dict | None = None,
+            load_timeout: int = 30,
+            increase_by_seconds: int = 10,
+            iter_count: int = 10,
+            with_new_context: bool = False,
+            load_img_mp4_mp3: bool = False,
+            headless_browser: bool = False,
+            load_for_state: str | None = "networkidle",
+            load_by_time: float = 0,
+            catch_requests_handler: Callable = None,  # type: ignore[assignment]
+            viewport_size: dict | None = None,
+            chromium_args: list[str] | None = None,
     ) -> Page | None:
         """
         Открывает страницу по переданному url,
@@ -129,10 +129,10 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
         return None
 
     async def _generate_new_context(
-        self,
-        headless_browser: bool,
-        user_agent: str | None = None,
-        chromium_args: list[str] | None = None,
+            self,
+            headless_browser: bool,
+            user_agent: str | None = None,
+            chromium_args: list[str] | None = None,
     ) -> None:
         """
         Создаёт playwright-контекст - открывает браузер с начальной страницей поиска гугл
@@ -161,58 +161,3 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
         self.context = await self.browser.new_context(user_agent=user_agent)
         page = await self.context.new_page()
         await page.goto("https://www.google.com")
-
-    async def _make_request_from_page(
-        self,
-        page: Page,
-        url: str | list[str],
-        method: str,
-        request_body: str | dict | list | None = None,
-        headers: str | dict | None = None,
-        log_request: bool = False,
-    ) -> str | list[str]:
-        """
-        Выполняет запрос через JS со страницы
-
-        :param page: Tab
-            Объект страницы
-        :param url: str | list[str]
-            Ссылка
-            Если передан список ссылок, запросы отправятся асинхронно
-        :param method: str
-            HTTP-метод
-        :param request_body: str | dict | None = None
-            Тело запроса
-        :param headers: str | dict | None = None
-            Хедеры запроса
-        :param log_request: bool = False
-            Вывод JS-кода запроса
-        :return:
-            Текст с запрашиваемой страницы
-        """
-
-        tasks: list = []
-        if isinstance(url, list):
-            for one_url in url:
-                script = await self._make_js_script(
-                    url=one_url,
-                    method=method,
-                    request_body=request_body,
-                    headers=headers,
-                    log_request=log_request,
-                )
-                tasks.append(page.evaluate(script))
-        else:
-            script = await self._make_js_script(
-                url=url,
-                method=method,
-                request_body=request_body,
-                headers=headers,
-                log_request=log_request,
-            )
-            tasks.append(page.evaluate(script))
-
-        responses = await asyncio.gather(*tasks)  # type: ignore[return-value]
-        if responses and len(responses) == 1 and not isinstance(url, list):
-            return responses[0]
-        return responses

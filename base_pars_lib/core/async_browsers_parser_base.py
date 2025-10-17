@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 from typing import Any, Callable
 
 from fake_useragent import UserAgent
@@ -6,6 +7,13 @@ from playwright.async_api import Page
 from zendriver.core.tab import Tab
 
 from base_pars_lib.config import logger
+
+
+@dataclass
+class JsResponse:
+    text: str | None
+    url: str
+    exception: Exception | None = None
 
 
 class AsyncBrowsersParserBase:
@@ -19,9 +27,9 @@ class AsyncBrowsersParserBase:
         while True:
             user_agent = self.user_agent.random
             if (
-                'Android' not in user_agent and
-                'iPhone' not in user_agent and
-                'iPad' not in user_agent
+                    'Android' not in user_agent and
+                    'iPhone' not in user_agent and
+                    'iPad' not in user_agent
             ):
                 return user_agent
 
@@ -159,3 +167,119 @@ class AsyncBrowsersParserBase:
             return None
         await page.evaluate(f"window.scrollTo({from_}, {to}, {smooth})")
         return None
+
+    async def _make_request_from_page(
+            self,
+            page: Page | Tab,
+            url: str | list[str],
+            method: str,
+            request_body: str | dict | list | None = None,
+            headers: str | dict | None = None,
+            log_request: bool = False,
+            return_response_object: bool = False,
+            iter_count: int = 10,
+            increase_by_seconds: int = 10
+    ) -> str | list[str] | JsResponse | list[JsResponse]:
+        """
+        Выполняет запрос через JS со страницы
+
+        :param page: Page | Tab
+            Объект страницы
+        :param url: str | list[str]
+            Ссылка
+            Если передан список ссылок, запросы отправятся асинхронно
+        :param method: str
+            HTTP-метод
+        :param request_body: str | dict | None = None
+            Тело запроса
+        :param headers: str | dict | None = None
+            Хедеры запроса
+        :param log_request: bool = False
+            Вывод JS-кода запроса
+        :param return_response_object: bool = False
+            Если True — возвращает список объектов JsResponse(text, url)
+        :param iter_count: int = 10
+            Кол-во попыток
+        :param increase_by_seconds: int = 10
+            Кол-во секунд, на которое увеличивается задержка между попытками
+        :return:
+            Текст с запрашиваемой страницы или объекты JsResponse
+        """
+
+        urls: list[str] = url if isinstance(url, list) else [url]
+
+        responses: list[str | Exception | BaseException | None] = list(await asyncio.gather(
+            *[self.__evaluate_with_backoff(one_url, iter_count, method, page, increase_by_seconds,
+                                           request_body, headers, log_request) for one_url in urls],
+            return_exceptions=True))
+
+        results = []
+        for resp, u in zip(responses, urls):
+            if isinstance(resp, str):
+                results.append(JsResponse(text=resp, url=u))
+            elif isinstance(resp, Exception):
+                results.append(JsResponse(text=None, url=u, exception=resp))
+            else:
+                results.append(JsResponse(text=None, url=u))
+
+        if not return_response_object:
+            results = [r.text for r in results]
+
+        if isinstance(url, str):
+            return results[0]
+        return results
+
+    async def __evaluate_with_backoff(self, one_url: str,
+                                      iter_count: int,
+                                      method: str,
+                                      page: Page | Tab,
+                                      increase_by_seconds: int,
+                                      request_body: str | dict | list | None = None,
+                                      headers: str | dict | None = None,
+                                      log_request: bool = False) -> str | Exception | None:
+        """
+        Выполняет JS-запрос через page.evaluate() с повторными попытками.
+
+        :param one_url: str
+            URL, на который выполняется запрос.
+        :param iter_count: int = 10
+            Кол-во попыток
+        :param method: str
+            HTTP-метод
+        :param page: Page | Tab
+            Объект страницы
+        :param increase_by_seconds: int = 10
+            Кол-во секунд, на которое увеличивается задержка между попытками
+        :param request_body: str | dict | None = None
+            Тело запроса
+        :param headers: str | dict | None = None
+            Хедеры запроса
+        :param log_request: bool = False
+            Вывод JS-кода запроса
+        :return:
+            Текст ответа от JS-запроса или None, если после всех попыток не удалось
+            получить результат, `Exception`: если все попытки завершились с ошибкой.
+        """
+        last_exception: Exception | None = None
+
+        for i in range(1, iter_count + 1):
+            try:
+                script = await self._make_js_script(
+                    url=one_url,
+                    method=method,
+                    request_body=request_body,
+                    headers=headers,
+                    log_request=log_request,
+                )
+                if isinstance(page, Tab):
+                    return await page.evaluate(script, await_promise=True)
+                else:
+                    return await page.evaluate(script)
+            except Exception as Ex:
+                last_exception = Ex
+                if self.debug:
+                    logger.backoff_exception(Ex, url=one_url, iteration=i,
+                                             print_logs=self.print_logs)
+            if i < iter_count:
+                await asyncio.sleep(i * increase_by_seconds)
+        return last_exception

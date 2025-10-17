@@ -469,7 +469,7 @@ if __name__ == '__main__':
 #### ```_make_request_from_page```
     Выполняет запрос через JS со страницы
 
-    :param page: Tab
+    :param page: Page | Tab
         Объект страницы
     :param url: str | list[str]
         Ссылка
@@ -482,8 +482,14 @@ if __name__ == '__main__':
         Хедеры запроса
     :param log_request: bool = False
         Вывод JS-кода запроса
+    :param return_response_object: bool = False
+        Если True — возвращает список объектов JsResponse(text, url)
+    :param iter_count: int = 10
+        Кол-во попыток
+    :param increase_by_seconds: int = 10
+        Кол-во секунд, на которое увеличивается задержка между попытками
     :return:
-        Текст с запрашиваемой страницы
+        Текст с запрашиваемой страницы или объекты JsResponse
 
 <a name="класс_webdriverbaseparser"></a>
 # WebDriverBaseParser
@@ -563,7 +569,7 @@ if __name__ == '__main__':
 #### ```_make_request_from_page```
     Выполняет запрос через JS со страницы
 
-    :param page: Tab
+    :param page: Page | Tab
         Объект страницы
     :param url: str | list[str]
         Ссылка
@@ -576,8 +582,14 @@ if __name__ == '__main__':
         Хедеры запроса
     :param log_request: bool = False
         Вывод JS-кода запроса
+    :param return_response_object: bool = False
+        Если True — возвращает список объектов JsResponse(text, url)
+    :param iter_count: int = 10
+        Кол-во попыток
+    :param increase_by_seconds: int = 10
+        Кол-во секунд, на которое увеличивается задержка между попытками
     :return:
-        Текст с запрашиваемой страницы
+        Текст с запрашиваемой страницы или объекты JsResponse
 
 <a name="класс_asyncbasecurlcffiparser"></a>
 # AsyncBaseCurlCffiParser
@@ -735,7 +747,7 @@ if __name__ == '__main__':
 #### Метод ```_make_request_from_page```
     Выполняет запрос через JS со страницы
 
-    :param page: Tab
+    :param page: Page | Tab
         Объект страницы
     :param url: str | list[str]
         Ссылка
@@ -748,8 +760,14 @@ if __name__ == '__main__':
         Хедеры запроса
     :param log_request: bool = False
         Вывод JS-кода запроса
+    :param return_response_object: bool = False
+        Если True — возвращает список объектов JsResponse(text, url)
+    :param iter_count: int = 10
+        Кол-во попыток
+    :param increase_by_seconds: int = 10
+        Кол-во секунд, на которое увеличивается задержка между попытками
     :return:
-        Текст с запрашиваемой страницы
+        Текст с запрашиваемой страницы или объекты JsResponse
 
 <a name="дополнительные_методы_библиотеки"></a>
 ### Дополнительные методы библиотеки
