@@ -146,8 +146,13 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
                         break
                     await asyncio.sleep(1)
 
-                if check_page is not None and check_page_args is not None:
-                    if await check_page(page, **check_page_args):
+                if check_page is not None:
+                    if check_page_args is not None:
+                        checking_result = await check_page(page, **check_page_args)
+                    else: 
+                        checking_result = await check_page(page)
+                    
+                    if checking_result:
                         return page
                     else:
                         await page.close()
