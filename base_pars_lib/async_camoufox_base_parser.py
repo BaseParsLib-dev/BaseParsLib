@@ -151,7 +151,6 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
                         checking_result = await check_page(page, **check_page_args)
                     else: 
                         checking_result = await check_page(page)
-                    
                     if checking_result:
                         return page
                     else:
