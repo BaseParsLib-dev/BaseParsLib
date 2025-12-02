@@ -210,10 +210,10 @@ class AsyncBrowsersParserBase:
             requests_bodies = [request_body]
 
         tasks = []
-        for i, url in enumerate(urls):
+        for i, _url in enumerate(urls):
             tasks.append(
                 self.__evaluate_with_backoff(
-                    one_url=url,
+                    one_url=_url,
                     iter_count=iter_count,
                     method=method,
                     page=page,
