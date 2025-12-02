@@ -1,3 +1,5 @@
+# ruff: noqa: UP031
+
 import asyncio
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -27,19 +29,19 @@ class AsyncBrowsersParserBase:
         while True:
             user_agent = self.user_agent.random
             if (
-                    'Android' not in user_agent and
-                    'iPhone' not in user_agent and
-                    'iPad' not in user_agent
+                "Android" not in user_agent
+                and "iPhone" not in user_agent
+                and "iPad" not in user_agent
             ):
                 return user_agent
 
     async def _make_js_script(
-            self,
-            url: str,
-            method: str,
-            request_body: str | dict | list | None = None,
-            headers: str | dict | None = None,
-            log_request: bool = False,
+        self,
+        url: str,
+        method: str,
+        request_body: str | dict | list | None = None,
+        headers: str | dict | None = None,
+        log_request: bool = False,
     ) -> str:
         """
         Возвращает JS-скрипт запроса в виде строки. Для запросов через браузер
@@ -64,22 +66,18 @@ class AsyncBrowsersParserBase:
                         HEADERS
                     })
                     .then(response => response.text());
-                """ % (  # noqa: UP031
+                """ % (
             url,
             method,
         )
 
         if request_body is not None:
-            script = script.replace(
-                "REQUEST_BODY", f"body: JSON.stringify({request_body})"
-            )
+            script = script.replace("REQUEST_BODY", f"body: JSON.stringify({request_body})")
         else:
             script = script.replace("REQUEST_BODY,", "")
 
         if headers is not None:
-            script = script.replace(
-                "HEADERS", f"headers: {headers}"
-            )
+            script = script.replace("HEADERS", f"headers: {headers}")
         else:
             script = script.replace(
                 "HEADERS", 'headers: {"Content-Type": "application/json;charset=UTF-8"}'
@@ -107,9 +105,7 @@ class AsyncBrowsersParserBase:
 
     @staticmethod
     async def _method_in_series(
-            chunked_array: list | tuple,
-            async_method: Callable,
-            sleep_time: int = 0
+        chunked_array: list | tuple, async_method: Callable, sleep_time: int = 0
     ) -> None:
         """
         Выполняет метод method для каждого чанка последовательно
@@ -134,11 +130,11 @@ class AsyncBrowsersParserBase:
 
     @staticmethod
     async def _scroll_to(
-            page: Page | Tab,
-            from_: int = 0,
-            to: int | None = None,
-            full_page: bool = False,
-            custom_js_code: str | None = None,
+        page: Page | Tab,
+        from_: int = 0,
+        to: int | None = None,
+        full_page: bool = False,
+        custom_js_code: str | None = None,
     ) -> None:
         """
         Прокручивает страницу вниз на указанное количество пикселов или полностью
@@ -169,16 +165,16 @@ class AsyncBrowsersParserBase:
         return None
 
     async def _make_request_from_page(
-            self,
-            page: Page | Tab,
-            url: str | list[str],
-            method: str,
-            request_body: str | dict | list | None = None,
-            headers: str | dict | None = None,
-            log_request: bool = False,
-            return_response_object: bool = False,
-            iter_count: int = 10,
-            increase_by_seconds: int = 10
+        self,
+        page: Page | Tab,
+        url: str | list[str],
+        method: str,
+        request_body: str | dict | list | None = None,
+        headers: str | dict | None = None,
+        log_request: bool = False,
+        return_response_object: bool = False,
+        iter_count: int = 10,
+        increase_by_seconds: int = 10,
     ) -> str | list[str] | JsResponse | list[JsResponse]:
         """
         Выполняет запрос через JS со страницы
@@ -190,7 +186,7 @@ class AsyncBrowsersParserBase:
             Если передан список ссылок, запросы отправятся асинхронно
         :param method: str
             HTTP-метод
-        :param request_body: str | dict | None = None
+        :param request_body: str | dict | list | None = None
             Тело запроса
         :param headers: str | dict | None = None
             Хедеры запроса
@@ -208,10 +204,32 @@ class AsyncBrowsersParserBase:
 
         urls: list[str] = url if isinstance(url, list) else [url]
 
-        responses: list[str | Exception | BaseException | None] = list(await asyncio.gather(
-            *[self.__evaluate_with_backoff(one_url, iter_count, method, page, increase_by_seconds,
-                                           request_body, headers, log_request) for one_url in urls],
-            return_exceptions=True))
+        if isinstance(request_body, list):
+            requests_bodies = request_body
+        else:
+            requests_bodies = [request_body]
+
+        tasks = []
+        for i, url in enumerate(urls):
+            tasks.append(
+                self.__evaluate_with_backoff(
+                    one_url=url,
+                    iter_count=iter_count,
+                    method=method,
+                    page=page,
+                    increase_by_seconds=increase_by_seconds,
+                    request_body=requests_bodies[i] if i < len(requests_bodies) else None,
+                    headers=headers,
+                    log_request=log_request,
+                )
+            )
+
+        responses: list[str | Exception | BaseException | None] = list(
+            await asyncio.gather(
+                *tasks,
+                return_exceptions=True,
+            )
+        )
 
         results = []
         for resp, u in zip(responses, urls):
@@ -229,14 +247,17 @@ class AsyncBrowsersParserBase:
             return results[0]
         return results
 
-    async def __evaluate_with_backoff(self, one_url: str,
-                                      iter_count: int,
-                                      method: str,
-                                      page: Page | Tab,
-                                      increase_by_seconds: int,
-                                      request_body: str | dict | list | None = None,
-                                      headers: str | dict | None = None,
-                                      log_request: bool = False) -> str | Exception | None:
+    async def __evaluate_with_backoff(
+        self,
+        one_url: str,
+        iter_count: int,
+        method: str,
+        page: Page | Tab,
+        increase_by_seconds: int,
+        request_body: str | dict | list | None = None,
+        headers: str | dict | None = None,
+        log_request: bool = False,
+    ) -> str | Exception | None:
         """
         Выполняет JS-запрос через page.evaluate() с повторными попытками.
 
@@ -278,8 +299,9 @@ class AsyncBrowsersParserBase:
             except Exception as Ex:
                 last_exception = Ex
                 if self.debug:
-                    logger.backoff_exception(Ex, url=one_url, iteration=i,
-                                             print_logs=self.print_logs)
+                    logger.backoff_exception(
+                        Ex, url=one_url, iteration=i, print_logs=self.print_logs
+                    )
             if i < iter_count:
                 await asyncio.sleep(i * increase_by_seconds)
         return last_exception
