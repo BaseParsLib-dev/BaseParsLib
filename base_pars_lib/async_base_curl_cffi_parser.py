@@ -59,7 +59,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         long_wait_for_50x: bool = False,
         save_bad_urls: bool = False,
         random_sleep_time_every_request: list[float | int] | bool = False,
-        impersonate: str | None = None,
+        impersonate: str | None = "random",
         debug_impersonate: bool = False,
     ) -> Response | None:
         """
@@ -93,8 +93,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             Собирает ссылки, по которым ошибка или код не 200 в список self.bad_urls
         :param random_sleep_time_every_request: list = False
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
-        :param impersonate: str | None = None
-            Имитируемый браузер, если None, выбирается рандомно для каждого запроса из:
+        :param impersonate: str | None = "random"
+            Имитируемый браузер, если "random", выбирается рандомно для каждого запроса из:
                 "chrome",
                 "edge",
                 "safari",
@@ -125,7 +125,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
                     random_sleep_time_every_request[1],  # type: ignore[index]
                 )
             )
-        if impersonate is None:
+        if impersonate == "random":
             impersonate = await self.__get_random_impersonate()
             if debug_impersonate:
                 logger.info_log(f"impersonate: {impersonate}", print_logs=self.print_logs)
@@ -186,7 +186,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         timeout: int = 30,
         random_sleep_time_every_request: list | bool = False,
         params: dict | None = None,
-        impersonate: str | None = None,
+        impersonate: str | None = "random",
         debug_curl_cffi: bool = False,
         match_headers_to_urls: bool = False,
         match_cookies_to_urls: bool = False,
@@ -246,8 +246,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             Список из 2-х чисел, рандомное между которыми - случайная задержка для каждого запроса
         :param params: dict | None = None,
             Словарь параметров запроса
-        :param impersonate: str | None = None
-            Имитируемый браузер, если None, выбирается рандомно для каждого запроса из:
+        :param impersonate: str | None = "random"
+            Имитируемый браузер, если "random", выбирается рандомно для каждого запроса из:
                 "chrome",
                 "edge",
                 "safari",
