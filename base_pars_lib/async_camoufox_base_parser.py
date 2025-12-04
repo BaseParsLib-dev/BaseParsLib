@@ -142,6 +142,9 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             try:
                 if page is None:
                     page = await self.browser.new_page(**new_page_kwargs)
+
+                if page_opening_timeout is not None:
+                    page_opening_timeout *= 1000
                 await page.goto(url, timeout=page_opening_timeout)
 
                 for _ in range(load_timeout):
