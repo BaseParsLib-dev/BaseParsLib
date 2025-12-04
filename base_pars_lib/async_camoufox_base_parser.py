@@ -94,6 +94,7 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
         check_page: Callable = None,  # type: ignore[assignment]
         check_page_args: dict | None = None,
         load_timeout: int = 30,
+        page_opening_timeout: int | None = None,
         increase_by_seconds: int = 10,
         iter_count: int = 10,
         **new_page_kwargs: Any,
@@ -116,6 +117,8 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             Дополнительные параметры для check_page
         :param load_timeout: int = 30
             Таймаут для загрузки страницы
+        :param page_opening_timeout: int | None = None
+            Таймаут для открытия страницы
         :param increase_by_seconds: int = 10
             Кол-во секунд, на которое увеличивается задержка между попытками
         :param iter_count: int = 10
@@ -139,7 +142,7 @@ class AsyncCamoufoxBaseParser(AsyncBrowsersParserBase):
             try:
                 if page is None:
                     page = await self.browser.new_page(**new_page_kwargs)
-                await page.goto(url)
+                await page.goto(url, timeout=page_opening_timeout * 1000)
 
                 for _ in range(load_timeout):
                     if await is_page_loaded_check(page):
