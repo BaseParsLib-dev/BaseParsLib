@@ -262,6 +262,8 @@ class AsyncBrowsersParserBase:
         request_body: str | dict | list | None = None,
         headers: str | dict | None = None,
         log_request: bool = False,
+        body_serialize_func: Literal["JSON.stringify", "new URLSearchParams"]
+        | str = "JSON.stringify",
     ) -> str | Exception | None:
         """
         Выполняет JS-запрос через page.evaluate() с повторными попытками.
@@ -282,6 +284,9 @@ class AsyncBrowsersParserBase:
             Хедеры запроса
         :param log_request: bool = False
             Вывод JS-кода запроса
+        :param body_serialize_func:
+        Literal["JSON.stringify", "new URLSearchParams"] | str = "JSON.stringify"
+            JS-функция, которая обрабатывает данные из request_body
         :return:
             Текст ответа от JS-запроса или None, если после всех попыток не удалось
             получить результат, `Exception`: если все попытки завершились с ошибкой.
@@ -296,6 +301,7 @@ class AsyncBrowsersParserBase:
                     request_body=request_body,
                     headers=headers,
                     log_request=log_request,
+                    body_serialize_func=body_serialize_func,
                 )
                 if isinstance(page, Tab):
                     return await page.evaluate(script, await_promise=True)
