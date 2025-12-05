@@ -180,6 +180,8 @@ class AsyncBrowsersParserBase:
         return_response_object: bool = False,
         iter_count: int = 10,
         increase_by_seconds: int = 10,
+        body_serialize_func: Literal["JSON.stringify", "new URLSearchParams"]
+        | str = "JSON.stringify",
     ) -> str | list[str] | JsResponse | list[JsResponse]:
         """
         Выполняет запрос через JS со страницы
@@ -203,6 +205,9 @@ class AsyncBrowsersParserBase:
             Кол-во попыток
         :param increase_by_seconds: int = 10
             Кол-во секунд, на которое увеличивается задержка между попытками
+        :param body_serialize_func:
+        Literal["JSON.stringify", "new URLSearchParams"] | str = "JSON.stringify"
+            JS-функция, которая обрабатывает данные из request_body
         :return:
             Текст с запрашиваемой страницы или объекты JsResponse
         """
@@ -226,6 +231,7 @@ class AsyncBrowsersParserBase:
                     request_body=requests_bodies[i] if i < len(requests_bodies) else None,
                     headers=headers,
                     log_request=log_request,
+                    body_serialize_func=body_serialize_func,
                 )
             )
 
