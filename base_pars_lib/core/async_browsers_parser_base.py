@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 from fake_useragent import UserAgent
 from playwright.async_api import Page
@@ -42,6 +42,8 @@ class AsyncBrowsersParserBase:
         request_body: str | dict | list | None = None,
         headers: str | dict | None = None,
         log_request: bool = False,
+        body_serialize_func: Literal["JSON.stringify", "new URLSearchParams"]
+        | str = "JSON.stringify",
     ) -> str:
         """
         Возвращает JS-скрипт запроса в виде строки. Для запросов через браузер
@@ -56,6 +58,9 @@ class AsyncBrowsersParserBase:
             Хедеры запроса
         :param log_request: bool = False
             Вывод кода JS-запроса
+        :param body_serialize_func:
+        Literal["JSON.stringify", "new URLSearchParams"] | str = "JSON.stringify"
+            JS-функция, которая обрабатывает данные из request_body
         :return: str
             JS-скрипт запроса в виде строки
         """
@@ -72,7 +77,7 @@ class AsyncBrowsersParserBase:
         )
 
         if request_body is not None:
-            script = script.replace("REQUEST_BODY", f"body: JSON.stringify({request_body})")
+            script = script.replace("REQUEST_BODY", f"body: {body_serialize_func}({request_body})")
         else:
             script = script.replace("REQUEST_BODY,", "")
 
@@ -257,6 +262,8 @@ class AsyncBrowsersParserBase:
         request_body: str | dict | list | None = None,
         headers: str | dict | None = None,
         log_request: bool = False,
+        body_serialize_func: Literal["JSON.stringify", "new URLSearchParams"]
+        | str = "JSON.stringify",
     ) -> str | Exception | None:
         """
         Выполняет JS-запрос через page.evaluate() с повторными попытками.
@@ -277,6 +284,9 @@ class AsyncBrowsersParserBase:
             Хедеры запроса
         :param log_request: bool = False
             Вывод JS-кода запроса
+        :param body_serialize_func:
+        Literal["JSON.stringify", "new URLSearchParams"] | str = "JSON.stringify"
+            JS-функция, которая обрабатывает данные из request_body
         :return:
             Текст ответа от JS-запроса или None, если после всех попыток не удалось
             получить результат, `Exception`: если все попытки завершились с ошибкой.
@@ -291,6 +301,7 @@ class AsyncBrowsersParserBase:
                     request_body=request_body,
                     headers=headers,
                     log_request=log_request,
+                    body_serialize_func=body_serialize_func,
                 )
                 if isinstance(page, Tab):
                     return await page.evaluate(script, await_promise=True)
