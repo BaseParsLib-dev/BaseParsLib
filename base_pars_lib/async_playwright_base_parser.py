@@ -1,5 +1,5 @@
 import asyncio
-from typing import Callable
+from typing import Any, Callable
 
 from playwright.async_api import Browser, BrowserContext, Page, Playwright
 
@@ -133,6 +133,7 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             headless_browser: bool,
             user_agent: str | None = None,
             chromium_args: list[str] | None = None,
+            **browser_kwargs: Any,
     ) -> None:
         """
         Создаёт playwright-контекст - открывает браузер с начальной страницей поиска гугл
@@ -145,6 +146,8 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             юзер-агент для пользователя на ПК
         :param chromium_args: list[str] | None = None:
             Аргументы хромиума, например ["--ignore-certificate-errors"]
+        :param browser_kwargs: Any
+            Любые аргументы в playwright.chromium.launch
         :return:
             None
         """
@@ -157,6 +160,7 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             proxy=self.proxy,  # type: ignore[arg-type]
             headless=headless_browser,
             args=chromium_args,
+            **browser_kwargs,
         )
         self.context = await self.browser.new_context(user_agent=user_agent)
         page = await self.context.new_page()
