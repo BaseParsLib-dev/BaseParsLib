@@ -133,6 +133,8 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             headless_browser: bool,
             user_agent: str | None = None,
             chromium_args: list[str] | None = None,
+            locale: str | None = None,
+            timezone_id: str | None = None,
             **browser_kwargs: Any,
     ) -> None:
         """
@@ -148,6 +150,10 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             Аргументы хромиума, например ["--ignore-certificate-errors"]
         :param browser_kwargs: Any
             Любые аргументы в playwright.chromium.launch
+        :param locale: str | None
+            Локализация (напр. ru-RU)
+        :param timezone_id: str | None
+            Таймзона (напр. "Europe/Moscow")
         :return:
             None
         """
@@ -162,6 +168,10 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             args=chromium_args,
             **browser_kwargs,
         )
-        self.context = await self.browser.new_context(user_agent=user_agent)
+        self.context = await self.browser.new_context(
+            user_agent=user_agent,
+            locale=locale,
+            timezone_id=timezone_id,
+        )
         page = await self.context.new_page()
         await page.goto("https://www.google.com")
