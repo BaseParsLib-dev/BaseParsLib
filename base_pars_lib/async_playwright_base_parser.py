@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 from playwright.async_api import Browser, BrowserContext, Page, Playwright
 
@@ -29,7 +29,9 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             with_new_context: bool = False,
             load_img_mp4_mp3: bool = False,
             headless_browser: bool = False,
-            load_for_state: str | None = "networkidle",
+            load_for_state: Literal[
+                                "domcontentloaded", "load", "networkidle"
+                            ] | None = "networkidle",
             load_by_time: float = 0,
             catch_requests_handler: Callable = None,  # type: ignore[assignment]
             viewport_size: dict | None = None,
@@ -143,7 +145,7 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             chromium_args: list[str] | None = None,
             locale: str | None = None,
             timezone_id: str | None = None,
-            load_for_state: str | None = None,
+            load_for_state: Literal["domcontentloaded", "load", "networkidle"] | None = None,
             **browser_kwargs: Any,
     ) -> None:
         """
@@ -163,7 +165,7 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             Локализация (напр. ru-RU)
         :param timezone_id: str | None
             Таймзона (напр. "Europe/Moscow")
-        :param load_for_state: str | None = None
+        :param load_for_state: Literal["domcontentloaded", "load", "networkidle"] | None = None
             Загружать страницу до:
             networkidle - прекращения сетевой активности
             load - полной загрузки страницы
