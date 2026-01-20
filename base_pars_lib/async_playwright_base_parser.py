@@ -86,7 +86,11 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
         """
 
         if with_new_context or self.context is None:
-            await self._generate_new_context(headless_browser, chromium_args=chromium_args)
+            await self._generate_new_context(
+                headless_browser=headless_browser,
+                load_for_state=load_for_state,
+                chromium_args=chromium_args,
+            )
 
         old_page: Page | None = None
         for i in range(1, iter_count + 1):
@@ -102,7 +106,11 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
                     page.on("request", catch_requests_handler)
                 if not load_img_mp4_mp3:
                     await page.route("**/*.{png,jpg,jpeg,mp4,mp3}", lambda route: route.abort())
-                await page.goto(url, timeout=load_timeout * 1000)
+
+                if load_for_state is None:
+                    await page.goto(url, timeout=load_timeout * 1000, wait_until="commit")
+                else:
+                    await page.goto(url, timeout=load_timeout * 1000, wait_until=load_for_state)
 
                 if load_for_state is not None:
                     await page.wait_for_load_state(
@@ -135,6 +143,7 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             chromium_args: list[str] | None = None,
             locale: str | None = None,
             timezone_id: str | None = None,
+            load_for_state: str | None = None,
             **browser_kwargs: Any,
     ) -> None:
         """
@@ -154,6 +163,12 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             Локализация (напр. ru-RU)
         :param timezone_id: str | None
             Таймзона (напр. "Europe/Moscow")
+        :param load_for_state: str | None = None
+            Загружать страницу до:
+            networkidle - прекращения сетевой активности
+            load - полной загрузки страницы
+            domcontentloaded - загрузки dom
+            None - сразу отдаёт страницу
         :return:
             None
         """
@@ -174,4 +189,8 @@ class AsyncPlaywrightBaseParser(AsyncBrowsersParserBase):
             timezone_id=timezone_id,
         )
         page = await self.context.new_page()
-        await page.goto("https://www.google.com")
+
+        if load_for_state is None:
+            await page.goto("https://www.google.com", wait_until="commit")
+        else:
+            await page.goto("https://www.google.com", wait_until=load_for_state)
