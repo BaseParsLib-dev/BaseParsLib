@@ -28,7 +28,11 @@ async def test_backoff_open_new_page_on_context_success() -> None:
 
     assert result == mock_page
     parser.context.new_page.assert_called_once()
-    mock_page.goto.assert_called_once_with("http://example.com", timeout=5000, wait_until="networkidle")
+    mock_page.goto.assert_called_once_with(
+        "http://example.com",
+        timeout=5000,
+        wait_until="networkidle",
+    )
 
 
 @pytest.mark.asyncio
