@@ -130,11 +130,16 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             if debug_impersonate:
                 logger.info_log(f"impersonate: {impersonate}", print_logs=self.print_logs)
 
+        if isinstance(params.get("proxies"), list):
+            proxies = params.get("proxies")
+        else:
+            proxies = None
+
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
-                if isinstance(params.get("proxies"), list):
-                    params["proxies"] = random.choice(params["proxies"])
+                if proxies is not None:
+                    params["proxies"] = random.choice(proxies)
 
                 response = await session.request(url=url, impersonate=impersonate, **params)  # type: ignore[arg-type]
                 is_cycle_end, response_ = await self._check_response(
