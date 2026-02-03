@@ -125,11 +125,16 @@ class AsyncBaseParser(AsyncRequestsParserBase):
                 )
             )
 
+        if isinstance(params.get("proxy", None), list):
+            proxies = params.get("proxy")
+        else:
+            proxies = None
+
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
-                if isinstance(params.get("proxy"), list):
-                    params["proxy"] = random.choice(params["proxy"])
+                if proxies is not None:
+                    params["proxy"] = random.choice(proxies)
 
                 async with session.request(url=url, **params) as response:
                     if get_raw_aiohttp_response_content:
