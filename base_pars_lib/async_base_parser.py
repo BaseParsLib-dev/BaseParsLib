@@ -125,7 +125,10 @@ class AsyncBaseParser(AsyncRequestsParserBase):
                 )
             )
 
-        proxies = params.get("proxy", None)
+        if isinstance(params.get("proxy", None), list):
+            proxies = params.get("proxy")
+        else:
+            proxies = None
 
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):

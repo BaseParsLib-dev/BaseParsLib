@@ -130,7 +130,10 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             if debug_impersonate:
                 logger.info_log(f"impersonate: {impersonate}", print_logs=self.print_logs)
 
-        proxies = params.get("proxies", None)
+        if isinstance(params.get("proxies"), list):
+            proxies = params.get("proxies")
+        else:
+            proxies = None
 
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):

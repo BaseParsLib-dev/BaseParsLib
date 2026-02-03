@@ -184,13 +184,16 @@ class BaseParser:
             timeout=timeout,
         )
 
-        proxies = request_params.get("proxies", None)
+        if isinstance(request_params.get("proxies"), list):
+            proxies = request_params.get("proxies")
+        else:
+            proxies = None
 
         iteration_for_50x = 1
         for i in range(1, iter_count + 1):
             try:
                 if proxies is not None:
-                    request_params["proxy"] = random.choice(proxies)
+                    request_params["proxies"] = random.choice(proxies)
 
                 response = self._make_request(
                     from_one_session=from_one_session, params=request_params
