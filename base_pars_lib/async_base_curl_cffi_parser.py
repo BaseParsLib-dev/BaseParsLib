@@ -56,6 +56,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         increase_by_seconds: int = 10,
         increase_by_minutes_for_50x_errors: int = 20,
         ignore_404: bool = False,
+        ignore_410: bool = False,
         long_wait_for_50x: bool = False,
         save_bad_urls: bool = False,
         random_sleep_time_every_request: list[float | int] | bool = False,
@@ -82,11 +83,13 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             Разница в секундах между задержками
         :param increase_by_minutes_for_50x_errors:
             Разница в секундах между задержками, если сайт возвращает ошибку сервера
-        :param ignore_404:
+        :param ignore_404: bool = False
             Позволяет не применять backoff к респонзам со статус-кодом 404.
             Если такой страницы нет, backoff может не понадобиться
             Если значение = True и передан url на несуществующую страницу,
             метод вернёт response после первой попытки
+        :param ignore_410: bool = False
+            То же самое, что и ignore_404, только с кодом ответа 410
         :param long_wait_for_50x:
             Если True, применяет increase_by_minutes_for_50x_errors
         :param save_bad_urls: bool = False
@@ -150,6 +153,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
                     iter_count=iter_count,
                     save_bad_urls=save_bad_urls,
                     ignore_404=ignore_404,
+                    ignore_410=ignore_410,
                     long_wait_for_50x=long_wait_for_50x,
                     iteration_for_50x=iteration_for_50x,
                     iter_count_for_50x_errors=iter_count_for_50x_errors,
@@ -186,6 +190,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
         json: list[dict | None] | dict | None = None,
         ignore_exceptions: tuple | str = "default",
         ignore_404: bool = False,
+        ignore_410: bool = False,
         long_wait_for_50x: bool = False,
         save_bad_urls: bool = False,
         timeout: int = 30,
@@ -241,6 +246,8 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
             Если такой страницы нет, backoff может не понадобиться
             Если значение = True и передан url на несуществующую страницу,
             метод вернёт response после первой попытки
+        :param ignore_410: bool = False
+            То же самое, что и ignore_404, только с кодом ответа 410
         :param long_wait_for_50x: bool = False
             Если True, применяет increase_by_minutes_for_50x_errors
         :param save_bad_urls: bool = False
@@ -330,6 +337,7 @@ class AsyncBaseCurlCffiParser(AsyncRequestsParserBase):
                         increase_by_seconds=increase_by_seconds,
                         increase_by_minutes_for_50x_errors=increase_by_minutes_for_50x_errors,
                         ignore_404=ignore_404,
+                        ignore_410=ignore_410,
                         long_wait_for_50x=long_wait_for_50x,
                         save_bad_urls=save_bad_urls,
                         random_sleep_time_every_request=random_sleep_time_every_request,

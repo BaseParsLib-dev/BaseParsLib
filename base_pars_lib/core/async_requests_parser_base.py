@@ -37,6 +37,7 @@ class AsyncRequestsParserBase:
         iter_count: int,
         save_bad_urls: bool,
         ignore_404: bool,
+        ignore_410: bool,
         long_wait_for_50x: bool,
         iteration_for_50x: int,
         iter_count_for_50x_errors: int,
@@ -82,9 +83,12 @@ class AsyncRequestsParserBase:
                 if save_bad_urls:
                     await self._delete_from_bad_urls(url)
                 return True, response
-        if save_bad_urls and response.status_code != HTTPStatus.NOT_FOUND:
+        if save_bad_urls and response.status_code not in (HTTPStatus.NOT_FOUND, HTTPStatus.GONE):
             await self._append_to_bad_urls(url)
-        if response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
+        if (
+                response.status_code in (HTTPStatus.NOT_FOUND, HTTPStatus.GONE)
+                and (ignore_404 or ignore_410)
+        ):
             return True, response
 
         if 599 >= response.status_code >= 500 and long_wait_for_50x:
