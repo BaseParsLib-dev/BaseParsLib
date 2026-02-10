@@ -216,6 +216,7 @@ async def test_check_response_200(async_base_parser: Any) -> None:
         iter_count=3,
         save_bad_urls=False,
         ignore_404=False,
+        ignore_410=False,
         long_wait_for_50x=False,
         iteration_for_50x=1,
         iter_count_for_50x_errors=3,
@@ -241,6 +242,33 @@ async def test_check_response_404_ignored(async_base_parser: Any) -> None:
         iter_count=3,
         save_bad_urls=False,
         ignore_404=True,
+        ignore_410=False,
+        long_wait_for_50x=False,
+        iteration_for_50x=1,
+        iter_count_for_50x_errors=3,
+        increase_by_minutes_for_50x_errors=20,
+        check_page=None,
+        check_page_args=None,
+    )
+
+    assert is_cycle_end is True
+    assert response_ == response
+
+
+@pytest.mark.asyncio
+async def test_check_response_410_ignored(async_base_parser: Any) -> None:
+    response = AiohttpResponse(
+        text="Not found", json=None, url="http://example.com", status_code=410
+    )
+    is_cycle_end, response_ = await async_base_parser._check_response(
+        response=response,
+        iteration=1,
+        url="http://example.com",
+        increase_by_seconds=1,
+        iter_count=3,
+        save_bad_urls=False,
+        ignore_404=False,
+        ignore_410=True,
         long_wait_for_50x=False,
         iteration_for_50x=1,
         iter_count_for_50x_errors=3,
@@ -264,6 +292,7 @@ async def test_check_response_500_retry(async_base_parser: Any) -> None:
         iter_count=3,
         save_bad_urls=False,
         ignore_404=False,
+        ignore_410=False,
         long_wait_for_50x=False,
         iteration_for_50x=1,
         iter_count_for_50x_errors=3,

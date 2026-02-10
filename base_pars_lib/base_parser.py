@@ -90,6 +90,7 @@ class BaseParser:
         data: dict | None = None,
         ignore_exceptions: tuple | str = "default",
         ignore_404: bool = False,
+        ignore_410: bool = False,
         long_wait_for_50x: bool = False,
         save_bad_urls: bool = False,
         compare_headers_and_cookies_indexes: bool = True,
@@ -144,6 +145,8 @@ class BaseParser:
             Если такой страницы нет, backoff может не понадобиться
             Если значение = True и передан url на несуществующую страницу,
             метод вернёт response после первой попытки
+        :param ignore_410: bool = False
+            То же самое, что и ignore_404, только с кодом ответа 410
         :param long_wait_for_50x: bool = False
             Если True, применяет increase_by_minutes_for_50x_errors
         :param save_bad_urls: bool = False
@@ -211,10 +214,15 @@ class BaseParser:
                     self._delete_from_bad_urls(url)
                 return response
 
-            if save_bad_urls and response.status_code != HTTPStatus.NOT_FOUND:
+            if save_bad_urls and response.status_code not in (
+                    HTTPStatus.NOT_FOUND, HTTPStatus.GONE
+            ):
                 self._append_to_bad_urls(url)
 
-            elif response.status_code == HTTPStatus.NOT_FOUND and ignore_404:
+            elif (
+                    response.status_code in (HTTPStatus.NOT_FOUND, HTTPStatus.GONE)
+                    and (ignore_404 or ignore_410)
+            ):
                 return response
             elif 599 >= response.status_code >= 500 and long_wait_for_50x:
                 if iteration_for_50x > iter_count_for_50x_errors:
